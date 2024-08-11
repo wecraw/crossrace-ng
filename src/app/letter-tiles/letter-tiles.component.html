@@ -1,0 +1,42 @@
+<div class="container game-container">
+  <div
+    cdkDropList
+    id="letter-bank"
+    #letterBank="cdkDropList"
+    cdkDropListOrientation="horizontal"
+    [cdkDropListData]="bankLetters"
+    [cdkDropListConnectedTo]="gridCellIds"
+    class="letter-bank m-lr-auto"
+    (cdkDropListDropped)="drop($event)"
+  >
+    @for (letter of bankLetters; track letter) {
+    <div class="tile-wrapper m-lr-auto" cdkDrag>
+      <div class="m-lr-auto">
+        {{ letter }}
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="grid-container">
+    @for (row of grid; track row; let i = $index) {
+    <div class="grid-row">
+      @for (cell of row; track cell; let j = $index) {
+      <div
+        cdkDropList
+        [id]="'cell-' + i + '-' + j"
+        [cdkDropListData]="[cell]"
+        [cdkDropListConnectedTo]="allDropListIds"
+        [cdkDropListEnterPredicate]="canEnter"
+        class="grid-cell"
+        (cdkDropListDropped)="drop($event)"
+      >
+        @if (cell) {
+        <div class="letter-tile" cdkDrag>{{ cell }}</div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>
