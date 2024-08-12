@@ -7,10 +7,18 @@ import {
   transferArrayItem,
 } from '@angular/cdk/drag-drop';
 
+import { DragScrollComponent, DragScrollItemDirective } from 'ngx-drag-scroll';
+
 @Component({
   selector: 'app-letter-tiles',
   standalone: true,
-  imports: [CdkDropListGroup, CdkDropList, CdkDrag],
+  imports: [
+    CdkDropListGroup,
+    CdkDropList,
+    CdkDrag,
+    DragScrollComponent,
+    DragScrollItemDirective,
+  ],
   templateUrl: './letter-tiles.component.html',
   styleUrls: ['./letter-tiles.component.scss'],
 })
@@ -19,6 +27,12 @@ export class LetterTilesComponent implements OnInit {
   grid: string[][] = [];
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
+
+  //initial position for the crossword grid
+  // dragPosition = { x: 200, y: 200 };
+  dragPosition = { x: -847, y: -847 };
+
+  GRID_SIZE: number = 36;
 
   ngOnInit(): void {
     this.generateRandomLetters();
@@ -36,14 +50,14 @@ export class LetterTilesComponent implements OnInit {
   }
 
   initializeGrid() {
-    this.grid = Array(10)
+    this.grid = Array(this.GRID_SIZE)
       .fill(null)
-      .map(() => Array(10).fill(null));
+      .map(() => Array(this.GRID_SIZE).fill(null));
   }
 
   generateGridCellIds() {
-    for (let i = 0; i < 10; i++) {
-      for (let j = 0; j < 10; j++) {
+    for (let i = 0; i < this.GRID_SIZE; i++) {
+      for (let j = 0; j < this.GRID_SIZE; j++) {
         this.gridCellIds.push(`cell-${i}-${j}`);
       }
     }
