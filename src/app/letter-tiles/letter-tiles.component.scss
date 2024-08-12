@@ -86,6 +86,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
+
+  &.valid-letter {
+    .letter-tile {
+      background-color: green !important;
+    }
+  }
 }
 
 .letter-tile {
@@ -98,15 +104,7 @@
   font-weight: bold;
   cursor: move;
   color: white;
-  border-radius: 4px;
-}
-
-.letter-tile.valid {
-  background-color: #90ee90; /* Light green */
-}
-
-.letter-tile.invalid {
-  background-color: #ffa07a; /* Light salmon */
+  border-radius: 6px;
 }
 
 .grid-boundary {
@@ -136,4 +134,25 @@
   mask-position: center;
   mask-repeat: no-repeat;
   mask-composite: intersect;
+}
+
+.lower-menu {
+  display: flex;
+  padding: 0 40px;
+  max-width: 400px;
+
+  .refresh {
+    font-size: 36px;
+    margin-top: 23px;
+    margin-left: auto;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    &.disabled {
+      pointer-events: none;
+      opacity: 0.4;
+    }
+  }
 }

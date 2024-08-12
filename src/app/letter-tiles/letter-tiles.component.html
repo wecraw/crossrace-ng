@@ -25,10 +25,11 @@
       cdkDrag
       cdkDragBoundary=".grid-boundary"
     >
-      @for (row of grid; track row; let i = $index) {
+      @for (row of grid; track $index; let i = $index) {
       <div class="grid-row">
         @for (cell of row; track $index; let j = $index) {
         <div
+          [ngClass]="{ 'valid-letter': validLetterIndices[i][j] }"
           class="grid-cell"
           cdkDropList
           [id]="'cell-' + i + '-' + j"
@@ -38,7 +39,11 @@
           (cdkDropListDropped)="drop($event)"
         >
           @if (cell) {
-          <div class="letter-tile" cdkDrag>
+          <div
+            class="letter-tile"
+            cdkDrag
+            (cdkDragStarted)="dragStarted($event)"
+          >
             {{ cell }}
           </div>
           }
@@ -48,10 +53,20 @@
       }
     </div>
   </div>
+  <div class="lower-menu m-lr-auto">
+    <app-timer [isRunning]="timerRunning" (timeChanged)="onTimeChanged($event)">
+    </app-timer>
+    <i
+      class="material-icons refresh"
+      (click)="startPuzzle()"
+      [ngClass]="{ disabled: !anyTilePlaced() }"
+      >refresh</i
+    >
+  </div>
 
-  <button (click)="nextPuzzle()">Next Puzzle</button>
+  <div *ngIf="debug" class="formed-words">
+    <button (click)="nextPuzzle()">Next Puzzle</button>
 
-  <div class="formed-words">
     <h3>Formed Words:</h3>
     <ul>
       @for (word of formedWords; track $index) {
