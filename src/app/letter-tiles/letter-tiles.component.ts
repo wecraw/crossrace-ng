@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import {
   CdkDragDrop,
   CdkDrag,
@@ -12,6 +12,9 @@ import { PUZZLES } from './puzzles';
 import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
+
+import { WebSocketService } from '../websocket.service';
+import { Subscription } from 'rxjs';
 
 interface ValidatedWord {
   word: string;
@@ -31,7 +34,9 @@ interface ValidatedWord {
   templateUrl: './letter-tiles.component.html',
   styleUrls: ['./letter-tiles.component.scss'],
 })
-export class LetterTilesComponent implements OnInit {
+export class LetterTilesComponent implements OnInit, OnDestroy {
+  private webSocketService = inject(WebSocketService);
+
   bankLetters: string[] = [];
   grid: string[][] = [];
   validLetterIndices: boolean[][] = [];
@@ -52,13 +57,44 @@ export class LetterTilesComponent implements OnInit {
   // Debug
   debug: boolean = false;
 
+  //MP
+  private wsSubscription!: Subscription;
+  isMultiplayer: boolean = false;
+  isGameOver: boolean = false;
+  isWinner: boolean = false;
+  isGameStarted: boolean = false;
+
   constructor() {
     this.validWords = new Set(VALID_WORDS);
   }
 
   ngOnInit(): void {
     this.startPuzzle();
-    this.toggleTimer();
+    this.wsSubscription = this.webSocketService
+      .connect()
+      .subscribe((message) => this.handleWebSocketMessage(message));
+  }
+
+  ngOnDestroy(): void {
+    if (this.wsSubscription) {
+      this.wsSubscription.unsubscribe();
+    }
+  }
+
+  handleWebSocketMessage(message: any): void {
+    switch (message.type) {
+      case 'gameStarted':
+        console.log('game started!');
+        this.isMultiplayer = true;
+        this.isGameStarted = true;
+        this.toggleTimer();
+        break;
+      case 'gameEnded':
+        this.isGameOver = true;
+        this.isWinner = message.winner;
+        this.toggleTimer();
+        break;
+    }
   }
 
   startPuzzle() {
@@ -215,7 +251,13 @@ export class LetterTilesComponent implements OnInit {
     }
 
     // If all conditions are met, it's a win
-    console.log('you win');
+    if (this.isMultiplayer) {
+      this.webSocketService.announceWin();
+      console.log('you win');
+    } else {
+      console.log('you win');
+      this.toggleTimer();
+    }
     this.toggleTimer();
     return true;
   }

@@ -135,6 +135,13 @@
   mask-repeat: no-repeat;
   mask-composite: intersect;
 }
+.hidden {
+  display: none;
+}
+
+.waiting {
+  font-size: 1.5em;
+}
 
 .lower-menu {
   display: flex;

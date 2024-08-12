@@ -54,8 +54,15 @@
     </div>
   </div>
   <div class="lower-menu m-lr-auto">
-    <app-timer [isRunning]="timerRunning" (timeChanged)="onTimeChanged($event)">
+    <app-timer
+      [ngClass]="{ hidden: !isGameStarted }"
+      [isRunning]="timerRunning"
+      (timeChanged)="onTimeChanged($event)"
+    >
     </app-timer>
+    <div *ngIf="!isGameStarted" class="waiting">
+      Waiting for player to connect...
+    </div>
     <i
       class="material-icons refresh"
       (click)="startPuzzle()"
