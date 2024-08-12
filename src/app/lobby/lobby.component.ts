@@ -1,8 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebSocketService } from '../websocket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-lobby',
@@ -13,7 +14,7 @@ import { WebSocketService } from '../websocket.service';
       <h2>Word Game Lobby</h2>
       <button (click)="createGame()">Create New Game</button>
       <div *ngIf="gameCode">
-        Share this URL to invite a player: localhost:4200/join/{{ gameCode }}
+        Share this code to invite a player: {{ gameCode }}
       </div>
       <div>
         <input
@@ -27,53 +28,71 @@ import { WebSocketService } from '../websocket.service';
     </div>
   `,
 })
-export class LobbyComponent implements OnInit {
-  private webSocketService = inject(WebSocketService);
-
+export class LobbyComponent implements OnInit, OnDestroy {
   gameCode: string | null = null;
   joinGameCode: string = '';
+  private messageSubscription!: Subscription;
 
   constructor(
-    private route: ActivatedRoute,
+    private webSocketService: WebSocketService,
     private router: Router,
-    private location: Location
+    private route: ActivatedRoute
   ) {}
 
-  ngOnInit() {
-    let urlSegments = this.location.path().split('/');
-    console.log(urlSegments);
-    if (urlSegments[1] === 'join') {
-      this.joinGameCode = urlSegments[2].toUpperCase();
-      setTimeout(() => {
-        this.joinGame();
-      }, 500);
+  async ngOnInit() {
+    try {
+      await this.webSocketService.connect();
+
+      this.messageSubscription = this.webSocketService
+        .getMessages()
+        .subscribe((message) => this.handleMessage(message));
+
+      // Check if we're joining a game from a URL
+      this.route.params.subscribe((params) => {
+        if (params['gameCode']) {
+          this.joinGameCode = params['gameCode'].toUpperCase();
+          this.joinGame();
+        }
+      });
+    } catch (error) {
+      console.error('Failed to connect to WebSocket:', error);
+      // Handle connection error (e.g., show an error message to the user)
     }
+  }
+
+  ngOnDestroy() {
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+    }
+    // You might want to close the WebSocket connection here if appropriate
   }
 
   createGame(): void {
     this.webSocketService.createGame();
-    this.webSocketService.connect().subscribe((message) => {
-      if (message.type === 'gameCreated') {
-        this.gameCode = message.gameCode;
-      } else if (message.type === 'gameStarted') {
-        this.router.navigate(['/game']);
-      }
-    });
   }
 
   joinGame(): void {
-    console.log;
     if (this.joinGameCode.length !== 4) {
       alert('Please enter a valid 4-character game code.');
       return;
     }
     this.webSocketService.joinGame(this.joinGameCode.toUpperCase());
-    this.webSocketService.connect().subscribe((message) => {
-      if (message.type === 'gameStarted') {
+  }
+
+  private handleMessage(message: any) {
+    console.log(message);
+    switch (message.type) {
+      case 'gameCreated':
+        this.gameCode = message.gameCode;
+        break;
+      case 'gameStarted':
         this.router.navigate(['/game']);
-      } else if (message.type === 'error') {
+        break;
+      case 'error':
         alert(message.message);
-      }
-    });
+        break;
+      default:
+        console.log('Unhandled message type:', message.type);
+    }
   }
 }

@@ -71,7 +71,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.startPuzzle();
     this.wsSubscription = this.webSocketService
-      .connect()
+      .getMessages()
       .subscribe((message) => this.handleWebSocketMessage(message));
   }
 
