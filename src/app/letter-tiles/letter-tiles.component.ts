@@ -7,18 +7,14 @@ import {
   transferArrayItem,
 } from '@angular/cdk/drag-drop';
 
-import { DragScrollComponent, DragScrollItemDirective } from 'ngx-drag-scroll';
+import { PUZZLES } from './puzzles';
+import { VALID_WORDS } from './valid-words';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-letter-tiles',
   standalone: true,
-  imports: [
-    CdkDropListGroup,
-    CdkDropList,
-    CdkDrag,
-    DragScrollComponent,
-    DragScrollItemDirective,
-  ],
+  imports: [CdkDropListGroup, CdkDropList, CdkDrag, CommonModule],
   templateUrl: './letter-tiles.component.html',
   styleUrls: ['./letter-tiles.component.scss'],
 })
@@ -27,26 +23,25 @@ export class LetterTilesComponent implements OnInit {
   grid: string[][] = [];
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
-
-  //initial position for the crossword grid
-  // dragPosition = { x: 200, y: 200 };
-  dragPosition = { x: -847, y: -847 };
-
+  dragPosition = { x: -586, y: -586 };
   GRID_SIZE: number = 36;
+  currentPuzzleIndex: number = 0;
+  formedWords: string[] = [];
 
   ngOnInit(): void {
-    this.generateRandomLetters();
+    this.startPuzzle();
+  }
+
+  startPuzzle() {
+    this.setLettersFromPuzzle();
     this.initializeGrid();
     this.generateGridCellIds();
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
+    this.updateFormedWords();
   }
 
-  generateRandomLetters() {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    this.bankLetters = Array.from(
-      { length: 12 },
-      () => alphabet[Math.floor(Math.random() * alphabet.length)]
-    );
+  setLettersFromPuzzle() {
+    this.bankLetters = [...PUZZLES[this.currentPuzzleIndex].letters];
   }
 
   initializeGrid() {
@@ -56,6 +51,7 @@ export class LetterTilesComponent implements OnInit {
   }
 
   generateGridCellIds() {
+    this.gridCellIds = [];
     for (let i = 0; i < this.GRID_SIZE; i++) {
       for (let j = 0; j < this.GRID_SIZE; j++) {
         this.gridCellIds.push(`cell-${i}-${j}`);
@@ -75,45 +71,42 @@ export class LetterTilesComponent implements OnInit {
         event.previousIndex,
         event.currentIndex
       );
-      return;
-    }
+    } else {
+      const [prevI, prevJ] = this.getCellCoordinates(
+        event.previousContainer.id
+      );
+      const [nextI, nextJ] = this.getCellCoordinates(event.container.id);
 
-    const [prevI, prevJ] = this.getCellCoordinates(event.previousContainer.id);
-    const [nextI, nextJ] = this.getCellCoordinates(event.container.id);
-
-    if (event.previousContainer.id === 'letter-bank') {
-      console.log('moving out of letter bank to grid');
-
-      if (this.isEmpty(this.grid[nextI][nextJ])) {
+      if (event.previousContainer.id === 'letter-bank') {
+        if (this.isEmpty(this.grid[nextI][nextJ])) {
+          transferArrayItem(
+            event.previousContainer.data,
+            event.container.data,
+            event.previousIndex,
+            0
+          );
+          this.grid[nextI][nextJ] = event.container.data[0];
+        }
+      } else if (event.container.id === 'letter-bank') {
         transferArrayItem(
           event.previousContainer.data,
           event.container.data,
-          event.previousIndex,
-          0
+          0,
+          event.currentIndex
         );
-        this.grid[nextI][nextJ] = event.container.data[0];
-      }
-    } else if (event.container.id === 'letter-bank') {
-      console.log('moving out of grid to letter bank');
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        0,
-        event.currentIndex
-      );
-      this.grid[prevI][prevJ] = '';
-    } else {
-      console.log('moving tile within grid');
-      console.log(this.grid[nextI][nextJ]);
-
-      if (this.isEmpty(this.grid[nextI][nextJ])) {
-        this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
         this.grid[prevI][prevJ] = '';
       } else {
-        this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
-        this.grid[prevI][prevJ] = '';
+        if (this.isEmpty(this.grid[nextI][nextJ])) {
+          this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
+          this.grid[prevI][prevJ] = '';
+        } else {
+          this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
+          this.grid[prevI][prevJ] = '';
+        }
       }
     }
+
+    this.updateFormedWords();
   }
 
   getCellCoordinates(id: string): [number, number] {
@@ -127,4 +120,51 @@ export class LetterTilesComponent implements OnInit {
     const [i, j] = this.getCellCoordinates(drop.id);
     return this.isEmpty(this.grid[i][j]);
   };
+
+  nextPuzzle() {
+    this.currentPuzzleIndex = (this.currentPuzzleIndex + 1) % PUZZLES.length;
+    this.startPuzzle();
+  }
+
+  updateFormedWords() {
+    this.formedWords = [];
+    this.checkHorizontalWords();
+    this.checkVerticalWords();
+  }
+
+  checkHorizontalWords() {
+    for (let i = 0; i < this.GRID_SIZE; i++) {
+      let word = '';
+      for (let j = 0; j < this.GRID_SIZE; j++) {
+        if (!this.isEmpty(this.grid[i][j])) {
+          word += this.grid[i][j];
+        } else {
+          this.addWordIfValid(word);
+          word = '';
+        }
+      }
+      this.addWordIfValid(word);
+    }
+  }
+
+  checkVerticalWords() {
+    for (let j = 0; j < this.GRID_SIZE; j++) {
+      let word = '';
+      for (let i = 0; i < this.GRID_SIZE; i++) {
+        if (!this.isEmpty(this.grid[i][j])) {
+          word += this.grid[i][j];
+        } else {
+          this.addWordIfValid(word);
+          word = '';
+        }
+      }
+      this.addWordIfValid(word);
+    }
+  }
+
+  addWordIfValid(word: string) {
+    if (word.length >= 2 && !this.formedWords.includes(word)) {
+      this.formedWords.push(word);
+    }
+  }
 }

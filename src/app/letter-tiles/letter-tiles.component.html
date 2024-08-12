@@ -1,48 +1,64 @@
 <div class="container game-container">
   <div
-    cdkDropList
     id="letter-bank"
-    #letterBank="cdkDropList"
+    class="letter-bank m-lr-auto"
+    cdkDropList
+    #letterbank="cdkDropList"
     cdkDropListOrientation="mixed"
     [cdkDropListData]="bankLetters"
     [cdkDropListConnectedTo]="gridCellIds"
-    class="letter-bank m-lr-auto"
     (cdkDropListDropped)="drop($event)"
   >
     @for (letter of bankLetters; track $index) {
     <div class="tile-wrapper" cdkDrag>
-      <div class="m-lr-auto">
+      <div class="letter m-lr-auto">
         {{ letter }}
       </div>
     </div>
     }
   </div>
+
   <div class="fade-out-edges m-lr-auto">
     <div
+      class="grid-container"
       [cdkDragFreeDragPosition]="dragPosition"
       cdkDrag
       cdkDragBoundary=".grid-boundary"
-      class="grid-container"
     >
       @for (row of grid; track row; let i = $index) {
       <div class="grid-row">
         @for (cell of row; track $index; let j = $index) {
         <div
+          class="grid-cell"
           cdkDropList
           [id]="'cell-' + i + '-' + j"
           [cdkDropListData]="[cell]"
           [cdkDropListConnectedTo]="allDropListIds"
           [cdkDropListEnterPredicate]="canEnter"
-          class="grid-cell"
           (cdkDropListDropped)="drop($event)"
         >
           @if (cell) {
-          <div class="letter-tile" cdkDrag>{{ cell }}</div>
+          <div class="letter-tile" cdkDrag>
+            {{ cell }}
+          </div>
           }
         </div>
         }
       </div>
       }
     </div>
+  </div>
+
+  <button (click)="nextPuzzle()">Next Puzzle</button>
+
+  <div class="formed-words">
+    <h3>Formed Words:</h3>
+    <ul>
+      @for (word of formedWords; track word) {
+      <li>
+        {{ word }}
+      </li>
+      }
+    </ul>
   </div>
 </div>
