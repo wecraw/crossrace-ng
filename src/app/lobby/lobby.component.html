@@ -1,1 +1,61 @@
-<p>lobby works!</p>
+<div class="lobby-container">
+  <h1>Multiplayer Game Lobby</h1>
+
+  <div *ngIf="!gameCode">
+    <button mat-raised-button color="primary" (click)="createGame()">
+      Create New Game
+    </button>
+
+    <h2>Join Game</h2>
+    <mat-form-field>
+      <input
+        matInput
+        [(ngModel)]="joinGameCode"
+        placeholder="Enter Game Code"
+      />
+    </mat-form-field>
+    <button mat-raised-button color="accent" (click)="joinGame()">
+      Join Game
+    </button>
+  </div>
+
+  <div *ngIf="gameCode">
+    <h2>Game Lobby: {{ gameCode }}</h2>
+
+    <div>
+      <h3>Share this link to invite players:</h3>
+      <p>{{ gameShareUrl }}</p>
+      <button mat-raised-button [cdkCopyToClipboard]="gameShareUrl">
+        Copy
+      </button>
+    </div>
+
+    <div>
+      <h3>Your Display Name</h3>
+      <mat-form-field>
+        <input
+          matInput
+          [(ngModel)]="displayName"
+          placeholder="Enter Display Name"
+        />
+      </mat-form-field>
+      <button mat-button (click)="updateDisplayName()">Update Name</button>
+    </div>
+
+    <h3>Players in Lobby</h3>
+    <mat-list>
+      <mat-list-item *ngFor="let player of players">
+        {{ player.name }} {{ player.id === players[0].id ? "(Host)" : "" }}
+      </mat-list-item>
+    </mat-list>
+
+    <button
+      mat-raised-button
+      color="primary"
+      *ngIf="isHost"
+      (click)="startGame()"
+    >
+      Start Game
+    </button>
+  </div>
+</div>

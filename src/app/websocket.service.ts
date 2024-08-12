@@ -65,6 +65,14 @@ export class WebSocketService {
     this.send({ action: 'join', gameCode });
   }
 
+  startGame(gameCode: string): void {
+    this.send({ action: 'startGame', gameCode });
+  }
+
+  updateDisplayName(displayName: string): void {
+    this.send({ action: 'updateDisplayName', displayName });
+  }
+
   announceWin(): void {
     this.send({ action: 'win' });
   }

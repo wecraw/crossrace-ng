@@ -6,7 +6,8 @@ import { LetterTilesComponent } from './app/letter-tiles/letter-tiles.component'
 import { WebSocketService } from './app/websocket.service';
 
 const routes: Routes = [
-  { path: '', component: LobbyComponent },
+  { path: '', component: LetterTilesComponent },
+  { path: 'lobby', component: LobbyComponent },
   { path: 'game', component: LetterTilesComponent },
   { path: 'join/:gameCode', component: LobbyComponent },
   { path: '**', redirectTo: '' },

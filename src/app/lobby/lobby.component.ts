@@ -1,37 +1,51 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
+import { ClipboardModule } from '@angular/cdk/clipboard';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatListModule } from '@angular/material/list';
+import { MatInputModule } from '@angular/material/input';
+import { DialogAnimationsExampleDialog } from './dialog/dialog.component';
 
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div>
-      <h2>Word Game Lobby</h2>
-      <button (click)="createGame()">Create New Game</button>
-      <div *ngIf="gameCode">
-        Share this code to invite a player: {{ gameCode }}
-      </div>
-      <div>
-        <input
-          [(ngModel)]="joinGameCode"
-          placeholder="Enter 4-character Game Code"
-          maxlength="4"
-          style="text-transform: uppercase;"
-        />
-        <button (click)="joinGame()">Join Game</button>
-      </div>
-    </div>
-  `,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ClipboardModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatListModule,
+    MatInputModule,
+  ],
+  templateUrl: './lobby.component.html',
+  styleUrls: ['./lobby.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LobbyComponent implements OnInit, OnDestroy {
   gameCode: string | null = null;
   joinGameCode: string = '';
+  gameShareUrl: string = '';
+  displayName: string = '';
+  isHost: boolean = false;
+  players: { id: string; name: string }[] = [];
   private messageSubscription!: Subscription;
+
+  joining: boolean = false;
+  readonly dialog = inject(MatDialog);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(
     private webSocketService: WebSocketService,
@@ -40,6 +54,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
+    // this.openDialog();
     try {
       await this.webSocketService.connect();
 
@@ -47,16 +62,16 @@ export class LobbyComponent implements OnInit, OnDestroy {
         .getMessages()
         .subscribe((message) => this.handleMessage(message));
 
-      // Check if we're joining a game from a URL
       this.route.params.subscribe((params) => {
         if (params['gameCode']) {
+          this.joining = true;
+          // this.openDialog();
           this.joinGameCode = params['gameCode'].toUpperCase();
           this.joinGame();
         }
       });
     } catch (error) {
       console.error('Failed to connect to WebSocket:', error);
-      // Handle connection error (e.g., show an error message to the user)
     }
   }
 
@@ -64,7 +79,16 @@ export class LobbyComponent implements OnInit, OnDestroy {
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
-    // You might want to close the WebSocket connection here if appropriate
+  }
+
+  openDialog() {
+    const dialogRef = this.dialog.open(DialogAnimationsExampleDialog, {
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log(`Dialog result: ${result}`);
+    });
   }
 
   createGame(): void {
@@ -79,11 +103,47 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.webSocketService.joinGame(this.joinGameCode.toUpperCase());
   }
 
+  startGame(): void {
+    if (this.isHost) {
+      this.webSocketService.startGame(this.gameCode!);
+    }
+  }
+
+  updateDisplayName(): void {
+    this.webSocketService.updateDisplayName(this.displayName);
+  }
+
+  getShareUrl() {
+    return window.location.origin + '/join/' + this.gameCode;
+  }
+
   private handleMessage(message: any) {
     console.log(message);
     switch (message.type) {
       case 'gameCreated':
         this.gameCode = message.gameCode;
+        this.gameShareUrl = this.getShareUrl();
+        this.isHost = true;
+        this.displayName = message.displayName;
+        this.players = [{ id: message.playerId, name: message.displayName }];
+        break;
+      case 'joinedGame':
+        this.gameCode = message.gameCode;
+        this.gameShareUrl = this.getShareUrl();
+        this.displayName = message.displayName;
+        this.players = message.players;
+        break;
+      case 'playerJoined':
+        this.players.push({ id: message.playerId, name: message.displayName });
+        break;
+      case 'playerLeft':
+        this.players = this.players.filter((p) => p.id !== message.playerId);
+        break;
+      case 'displayNameUpdated':
+        const player = this.players.find((p) => p.id === message.playerId);
+        if (player) {
+          player.name = message.displayName;
+        }
         break;
       case 'gameStarted':
         this.router.navigate(['/game']);
@@ -94,5 +154,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       default:
         console.log('Unhandled message type:', message.type);
     }
+    this.cdr.detectChanges();
   }
 }
