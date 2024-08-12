@@ -30,18 +30,6 @@
       </button>
     </div>
 
-    <div>
-      <h3>Your Display Name</h3>
-      <mat-form-field>
-        <input
-          matInput
-          [(ngModel)]="displayName"
-          placeholder="Enter Display Name"
-        />
-      </mat-form-field>
-      <button mat-button (click)="updateDisplayName()">Update Name</button>
-    </div>
-
     <h3>Players in Lobby</h3>
     <mat-list>
       <mat-list-item *ngFor="let player of players">

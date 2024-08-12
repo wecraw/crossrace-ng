@@ -104,13 +104,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   startGame(): void {
-    if (this.isHost) {
-      this.webSocketService.startGame(this.gameCode!);
+    if (this.isHost && this.gameCode) {
+      console.log('Starting game:', this.gameCode);
+      this.webSocketService.startGame(this.gameCode);
+    } else {
+      console.error('Cannot start game: not host or no game code');
     }
-  }
-
-  updateDisplayName(): void {
-    this.webSocketService.updateDisplayName(this.displayName);
   }
 
   getShareUrl() {
@@ -118,7 +117,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   private handleMessage(message: any) {
-    console.log(message);
+    console.log('Received message in lobby:', message);
     switch (message.type) {
       case 'gameCreated':
         this.gameCode = message.gameCode;
@@ -139,16 +138,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'playerLeft':
         this.players = this.players.filter((p) => p.id !== message.playerId);
         break;
-      case 'displayNameUpdated':
-        const player = this.players.find((p) => p.id === message.playerId);
-        if (player) {
-          player.name = message.displayName;
-        }
-        break;
       case 'gameStarted':
+        console.log('Game started, navigating to game page');
         this.router.navigate(['/game']);
         break;
       case 'error':
+        console.error('Received error:', message.message);
         alert(message.message);
         break;
       default:

@@ -20,11 +20,12 @@ export class WebSocketService {
         resolve();
       };
 
-      this.socket.onclose = () => {
+      this.socket.onclose = (event) => {
         this.connectionStatus.next(false);
       };
 
       this.socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
         reject(error);
       };
 
@@ -48,13 +49,20 @@ export class WebSocketService {
         .subscribe(() => resolve());
     });
   }
-
   send(message: any): void {
     if (this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(message));
+      try {
+        this.socket.send(JSON.stringify(message));
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
     } else {
       console.error('WebSocket is not open. Message not sent:', message);
     }
+  }
+
+  startGame(gameCode: string): void {
+    this.send({ action: 'startGame', gameCode });
   }
 
   createGame(): void {
@@ -63,10 +71,6 @@ export class WebSocketService {
 
   joinGame(gameCode: string): void {
     this.send({ action: 'join', gameCode });
-  }
-
-  startGame(gameCode: string): void {
-    this.send({ action: 'startGame', gameCode });
   }
 
   updateDisplayName(displayName: string): void {
