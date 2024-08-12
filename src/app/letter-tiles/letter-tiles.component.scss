@@ -62,6 +62,12 @@
   margin-top: 20px;
 }
 
+.formed-words {
+  .valid {
+    color: green;
+  }
+}
+
 .grid-container {
   display: flex;
   flex-direction: column;
@@ -93,6 +99,14 @@
   cursor: move;
   color: white;
   border-radius: 4px;
+}
+
+.letter-tile.valid {
+  background-color: #90ee90; /* Light green */
+}
+
+.letter-tile.invalid {
+  background-color: #ffa07a; /* Light salmon */
 }
 
 .grid-boundary {

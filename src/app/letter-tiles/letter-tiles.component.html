@@ -54,9 +54,9 @@
   <div class="formed-words">
     <h3>Formed Words:</h3>
     <ul>
-      @for (word of formedWords; track word) {
-      <li>
-        {{ word }}
+      @for (word of formedWords; track $index) {
+      <li [ngClass]="{ valid: word.isValid }">
+        {{ word.word }}
       </li>
       }
     </ul>

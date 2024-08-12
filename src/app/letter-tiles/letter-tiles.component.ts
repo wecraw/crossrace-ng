@@ -11,6 +11,11 @@ import { PUZZLES } from './puzzles';
 import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
 
+interface ValidatedWord {
+  word: string;
+  isValid: boolean;
+}
+
 @Component({
   selector: 'app-letter-tiles',
   standalone: true,
@@ -26,7 +31,12 @@ export class LetterTilesComponent implements OnInit {
   dragPosition = { x: -586, y: -586 };
   GRID_SIZE: number = 36;
   currentPuzzleIndex: number = 0;
-  formedWords: string[] = [];
+  formedWords: ValidatedWord[] = [];
+  validWords: Set<string>;
+
+  constructor() {
+    this.validWords = new Set(VALID_WORDS);
+  }
 
   ngOnInit(): void {
     this.startPuzzle();
@@ -163,8 +173,10 @@ export class LetterTilesComponent implements OnInit {
   }
 
   addWordIfValid(word: string) {
-    if (word.length >= 2 && !this.formedWords.includes(word)) {
-      this.formedWords.push(word);
+    if (word.length >= 2 && !this.formedWords.some((w) => w.word === word)) {
+      const isValid =
+        word.length >= 3 && this.validWords.has(word.toLowerCase());
+      this.formedWords.push({ word, isValid });
     }
   }
 }
