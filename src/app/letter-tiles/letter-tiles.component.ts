@@ -92,6 +92,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
       case 'gameEnded':
         this.isGameOver = true;
         this.isWinner = message.winner;
+        console.log(message.playerId);
         this.toggleTimer();
         break;
     }
@@ -256,7 +257,6 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
       console.log('you win');
     } else {
       console.log('you win');
-      this.toggleTimer();
     }
     this.toggleTimer();
     return true;

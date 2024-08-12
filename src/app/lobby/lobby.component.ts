@@ -13,7 +13,7 @@ import { WebSocketService } from '../websocket.service';
       <h2>Word Game Lobby</h2>
       <button (click)="createGame()">Create New Game</button>
       <div *ngIf="gameCode">
-        Share this code to invite a player: {{ gameCode }}
+        Share this URL to invite a player: localhost:4200/join/{{ gameCode }}
       </div>
       <div>
         <input
@@ -46,7 +46,7 @@ export class LobbyComponent implements OnInit {
       this.joinGameCode = urlSegments[2].toUpperCase();
       setTimeout(() => {
         this.joinGame();
-      }, 1000);
+      }, 500);
     }
   }
 
