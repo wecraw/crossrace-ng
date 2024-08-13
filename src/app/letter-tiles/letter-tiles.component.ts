@@ -4,6 +4,7 @@ import {
   inject,
   OnDestroy,
   OnInit,
+  Renderer2,
   ViewChild,
 } from '@angular/core';
 import {
@@ -22,6 +23,7 @@ import { TimerComponent } from '../timer/timer.component';
 
 import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
+import * as confetti from 'canvas-confetti';
 
 interface ValidatedWord {
   word: string;
@@ -76,7 +78,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   isWinner: boolean = false;
   isGameStarted: boolean = false;
 
-  constructor() {
+  constructor(private renderer2: Renderer2, private elementRef: ElementRef) {
     this.validWords = new Set(VALID_WORDS);
   }
 
@@ -187,11 +189,11 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
       this.webSocketService.announceWin();
       console.log('announcing win');
     } else {
-      alert('you win');
       this.toggleTimer();
       this.isGameStarted = false;
       this.resetTimer();
     }
+    this.renderConfetti();
     return true;
   }
 
@@ -494,5 +496,46 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     }
 
     this.updateFormedWords();
+  }
+  renderConfetti() {
+    const canvas = this.renderer2.createElement('canvas');
+
+    // Set canvas dimensions to match the window size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Set canvas style to position it correctly
+    this.renderer2.setStyle(canvas, 'position', 'fixed');
+    this.renderer2.setStyle(canvas, 'top', '0');
+    this.renderer2.setStyle(canvas, 'left', '0');
+    this.renderer2.setStyle(canvas, 'pointer-events', 'none');
+
+    this.renderer2.appendChild(this.elementRef.nativeElement, canvas);
+
+    const myConfetti = confetti.create(canvas, {
+      resize: true, // will fit all screen sizes
+    });
+
+    myConfetti({
+      particleCount: 150,
+      ticks: 150,
+      spread: 70,
+      angle: 60,
+      origin: { y: 0.5, x: 0 },
+    });
+
+    myConfetti({
+      particleCount: 150,
+      ticks: 150,
+      spread: 70,
+      angle: 120,
+      origin: { y: 0.5, x: 1 },
+    });
+
+    // Add event listener to resize canvas when window is resized
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
   }
 }
