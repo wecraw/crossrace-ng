@@ -84,15 +84,8 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private resetTimer() {
-    if (this.timerComponent) {
-      this.timerComponent.resetTimer();
-    }
-  }
-
   startRandomPuzzle() {
-    // this.currentPuzzleIndex = Math.floor(Math.random() * 1000);
-    this.currentPuzzleIndex = 0;
+    this.currentPuzzleIndex = Math.floor(Math.random() * 1000);
     this.startPuzzle();
   }
 
@@ -102,13 +95,15 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   handleWebSocketMessage(message: any): void {
+    console.log(message);
     switch (message.type) {
       case 'gameStarted':
-        console.log('game started!');
         this.isMultiplayer = true;
         this.isGameStarted = true;
+        this.startSeededPuzzle(message.gameSeed);
         break;
       case 'gameEnded':
+        console.log('heard game ended', message);
         this.isGameOver = true;
         this.isWinner = message.winner;
         if (this.isWinner) {
@@ -136,123 +131,16 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     this.bankLetters = [...PUZZLES[this.currentPuzzleIndex].letters];
   }
 
-  toggleTimer() {
-    this.timerRunning = !this.timerRunning;
-  }
-
-  onTimeChanged(time: number) {
-    this.currentTime = time;
-  }
-
-  initializeGrid() {
-    this.dragPosition = { x: -586, y: -586 };
-
-    this.grid = Array(this.GRID_SIZE)
-      .fill(null)
-      .map(() => Array(this.GRID_SIZE).fill(null));
-  }
-
-  initializeValidLetterIndices() {
-    this.validLetterIndices = Array(this.GRID_SIZE)
-      .fill(null)
-      .map(() => Array(this.GRID_SIZE).fill(false));
-  }
-
-  generateGridCellIds() {
-    this.gridCellIds = [];
-    for (let i = 0; i < this.GRID_SIZE; i++) {
-      for (let j = 0; j < this.GRID_SIZE; j++) {
-        this.gridCellIds.push(`cell-${i}-${j}`);
-      }
-    }
-  }
-
-  isEmpty(cell: string) {
-    return cell === null || cell === '';
-  }
-
-  dragStarted(event: CdkDragStart) {
-    const [i, j] = this.getCellCoordinates(event.source.dropContainer.id);
-    if (i !== -1 && j !== -1) {
-      // Only handle drag start from grid cells, not the letter bank
-      const originalLetter = this.grid[i][j];
-      this.grid[i][j] = ''; // Temporarily remove the letter from the grid
-      this.updateFormedWords(); // Revalidate words
-      this.grid[i][j] = originalLetter; // Restore the letter
-    }
-  }
-
-  drop(event: CdkDragDrop<string[]>) {
-    if (event.previousContainer === event.container) {
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex
-      );
-    } else {
-      const [prevI, prevJ] = this.getCellCoordinates(
-        event.previousContainer.id
-      );
-      const [nextI, nextJ] = this.getCellCoordinates(event.container.id);
-
-      if (event.previousContainer.id === 'letter-bank') {
-        if (this.isEmpty(this.grid[nextI][nextJ])) {
-          transferArrayItem(
-            event.previousContainer.data,
-            event.container.data,
-            event.previousIndex,
-            0
-          );
-          this.grid[nextI][nextJ] = event.container.data[0];
-        }
-      } else if (event.container.id === 'letter-bank') {
-        transferArrayItem(
-          event.previousContainer.data,
-          event.container.data,
-          0,
-          event.currentIndex
-        );
-        this.grid[prevI][prevJ] = '';
-      } else {
-        if (this.isEmpty(this.grid[nextI][nextJ])) {
-          this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
-          this.grid[prevI][prevJ] = '';
-        } else {
-          const temp = this.grid[nextI][nextJ];
-          this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
-          this.grid[prevI][prevJ] = temp;
-        }
-      }
-    }
-
-    this.updateFormedWords();
-  }
-
-  getCellCoordinates(id: string): [number, number] {
-    if (id === 'letter-bank') return [-1, -1];
-    const [_, i, j] = id.split('-').map(Number);
-    return [i, j];
-  }
-
-  canEnter = (drag: CdkDrag, drop: CdkDropList) => {
-    if (drop.id === 'letter-bank') return true;
-    const [i, j] = this.getCellCoordinates(drop.id);
-    return this.isEmpty(this.grid[i][j]);
-  };
-
   nextPuzzle() {
     this.currentPuzzleIndex = (this.currentPuzzleIndex + 1) % PUZZLES.length;
     this.startPuzzle();
   }
 
-  updateFormedWords() {
-    this.formedWords = [];
-    this.resetValidLetterIndices();
-    this.checkHorizontalWords();
-    this.checkVerticalWords();
-    this.checkWin();
+  resetPuzzle() {
+    this.startPuzzle();
   }
+
+  // Validators===========================================================
 
   checkWin(): boolean {
     // Check if all letters from the bank are used
@@ -281,6 +169,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     // If all conditions are met, it's a win
     if (this.isMultiplayer) {
       this.webSocketService.announceWin();
+      console.log('announcing win');
     } else {
       alert('you win');
       this.toggleTimer();
@@ -332,8 +221,12 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     return this.bankLetters.length < 12;
   }
 
-  resetPuzzle() {
-    this.startPuzzle();
+  updateFormedWords() {
+    this.formedWords = [];
+    this.resetValidLetterIndices();
+    this.checkHorizontalWords();
+    this.checkVerticalWords();
+    this.checkWin();
   }
 
   // Depth-First Search helper function
@@ -421,5 +314,119 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
         }
       }
     }
+  }
+
+  // Timer===============================================================
+
+  toggleTimer() {
+    this.timerRunning = !this.timerRunning;
+  }
+
+  onTimeChanged(time: number) {
+    this.currentTime = time;
+  }
+
+  private resetTimer() {
+    if (this.timerComponent) {
+      this.timerComponent.resetTimer();
+    }
+  }
+
+  // DOM Helpers=========================================================
+
+  isEmpty(cell: string) {
+    return cell === null || cell === '';
+  }
+
+  dragStarted(event: CdkDragStart) {
+    const [i, j] = this.getCellCoordinates(event.source.dropContainer.id);
+    if (i !== -1 && j !== -1) {
+      // Only handle drag start from grid cells, not the letter bank
+      const originalLetter = this.grid[i][j];
+      this.grid[i][j] = ''; // Temporarily remove the letter from the grid
+      this.updateFormedWords(); // Revalidate words
+      this.grid[i][j] = originalLetter; // Restore the letter
+    }
+  }
+
+  initializeGrid() {
+    this.dragPosition = { x: -586, y: -586 };
+
+    this.grid = Array(this.GRID_SIZE)
+      .fill(null)
+      .map(() => Array(this.GRID_SIZE).fill(null));
+  }
+
+  initializeValidLetterIndices() {
+    this.validLetterIndices = Array(this.GRID_SIZE)
+      .fill(null)
+      .map(() => Array(this.GRID_SIZE).fill(false));
+  }
+
+  generateGridCellIds() {
+    this.gridCellIds = [];
+    for (let i = 0; i < this.GRID_SIZE; i++) {
+      for (let j = 0; j < this.GRID_SIZE; j++) {
+        this.gridCellIds.push(`cell-${i}-${j}`);
+      }
+    }
+  }
+  getCellCoordinates(id: string): [number, number] {
+    if (id === 'letter-bank') return [-1, -1];
+    const [_, i, j] = id.split('-').map(Number);
+    return [i, j];
+  }
+
+  canEnter = (drag: CdkDrag, drop: CdkDropList) => {
+    if (drop.id === 'letter-bank') return true;
+    const [i, j] = this.getCellCoordinates(drop.id);
+    return this.isEmpty(this.grid[i][j]);
+  };
+
+  drop(event: CdkDragDrop<string[]>) {
+    if (event.previousContainer === event.container) {
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
+    } else {
+      const [prevI, prevJ] = this.getCellCoordinates(
+        event.previousContainer.id
+      );
+      const [nextI, nextJ] = this.getCellCoordinates(event.container.id);
+
+      if (event.previousContainer.id === 'letter-bank') {
+        if (this.isEmpty(this.grid[nextI][nextJ])) {
+          transferArrayItem(
+            event.previousContainer.data,
+            event.container.data,
+            event.previousIndex,
+            0
+          );
+          this.grid[nextI][nextJ] = event.container.data[0];
+        }
+      } else if (event.container.id === 'letter-bank') {
+        transferArrayItem(
+          event.previousContainer.data,
+          event.container.data,
+          0,
+          event.currentIndex
+        );
+        this.grid[prevI][prevJ] = '';
+      } else {
+        if (this.isEmpty(this.grid[nextI][nextJ])) {
+          this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
+          this.grid[prevI][prevJ] = '';
+        } else {
+          const temp = this.grid[nextI][nextJ];
+          this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
+          this.grid[prevI][prevJ] = temp;
+        }
+      }
+    }
+
+    this.updateFormedWords();
   }
 }

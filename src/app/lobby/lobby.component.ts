@@ -82,7 +82,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       this.route.params.subscribe((params) => {
         if (params['gameCode']) {
           this.joining = true;
-          // this.openDialog();
+          this.openDialog();
           this.joinGameCode = params['gameCode'].toUpperCase();
           this.joinGame();
         }
@@ -112,9 +112,13 @@ export class LobbyComponent implements OnInit, OnDestroy {
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log(`Dialog result: ${result}`);
-    });
+    // dialogRef.afterClosed().subscribe((result) => {
+    //   console.log(`Dialog result: ${result}`);
+    // });
+  }
+
+  closeDialog() {
+    this.dialog.closeAll();
   }
 
   createGame(): void {
@@ -157,6 +161,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'playerList':
         if (!this.isHost) {
           this.gameCode = this.joinGameCode;
+          this.closeDialog();
         }
         this.gameShareUrl = this.getShareUrl();
         this.displayName = message.displayName;
