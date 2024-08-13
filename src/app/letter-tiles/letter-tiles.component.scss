@@ -21,6 +21,29 @@
   margin-right: auto;
 }
 
+.grid-wrapper {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  overflow: hidden;
+  margin: 162px auto 0;
+}
+
+.grid-fade-wrapper {
+  position: absolute;
+  z-index: -1000;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+}
+
+.ab-center {
+  position: absolute;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+}
+
 .letter-bank {
   display: flex;
   flex-wrap: wrap;
@@ -33,6 +56,7 @@
   // padding: 10px 10px 5px 10px;
   border-radius: 16px;
   margin-bottom: 35px;
+  top: 100px;
 }
 
 .cdk-drag-preview {
@@ -69,6 +93,7 @@
 }
 
 .grid-container {
+  position: absolute;
   display: flex;
   flex-direction: column;
   width: fit-content;
@@ -113,8 +138,12 @@
 }
 
 .fade-out-edges {
-  max-width: 400px;
-  max-height: 400px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
   --mask-size: 20px;
   mask-image: linear-gradient(
       to right,
@@ -135,6 +164,7 @@
   mask-repeat: no-repeat;
   mask-composite: intersect;
 }
+
 .hidden {
   display: none;
 }

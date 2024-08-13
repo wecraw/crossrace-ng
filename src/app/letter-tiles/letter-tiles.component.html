@@ -1,7 +1,7 @@
 <div class="container game-container">
   <div
     id="letter-bank"
-    class="letter-bank m-lr-auto"
+    class="ab-center letter-bank m-lr-auto"
     cdkDropList
     #letterbank="cdkDropList"
     cdkDropListOrientation="mixed"
@@ -25,9 +25,12 @@
       Start
     </button>
   </div>
+</div>
 
+<div #gridWrapper class="grid-wrapper">
   <div class="fade-out-edges m-lr-auto">
     <div
+      #gridContainer
       class="grid-container"
       [cdkDragFreeDragPosition]="dragPosition"
       cdkDrag
@@ -61,31 +64,18 @@
       }
     </div>
   </div>
-  <div class="lower-menu m-lr-auto">
-    <app-timer
-      [ngClass]="{ hidden: !isGameStarted }"
-      [isRunning]="timerRunning"
-      (timeChanged)="onTimeChanged($event)"
-    >
-    </app-timer>
-    <i
-      class="material-icons refresh"
-      (click)="startPuzzle()"
-      [ngClass]="{ disabled: !anyTilePlaced(), hidden: !isGameStarted }"
-      >refresh</i
-    >
-  </div>
-
-  <div *ngIf="debug" class="formed-words">
-    <button (click)="nextPuzzle()">Next Puzzle</button>
-
-    <h3>Formed Words:</h3>
-    <ul>
-      @for (word of formedWords; track $index) {
-      <li [ngClass]="{ valid: word.isValid }">
-        {{ word.word }}
-      </li>
-      }
-    </ul>
-  </div>
+</div>
+<div class="lower-menu m-lr-auto">
+  <app-timer
+    [ngClass]="{ hidden: !isGameStarted }"
+    [isRunning]="timerRunning"
+    (timeChanged)="onTimeChanged($event)"
+  >
+  </app-timer>
+  <i
+    class="material-icons refresh"
+    (click)="startPuzzle()"
+    [ngClass]="{ disabled: !anyTilePlaced(), hidden: !isGameStarted }"
+    >refresh</i
+  >
 </div>

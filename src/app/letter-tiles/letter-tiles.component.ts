@@ -1,4 +1,11 @@
-import { Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import {
   CdkDragDrop,
   CdkDrag,
@@ -36,6 +43,10 @@ interface ValidatedWord {
 })
 export class LetterTilesComponent implements OnInit, OnDestroy {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;
+  @ViewChild('gridWrapper') gridWrapper!: ElementRef;
+  @ViewChild('gridContainer') gridContainer!: ElementRef;
+
+  private touchMoveListener!: (e: TouchEvent) => void;
   private webSocketService = inject(WebSocketService);
 
   bankLetters: string[] = [];
@@ -78,7 +89,12 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
       .subscribe((message) => this.handleWebSocketMessage(message));
   }
 
+  ngAfterViewInit() {
+    this.setupTouchEventHandling();
+  }
+
   ngOnDestroy(): void {
+    this.removeTouchEventHandling();
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
     }
@@ -333,6 +349,39 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   // DOM Helpers=========================================================
+
+  private setupTouchEventHandling() {
+    const wrapper = this.gridWrapper.nativeElement;
+    const container = this.gridContainer.nativeElement;
+
+    this.touchMoveListener = (e: TouchEvent) => {
+      console.log('touch me');
+      const touch = e.touches[0];
+      const wrapperRect = wrapper.getBoundingClientRect();
+
+      if (
+        touch.clientX < wrapperRect.left ||
+        touch.clientX > wrapperRect.right ||
+        touch.clientY < wrapperRect.top ||
+        touch.clientY > wrapperRect.bottom
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    container.addEventListener('touchmove', this.touchMoveListener, {
+      passive: false,
+    });
+  }
+
+  private removeTouchEventHandling() {
+    if (this.touchMoveListener) {
+      this.gridContainer.nativeElement.removeEventListener(
+        'touchmove',
+        this.touchMoveListener
+      );
+    }
+  }
 
   isEmpty(cell: string) {
     return cell === null || cell === '';
