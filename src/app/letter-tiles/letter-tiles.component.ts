@@ -111,7 +111,11 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
       case 'gameEnded':
         this.isGameOver = true;
         this.isWinner = message.winner;
-        console.log(message.playerId);
+        if (this.isWinner) {
+          alert('You win!');
+        } else {
+          alert('You lose!');
+        }
         this.toggleTimer();
         break;
     }
@@ -277,7 +281,6 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     // If all conditions are met, it's a win
     if (this.isMultiplayer) {
       this.webSocketService.announceWin();
-      alert('you win');
     } else {
       alert('you win');
       this.toggleTimer();
