@@ -1,13 +1,27 @@
 <div class="wrapper">
-  <mat-dialog-content>
+  <mat-dialog-content [ngClass]="{ 'pb-0 pt-3': data.showConfirm }">
     <div class="d-flex">
-      <h1 mat-dialog-title>Joining game</h1>
+      <h1 mat-dialog-title>{{ data.dialogText }}</h1>
 
+      @if(data.showSpinner) {
       <mat-spinner
         [diameter]="25"
         class="spinner"
         style="margin-left: auto; margin-right: auto"
       ></mat-spinner>
+      }
     </div>
   </mat-dialog-content>
+  @if(data.showConfirm){
+  <mat-dialog-actions>
+    <button
+      style="margin-left: auto"
+      mat-button
+      cdkFocusInitial
+      (click)="close()"
+    >
+      Ok
+    </button>
+  </mat-dialog-actions>
+  }
 </div>

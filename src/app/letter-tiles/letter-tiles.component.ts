@@ -328,6 +328,24 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
             this.validLetterIndices[startI + k][startJ] = true;
           }
         }
+      } else if (word.length === 2) {
+        // Mark letters in two-letter words as invalid
+        this.markInvalidLetters(startI, startJ, direction, word.length);
+      }
+    }
+  }
+
+  markInvalidLetters(
+    startI: number,
+    startJ: number,
+    direction: 'horizontal' | 'vertical',
+    length: number
+  ) {
+    for (let k = 0; k < length; k++) {
+      if (direction === 'horizontal') {
+        this.validLetterIndices[startI][startJ + k] = false;
+      } else {
+        this.validLetterIndices[startI + k][startJ] = false;
       }
     }
   }
@@ -355,7 +373,6 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     const container = this.gridContainer.nativeElement;
 
     this.touchMoveListener = (e: TouchEvent) => {
-      console.log('touch me');
       const touch = e.touches[0];
       const wrapperRect = wrapper.getBoundingClientRect();
 

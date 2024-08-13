@@ -46,7 +46,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
   players: { id: string; displayName: string }[] = [];
   private messageSubscription!: Subscription;
 
-  joining: boolean = false;
   readonly dialog = inject(MatDialog);
   private cdr = inject(ChangeDetectorRef);
 
@@ -58,6 +57,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
   ) {}
 
   joinGameForm!: FormGroup;
+
+  dialogSettingsJoin: any = {
+    dialogText: 'Joining game',
+    showSpinner: true,
+    showConfirm: false,
+  };
 
   async ngOnInit() {
     this.joinGameForm = this.fb.group({
@@ -71,7 +76,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         ],
       ],
     });
-    // this.openDialog();
     try {
       await this.webSocketService.connect();
 
@@ -81,9 +85,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
       this.route.params.subscribe((params) => {
         if (params['gameCode']) {
-          this.joining = true;
-          this.openDialog();
-          this.joinGameCode = params['gameCode'].toUpperCase();
+          this.openDialog(this.dialogSettingsJoin, true);
+          this.joinGameForm.patchValue({
+            gameCode: params['gameCode'].toUpperCase(),
+          });
           this.joinGame();
         }
       });
@@ -107,14 +112,17 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.joinGameForm.patchValue({ gameCode: input.value });
   }
 
-  openDialog() {
-    const dialogRef = this.dialog.open(DialogAnimationsExampleDialog, {
-      disableClose: true,
-    });
-
-    // dialogRef.afterClosed().subscribe((result) => {
-    //   console.log(`Dialog result: ${result}`);
-    // });
+  openDialog(data: any, disableClose: boolean) {
+    if (!disableClose) {
+      const dialogRef = this.dialog.open(DialogAnimationsExampleDialog, {
+        data: data,
+      });
+    } else {
+      const dialogRef = this.dialog.open(DialogAnimationsExampleDialog, {
+        data: data,
+        disableClose: true,
+      });
+    }
   }
 
   closeDialog() {
@@ -126,11 +134,13 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   joinGame(): void {
-    if (this.joinGameCode.length !== 4) {
+    const gameCode = this.joinGameForm.get('gameCode')?.value;
+    if (gameCode && gameCode.length === 4) {
+      this.openDialog(this.dialogSettingsJoin, true);
+      this.webSocketService.joinGame(gameCode.toUpperCase());
+    } else {
       alert('Please enter a valid 4-character game code.');
-      return;
     }
-    this.webSocketService.joinGame(this.joinGameCode.toUpperCase());
   }
 
   startGame(): void {
@@ -158,9 +168,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
           { id: message.playerId, displayName: message.displayName },
         ];
         break;
-      case 'playerList':
+      case 'playerList': //effectively when a new player (or self) joins, triggered when the player list is pushed from server
         if (!this.isHost) {
-          this.gameCode = this.joinGameCode;
+          this.gameCode = this.joinGameForm.get('gameCode')?.value;
           this.closeDialog();
         }
         this.gameShareUrl = this.getShareUrl();
@@ -168,12 +178,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         this.players = message.players;
         console.log(this.players);
         break;
-      // case 'playerJoined':
-      //   this.players.push({
-      //     id: message.playerId,
-      //     displayName: message.displayName,
-      //   });
-      //   break;
       case 'playerLeft':
         this.players = this.players.filter((p) => p.id !== message.playerId);
         break;
@@ -183,7 +187,17 @@ export class LobbyComponent implements OnInit, OnDestroy {
         break;
       case 'error':
         console.error('Received error:', message.message);
-        alert(message.message);
+        if (message.message === 'Game not found') {
+          this.closeDialog();
+          this.openDialog(
+            {
+              dialogText: 'Game not found',
+              showSpinner: false,
+              showConfirm: true,
+            },
+            false
+          );
+        }
         break;
       default:
         console.log('Unhandled message type:', message.type);
