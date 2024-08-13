@@ -21,6 +21,7 @@ import {
       .time {
         font-size: 2em;
         margin: 20px 0;
+        color: #444;
       }
     `,
   ],
@@ -28,6 +29,7 @@ import {
 export class TimerComponent implements OnDestroy, OnChanges {
   @Input() isRunning = false;
   @Output() timeChanged = new EventEmitter<number>();
+  @Output() restart = new EventEmitter<String>();
 
   private timer: any;
   private seconds = 0;
@@ -46,6 +48,12 @@ export class TimerComponent implements OnDestroy, OnChanges {
         this.stopStopwatch();
       }
     }
+  }
+
+  resetTimer() {
+    this.stopStopwatch();
+    this.seconds = 0;
+    this.timeChanged.emit(this.seconds);
   }
 
   private startStopwatch(): void {

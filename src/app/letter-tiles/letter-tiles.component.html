@@ -16,6 +16,14 @@
       </div>
     </div>
     }
+    <button
+      *ngIf="!isGameStarted"
+      (click)="startRandomPuzzle()"
+      class="btn btn-primary m-auto"
+      style="max-height: 40px; min-width: 130px"
+    >
+      Start
+    </button>
   </div>
 
   <div class="fade-out-edges m-lr-auto">
@@ -60,9 +68,6 @@
       (timeChanged)="onTimeChanged($event)"
     >
     </app-timer>
-    <div *ngIf="!isGameStarted" class="waiting">
-      Waiting for player to connect...
-    </div>
     <i
       class="material-icons refresh"
       (click)="startPuzzle()"

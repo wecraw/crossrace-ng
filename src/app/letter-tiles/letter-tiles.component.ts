@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import {
   CdkDragDrop,
   CdkDrag,
@@ -35,6 +35,7 @@ interface ValidatedWord {
   styleUrls: ['./letter-tiles.component.scss'],
 })
 export class LetterTilesComponent implements OnInit, OnDestroy {
+  @ViewChild(TimerComponent) timerComponent!: TimerComponent;
   private webSocketService = inject(WebSocketService);
 
   bankLetters: string[] = [];
@@ -69,7 +70,9 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.startPuzzle();
+    this.initializeGrid();
+    this.initializeValidLetterIndices();
+    this.generateGridCellIds();
     this.wsSubscription = this.webSocketService
       .getMessages()
       .subscribe((message) => this.handleWebSocketMessage(message));
@@ -81,13 +84,29 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     }
   }
 
+  private resetTimer() {
+    if (this.timerComponent) {
+      this.timerComponent.resetTimer();
+    }
+  }
+
+  startRandomPuzzle() {
+    // this.currentPuzzleIndex = Math.floor(Math.random() * 1000);
+    this.currentPuzzleIndex = 0;
+    this.startPuzzle();
+  }
+
+  startSeededPuzzle(seed: number) {
+    this.currentPuzzleIndex = seed;
+    this.startPuzzle();
+  }
+
   handleWebSocketMessage(message: any): void {
     switch (message.type) {
       case 'gameStarted':
         console.log('game started!');
         this.isMultiplayer = true;
         this.isGameStarted = true;
-        this.toggleTimer();
         break;
       case 'gameEnded':
         this.isGameOver = true;
@@ -99,12 +118,14 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   startPuzzle() {
+    this.toggleTimer();
     this.setLettersFromPuzzle();
     this.initializeGrid();
     this.initializeValidLetterIndices();
     this.generateGridCellIds();
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
     this.updateFormedWords();
+    this.isGameStarted = true;
   }
 
   setLettersFromPuzzle() {
@@ -120,6 +141,8 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   initializeGrid() {
+    this.dragPosition = { x: -586, y: -586 };
+
     this.grid = Array(this.GRID_SIZE)
       .fill(null)
       .map(() => Array(this.GRID_SIZE).fill(null));
@@ -254,11 +277,13 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     // If all conditions are met, it's a win
     if (this.isMultiplayer) {
       this.webSocketService.announceWin();
-      console.log('you win');
+      alert('you win');
     } else {
-      console.log('you win');
+      alert('you win');
+      this.toggleTimer();
+      this.isGameStarted = false;
+      this.resetTimer();
     }
-    this.toggleTimer();
     return true;
   }
 

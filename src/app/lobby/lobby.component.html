@@ -1,22 +1,41 @@
-<div class="lobby-container">
-  <h1>Multiplayer Game Lobby</h1>
+<div class="container">
+  <h1>Multiplayer</h1>
 
   <div *ngIf="!gameCode">
     <button mat-raised-button color="primary" (click)="createGame()">
       Create New Game
     </button>
 
-    <h2>Join Game</h2>
-    <mat-form-field>
-      <input
-        matInput
-        [(ngModel)]="joinGameCode"
-        placeholder="Enter Game Code"
-      />
-    </mat-form-field>
-    <button mat-raised-button color="accent" (click)="joinGame()">
-      Join Game
-    </button>
+    <h4>or</h4>
+    <form [formGroup]="joinGameForm">
+      <mat-form-field>
+        <input
+          matInput
+          formControlName="gameCode"
+          placeholder="Enter 4-Letter Game Code"
+          (input)="onInputChange($event)"
+          maxlength="4"
+        />
+        <mat-error
+          *ngIf="
+            joinGameForm.get('gameCode')!.invalid &&
+            joinGameForm.get('gameCode')!.touched
+          "
+        >
+          Please input a valid room code
+        </mat-error>
+      </mat-form-field>
+      <br />
+      <button
+        mat-raised-button
+        color="accent"
+        [disabled]="!joinGameForm.valid"
+        (click)="joinGame()"
+      >
+        Join Game
+      </button>
+      <br />
+    </form>
   </div>
 
   <div *ngIf="gameCode">
@@ -32,8 +51,9 @@
 
     <h3>Players in Lobby</h3>
     <mat-list>
-      <mat-list-item *ngFor="let player of players">
-        {{ player.name }} {{ player.id === players[0].id ? "(Host)" : "" }}
+      <mat-list-item *ngFor="let player of players; index as i">
+        {{ player.displayName }}
+        {{ i === 0 ? "(Host)" : "" }}
       </mat-list-item>
     </mat-list>
 

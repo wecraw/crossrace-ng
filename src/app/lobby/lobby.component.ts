@@ -7,7 +7,7 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
@@ -17,6 +17,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { DialogAnimationsExampleDialog } from './dialog/dialog.component';
+
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-lobby',
@@ -29,6 +31,7 @@ import { DialogAnimationsExampleDialog } from './dialog/dialog.component';
     MatButtonModule,
     MatListModule,
     MatInputModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
@@ -40,7 +43,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   gameShareUrl: string = '';
   displayName: string = '';
   isHost: boolean = false;
-  players: { id: string; name: string }[] = [];
+  players: { id: string; displayName: string }[] = [];
   private messageSubscription!: Subscription;
 
   joining: boolean = false;
@@ -50,10 +53,24 @@ export class LobbyComponent implements OnInit, OnDestroy {
   constructor(
     private webSocketService: WebSocketService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private fb: FormBuilder
   ) {}
 
+  joinGameForm!: FormGroup;
+
   async ngOnInit() {
+    this.joinGameForm = this.fb.group({
+      gameCode: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(4),
+          Validators.maxLength(4),
+          Validators.pattern('^[A-Za-z]{4}$'),
+        ],
+      ],
+    });
     // this.openDialog();
     try {
       await this.webSocketService.connect();
@@ -79,6 +96,15 @@ export class LobbyComponent implements OnInit, OnDestroy {
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
+  }
+
+  onInputChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    input.value = input.value
+      .toUpperCase()
+      .replace(/[^A-Z]/g, '')
+      .slice(0, 4);
+    this.joinGameForm.patchValue({ gameCode: input.value });
   }
 
   openDialog() {
@@ -124,17 +150,25 @@ export class LobbyComponent implements OnInit, OnDestroy {
         this.gameShareUrl = this.getShareUrl();
         this.isHost = true;
         this.displayName = message.displayName;
-        this.players = [{ id: message.playerId, name: message.displayName }];
+        this.players = [
+          { id: message.playerId, displayName: message.displayName },
+        ];
         break;
-      case 'joinedGame':
-        this.gameCode = message.gameCode;
+      case 'playerList':
+        if (!this.isHost) {
+          this.gameCode = this.joinGameCode;
+        }
         this.gameShareUrl = this.getShareUrl();
         this.displayName = message.displayName;
         this.players = message.players;
+        console.log(this.players);
         break;
-      case 'playerJoined':
-        this.players.push({ id: message.playerId, name: message.displayName });
-        break;
+      // case 'playerJoined':
+      //   this.players.push({
+      //     id: message.playerId,
+      //     displayName: message.displayName,
+      //   });
+      //   break;
       case 'playerLeft':
         this.players = this.players.filter((p) => p.id !== message.playerId);
         break;
