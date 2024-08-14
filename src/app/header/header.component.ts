@@ -7,7 +7,8 @@ import { RouterModule } from '@angular/router';
   imports: [RouterModule],
   template: `
     <header class="header">
-      <h2 style="margin-right: auto">Crossrace (alpha)</h2>
+      <h2>Crossrace</h2>
+      <div class="version" style="margin-right: auto">(0.2.1)</div>
       <nav class="d-flex">
         <a
           style="margin-right: 35px;"
@@ -25,7 +26,7 @@ import { RouterModule } from '@angular/router';
   styles: [
     `
       .header {
-        height: 75px;
+        height: 50px;
         background-color: #ccc;
         width: 100vw;
         display: flex;
@@ -38,6 +39,9 @@ import { RouterModule } from '@angular/router';
         color: black;
         text-decoration: none;
         cursor: pointer;
+      }
+      .version {
+        font-size: 10px;
       }
     `,
   ],
