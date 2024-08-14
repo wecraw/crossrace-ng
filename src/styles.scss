@@ -22,3 +22,7 @@ body {
 .btn-primary {
   background-color: #3f51b5;
 }
+
+body {
+  touch-action: none;
+}
