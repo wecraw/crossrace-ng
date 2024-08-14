@@ -17,8 +17,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { DialogAnimationsExampleDialog } from './dialog/dialog.component';
+import { Clipboard } from '@angular/cdk/clipboard';
 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+interface Player {
+  id: string;
+  displayName: string;
+  ready?: boolean;
+  isHost?: boolean;
+}
 
 @Component({
   selector: 'app-lobby',
@@ -38,23 +46,38 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LobbyComponent implements OnInit, OnDestroy {
+  pastelRainbowColors = [
+    '#F94144',
+    '#43AA8B',
+    '#277DA1',
+    '#F8961E',
+    '#ff006e',
+    '#264653',
+  ];
+  localPlayer!: Player;
   gameCode: string | null = null;
   gameShareUrl: string = '';
-  displayName: string = '';
+  localPlayerId: string = '';
+  joining: boolean = false;
+
   isHost: boolean = false;
-  players: { id: string; displayName: string }[] = [];
+  players: Player[] = [];
   private messageSubscription!: Subscription;
 
   readonly dialog = inject(MatDialog);
   private cdr = inject(ChangeDetectorRef);
 
   displayNameInput: string = '';
+  creatingGame: boolean = false;
+  editingName: boolean = false;
+  isCopied: boolean = false;
 
   constructor(
     private webSocketService: WebSocketService,
     private router: Router,
     private route: ActivatedRoute,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private clipboard: Clipboard
   ) {}
 
   joinGameForm!: FormGroup;
@@ -64,6 +87,17 @@ export class LobbyComponent implements OnInit, OnDestroy {
     showSpinner: true,
     showConfirm: false,
   };
+
+  dialogSettingsCreate: any = {
+    dialogText: 'Creating game',
+    showSpinner: true,
+    showConfirm: false,
+  };
+
+  getBackgroundColor(index: number): { 'background-color': string } {
+    const colorIndex = index % this.pastelRainbowColors.length;
+    return { 'background-color': this.pastelRainbowColors[colorIndex] };
+  }
 
   async ngOnInit() {
     this.joinGameForm = this.fb.group({
@@ -110,12 +144,58 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   submitName() {
+    this.editingName = false;
+    if (this.displayNameInput === '') return;
+    const playerIndex = this.players.findIndex(
+      (p) => p.id === this.localPlayerId
+    );
+    if (playerIndex !== -1) {
+      this.players[playerIndex].displayName = this.displayNameInput;
+    }
     if (this.gameCode) {
       this.webSocketService.updateDisplayName(
         this.gameCode,
         this.displayNameInput
       );
     }
+  }
+
+  readyUp() {
+    const playerIndex = this.players.findIndex(
+      (p) => p.id === this.localPlayerId
+    );
+    if (playerIndex !== -1) {
+      this.players[playerIndex].ready = true;
+    }
+    if (this.gameCode) this.webSocketService.readyUp(this.gameCode);
+  }
+
+  copyToClipboard() {
+    this.clipboard.copy(this.gameShareUrl);
+    this.isCopied = true;
+    setTimeout(() => {
+      this.isCopied = false;
+      this.cdr.detectChanges();
+    }, 2500);
+  }
+
+  getDisplayUrl() {
+    // Use URL constructor to parse the input
+    const parsedUrl = new URL(this.gameShareUrl);
+
+    // Check if the hostname is localhost. Not strictly needed, but nice for debugging
+    if (parsedUrl.hostname === 'localhost') {
+      // For localhost, we'll include the port number
+      return `${parsedUrl.hostname}:${parsedUrl.port}${parsedUrl.pathname}`;
+    } else {
+      // For other hostnames, we'll use the domain without 'www' if present
+      const hostname = parsedUrl.hostname.replace(/^www\./, '');
+      return `${hostname}${parsedUrl.pathname}`;
+    }
+  }
+
+  isPlayerSelf(player: Player) {
+    return player.id === this.localPlayerId;
   }
 
   onInputChange(event: Event) {
@@ -125,6 +205,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
       .replace(/[^A-Z]/g, '')
       .slice(0, 4);
     this.joinGameForm.patchValue({ gameCode: input.value });
+  }
+
+  editName() {
+    this.editingName = true;
   }
 
   openDialog(data: any, disableClose: boolean) {
@@ -145,10 +229,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   createGame(): void {
+    this.openDialog(this.dialogSettingsCreate, true);
     this.webSocketService.createGame();
   }
 
   joinGame(): void {
+    this.joining = true;
     const gameCode = this.joinGameForm.get('gameCode')?.value;
     if (gameCode && gameCode.length === 4) {
       this.openDialog(this.dialogSettingsJoin, true);
@@ -171,31 +257,53 @@ export class LobbyComponent implements OnInit, OnDestroy {
     return window.location.origin + '/join/' + this.gameCode;
   }
 
-  readyUp() {
-    if (this.gameCode) this.webSocketService.readyUp(this.gameCode);
+  checkIfHost() {
+    this.players.forEach((player) => {
+      if (player.isHost && player.id === this.localPlayerId) this.isHost = true;
+    });
+  }
+
+  anyNotReady() {
+    let anyNotReady = false;
+    this.players.forEach((player) => {
+      if (!player.ready) anyNotReady = true;
+    });
+
+    return anyNotReady;
   }
 
   private handleMessage(message: any) {
     console.log('Received message in lobby:', message);
     switch (message.type) {
       case 'gameCreated':
+        this.closeDialog();
         this.gameCode = message.gameCode;
         this.gameShareUrl = this.getShareUrl();
         this.isHost = true;
-        this.displayName = message.displayName;
+        this.localPlayerId = message.playerId;
         this.players = [
-          { id: message.playerId, displayName: message.displayName },
+          {
+            id: message.playerId,
+            displayName: message.displayName,
+            isHost: true,
+          },
         ];
+
         break;
-      case 'playerList': //effectively when a new player (or self) joins, triggered when the player list is pushed from server
-        if (!this.isHost) {
+      case 'playerList': //triggered when the player list is pushed from server
+        if (this.joining) {
+          //first join
           this.gameCode = this.joinGameForm.get('gameCode')?.value;
           this.closeDialog();
+          this.joining = false;
         }
         this.gameShareUrl = this.getShareUrl();
-        this.displayName = message.displayName;
         this.players = message.players;
-        console.log(this.players);
+        this.checkIfHost();
+        break;
+      case 'selfJoined':
+        this.localPlayerId = message.playerId;
+        this.checkIfHost(); //might be unnecessary
         break;
       case 'playerLeft':
         this.players = this.players.filter((p) => p.id !== message.playerId);

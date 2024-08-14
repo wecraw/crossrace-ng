@@ -1,10 +1,82 @@
 h1 {
   margin: 20px 0;
 }
+
+h2 {
+  margin-top: 20px;
+}
 h4 {
   margin: 20px 0;
 }
 
 button {
   margin-right: 10px;
+}
+
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+.player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #2196f3;
+  margin-bottom: 8px;
+}
+.player-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.player-status {
+  font-size: 0.9em;
+}
+.ready {
+  color: #4caf50;
+}
+.not-ready {
+  color: #f44336;
+}
+
+.crown {
+  font-size: 24px;
+  color: #d4af37;
+}
+
+.pencil {
+  cursor: pointer;
+}
+
+.transparent {
+  opacity: 0;
+}
+
+.link-container {
+  cursor: pointer;
+  border: 1px solid black;
+  padding: 15px 20px;
+  border-radius: 16px;
+  width: fit-content;
+  height: fit-content;
+  &:hover {
+    border: 1px solid #3f51b5;
+    background-color: #3f51b53f;
+  }
+
+  .url {
+    margin-right: 15px;
+  }
+
+  .copy-icon {
+    line-height: 1.3;
+    min-width: 16px;
+  }
 }

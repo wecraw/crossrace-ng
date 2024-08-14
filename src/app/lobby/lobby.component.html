@@ -1,5 +1,5 @@
 <div class="container">
-  <h1>Multiplayer</h1>
+  <h1 *ngIf="!gameCode">Multiplayer</h1>
 
   <div *ngIf="!gameCode">
     <button mat-raised-button color="primary" (click)="createGame()">
@@ -39,34 +39,78 @@
   </div>
 
   <div *ngIf="gameCode">
-    <h2>Game Lobby: {{ gameCode }}</h2>
+    <h2>Room code: {{ gameCode }}</h2>
 
-    <div>
-      <h3>Share this link to invite players:</h3>
-      <p>{{ gameShareUrl }}</p>
-      <button mat-raised-button [cdkCopyToClipboard]="gameShareUrl">
-        Copy
-      </button>
+    <div class="mt-4">
+      <h3 class="text-lg font-semibold mb-2">Invite link:</h3>
+      <div class="d-flex link-container" (click)="copyToClipboard()">
+        <div class="url">{{ getDisplayUrl() }}</div>
+        <i
+          class="copy-icon"
+          [ngClass]="
+            isCopied ? 'fa-regular fa-circle-check' : 'fa-regular fa-copy'
+          "
+        ></i>
+      </div>
     </div>
-
-    <h3>Players in Lobby</h3>
-    <mat-list>
-      <mat-list-item *ngFor="let player of players; index as i">
-        {{ player.displayName }}
-        {{ i === 0 ? "(Host)" : "" }}
-      </mat-list-item>
-    </mat-list>
+    <div class="player-grid">
+      <div *ngFor="let player of players; let i = index" class="player-card">
+        <i
+          [ngClass]="{ transparent: !player.isHost }"
+          class="fa-solid fa-crown crown"
+        ></i>
+        <div [ngStyle]="getBackgroundColor(i)" class="player-avatar"></div>
+        <div class="player-name">
+          <ng-container *ngIf="!isPlayerSelf(player) || !editingName">
+            {{ player.displayName }}
+            <i
+              *ngIf="isPlayerSelf(player)"
+              (click)="editName()"
+              (blur)="submitName()"
+              class="fa-solid fa-pencil pencil"
+            ></i>
+          </ng-container>
+          <ng-container *ngIf="isPlayerSelf(player) && editingName">
+            <input
+              [value]="player.displayName"
+              (input)="onNameInputChange($event)"
+              (blur)="submitName()"
+              (keyup.enter)="submitName()"
+              maxlength="20"
+              #nameInput
+            />
+          </ng-container>
+        </div>
+        <div
+          class="player-status"
+          [ngClass]="{ ready: player.ready, 'not-ready': !player.ready }"
+        >
+          <div
+            *ngIf="
+              !isPlayerSelf(player) || (isPlayerSelf(player) && player.ready)
+            "
+          >
+            {{ player.ready ? "Ready" : "Not ready" }}
+          </div>
+          <button
+            class="btn btn-primary"
+            *ngIf="isPlayerSelf(player) && !player.ready"
+            (click)="readyUp()"
+          >
+            Ready
+          </button>
+        </div>
+      </div>
+    </div>
 
     <button
       mat-raised-button
       color="primary"
       *ngIf="isHost"
       (click)="startGame()"
+      [disabled]="anyNotReady() || players.length < 2"
     >
       Start Game
     </button>
-    <input placeholder="displayName" (input)="onNameInputChange($event)" />
-    <button (click)="submitName()">submit name</button>
-    <button (click)="readyUp()">Ready</button>
   </div>
 </div>
