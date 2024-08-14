@@ -127,7 +127,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
         if (this.isWinner) {
           alert('You win!');
         } else {
-          alert('You lose!');
+          alert('You lose! ' + message.winnerDisplayName + ' was the winner.');
         }
         this.toggleTimer();
         break;

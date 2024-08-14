@@ -39,7 +39,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 })
 export class LobbyComponent implements OnInit, OnDestroy {
   gameCode: string | null = null;
-  joinGameCode: string = '';
   gameShareUrl: string = '';
   displayName: string = '';
   isHost: boolean = false;
@@ -48,6 +47,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   readonly dialog = inject(MatDialog);
   private cdr = inject(ChangeDetectorRef);
+
+  displayNameInput: string = '';
 
   constructor(
     private webSocketService: WebSocketService,
@@ -100,6 +101,20 @@ export class LobbyComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
+    }
+  }
+
+  onNameInputChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.displayNameInput = input.value;
+  }
+
+  submitName() {
+    if (this.gameCode) {
+      this.webSocketService.updateDisplayName(
+        this.gameCode,
+        this.displayNameInput
+      );
     }
   }
 
