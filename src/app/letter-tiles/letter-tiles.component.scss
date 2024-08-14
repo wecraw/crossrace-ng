@@ -26,7 +26,7 @@
   width: 400px;
   height: 400px;
   overflow: hidden;
-  margin: 162px auto 0;
+  margin: 150px auto 0;
 }
 
 .grid-fade-wrapper {
@@ -56,7 +56,7 @@
   // padding: 10px 10px 5px 10px;
   border-radius: 16px;
   margin-bottom: 35px;
-  top: 100px;
+  top: 60px;
 }
 
 .cdk-drag-preview {
@@ -98,6 +98,7 @@
   flex-direction: column;
   width: fit-content;
   padding: 10px;
+  // padding-top: 0;
 }
 
 .grid-row {
@@ -138,6 +139,7 @@
 }
 
 .fade-out-edges {
+  padding-top: 0;
   position: absolute;
   top: 0;
   left: 0;

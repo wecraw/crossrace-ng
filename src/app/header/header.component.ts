@@ -11,7 +11,7 @@ import { RouterModule } from '@angular/router';
       <div class="version" style="margin-right: auto">(0.2.1)</div>
       <nav class="d-flex">
         <a
-          style="margin-right: 35px;"
+          style="margin-right: 20px;"
           class="nav-link"
           routerLink="/"
           routerLinkActive="active"
@@ -25,14 +25,17 @@ import { RouterModule } from '@angular/router';
   `,
   styles: [
     `
+      h2 {
+        margin-bottom: 0;
+      }
       .header {
-        height: 50px;
+        height: 40px;
         background-color: #ccc;
         width: 100vw;
         display: flex;
         justify-content: flex-end;
         align-items: center;
-        padding: 0 20px;
+        padding: 0 10px;
         box-sizing: border-box;
       }
       .nav-link {
@@ -42,6 +45,9 @@ import { RouterModule } from '@angular/router';
       }
       .version {
         font-size: 10px;
+        margin-top: 6px;
+        margin-left: 2px;
+        margin-right: auto;
       }
     `,
   ],
