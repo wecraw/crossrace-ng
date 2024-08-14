@@ -77,6 +77,10 @@ export class WebSocketService {
     this.send({ action: 'join', gameCode });
   }
 
+  readyUp(gameCode: string): void {
+    this.send({ action: 'playerReady', gameCode });
+  }
+
   announceWin(): void {
     this.send({ action: 'win' });
   }

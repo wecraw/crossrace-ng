@@ -134,8 +134,8 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     }
   }
 
-  startPuzzle() {
-    this.toggleTimer();
+  startPuzzle(continueTimer?: boolean) {
+    if (!continueTimer) this.toggleTimer();
     this.setLettersFromPuzzle();
     this.initializeGrid();
     this.initializeValidLetterIndices();

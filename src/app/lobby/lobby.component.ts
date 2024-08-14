@@ -171,6 +171,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
     return window.location.origin + '/join/' + this.gameCode;
   }
 
+  readyUp() {
+    if (this.gameCode) this.webSocketService.readyUp(this.gameCode);
+  }
+
   private handleMessage(message: any) {
     console.log('Received message in lobby:', message);
     switch (message.type) {

@@ -8,7 +8,7 @@ import { RouterModule } from '@angular/router';
   template: `
     <header class="header">
       <h2>Crossrace</h2>
-      <div class="version" style="margin-right: auto">(0.2.1)</div>
+      <div class="version" style="margin-right: auto">(0.2.3)</div>
       <nav class="d-flex">
         <a
           style="margin-right: 20px;"

@@ -1,4 +1,5 @@
 export const VALID_WORDS = [
+  'spam',
   'scuppers',
   'incited',
   'sticklebacks',
