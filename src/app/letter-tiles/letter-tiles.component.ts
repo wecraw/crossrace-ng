@@ -20,6 +20,8 @@ import { PUZZLES } from './puzzles';
 import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
+import { Dialog } from '../dialog/dialog.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
@@ -39,6 +41,7 @@ interface ValidatedWord {
     CdkDrag,
     CommonModule,
     TimerComponent,
+    MatDialogModule,
   ],
   templateUrl: './letter-tiles.component.html',
   styleUrls: ['./letter-tiles.component.scss'],
@@ -59,6 +62,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   currentPuzzleIndex: number = 0;
   formedWords: ValidatedWord[] = [];
   validWords: Set<string>;
+  countdown: number = 3;
 
   // Grid DOM settings
   GRID_SIZE: number = 36;
@@ -70,6 +74,9 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
 
   // Debug
   debug: boolean = false;
+
+  // Dialog
+  readonly dialog = inject(MatDialog);
 
   //MP
   private wsSubscription!: Subscription;
@@ -112,22 +119,52 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     this.startPuzzle();
   }
 
+  startAfterCountDown(seed: number) {
+    setTimeout(() => {
+      this.isGameStarted = true;
+      this.startSeededPuzzle(seed);
+    }, 3000);
+
+    const intervalId = setInterval(() => {
+      this.countdown--;
+
+      if (this.countdown <= 0) {
+        clearInterval(intervalId);
+      }
+    }, 1000);
+  }
+
   handleWebSocketMessage(message: any): void {
     console.log(message);
     switch (message.type) {
       case 'gameStarted':
         this.isMultiplayer = true;
-        this.isGameStarted = true;
-        this.startSeededPuzzle(message.gameSeed);
+        this.startAfterCountDown(message.gameSeed);
         break;
       case 'gameEnded':
         console.log('heard game ended', message);
         this.isGameOver = true;
         this.isWinner = message.winner;
         if (this.isWinner) {
-          alert('You win!');
+          this.openDialog(
+            {
+              dialogText: 'You win!',
+              showSpinner: false,
+              showConfirm: true,
+              confirmText: 'Play again',
+            },
+            false
+          );
         } else {
-          alert('You lose! ' + message.winnerDisplayName + ' was the winner.');
+          this.openDialog(
+            {
+              dialogText:
+                'You lose! ' + message.winnerDisplayName + ' was the winner.',
+              showSpinner: false,
+              showConfirm: true,
+            },
+            false
+          );
         }
         this.toggleTimer();
         break;
@@ -191,6 +228,14 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     } else {
       this.toggleTimer();
       this.isGameStarted = false;
+      this.openDialog(
+        {
+          dialogText: 'You win!',
+          showSpinner: false,
+          showConfirm: true,
+        },
+        false
+      );
       this.resetTimer();
     }
     this.renderConfetti();
@@ -369,6 +414,23 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   // DOM Helpers=========================================================
+
+  openDialog(data: any, disableClose: boolean) {
+    if (!disableClose) {
+      const dialogRef = this.dialog.open(Dialog, {
+        data: data,
+      });
+    } else {
+      const dialogRef = this.dialog.open(Dialog, {
+        data: data,
+        disableClose: true,
+      });
+    }
+  }
+
+  closeDialog() {
+    this.dialog.closeAll();
+  }
 
   private setupTouchEventHandling() {
     const wrapper = this.gridWrapper.nativeElement;

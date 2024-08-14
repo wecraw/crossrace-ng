@@ -16,7 +16,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
-import { DialogAnimationsExampleDialog } from './dialog/dialog.component';
+import { Dialog } from '../dialog/dialog.component';
 import { Clipboard } from '@angular/cdk/clipboard';
 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -26,6 +26,12 @@ interface Player {
   displayName: string;
   ready?: boolean;
   isHost?: boolean;
+}
+
+interface DialogData {
+  dialogText: string;
+  showSpinner: boolean;
+  showConfirm: boolean;
 }
 
 @Component({
@@ -211,13 +217,13 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.editingName = true;
   }
 
-  openDialog(data: any, disableClose: boolean) {
+  openDialog(data: DialogData, disableClose: boolean) {
     if (!disableClose) {
-      const dialogRef = this.dialog.open(DialogAnimationsExampleDialog, {
+      const dialogRef = this.dialog.open(Dialog, {
         data: data,
       });
     } else {
-      const dialogRef = this.dialog.open(DialogAnimationsExampleDialog, {
+      const dialogRef = this.dialog.open(Dialog, {
         data: data,
         disableClose: true,
       });

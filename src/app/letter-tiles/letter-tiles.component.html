@@ -17,13 +17,17 @@
     </div>
     }
     <button
-      *ngIf="!isGameStarted"
+      *ngIf="!isGameStarted && !isMultiplayer"
       (click)="startRandomPuzzle()"
       class="btn btn-primary m-auto"
       style="max-height: 40px; min-width: 130px"
     >
       Start
     </button>
+    <div class="m-auto countdown" *ngIf="isMultiplayer && !isGameStarted">
+      <h3>Get ready!</h3>
+      <h5>Game starting in {{ countdown }}...</h5>
+    </div>
   </div>
 </div>
 

@@ -1,8 +1,9 @@
 <div class="wrapper">
   <mat-dialog-content [ngClass]="{ 'pb-0 pt-3': data.showConfirm }">
     <div class="d-flex">
-      <h1 mat-dialog-title>{{ data.dialogText }}</h1>
-
+      <h1 mat-dialog-title>
+        {{ data.dialogText }}
+      </h1>
       @if(data.showSpinner) {
       <mat-spinner
         [diameter]="25"
@@ -20,7 +21,7 @@
       cdkFocusInitial
       (click)="close()"
     >
-      Ok
+      {{ data.confirmText ? data.confirmText : "Ok" }}
     </button>
   </mat-dialog-actions>
   }

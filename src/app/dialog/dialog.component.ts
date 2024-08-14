@@ -1,11 +1,9 @@
 import {
   Component,
-  OnInit,
-  OnDestroy,
   inject,
   ChangeDetectionStrategy,
-  Input,
   Inject,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -23,7 +21,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
-  selector: 'dialog-animations-example-dialog',
+  selector: 'dialog',
   templateUrl: 'dialog.component.html',
   styleUrls: ['./dialog.component.scss'],
   standalone: true,
@@ -38,17 +36,19 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DialogAnimationsExampleDialog {
+export class Dialog {
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
       dialogText: string;
       showSpinner: boolean;
       showConfirm: boolean;
-    }
+      confirmText?: string;
+    },
+    private cdr: ChangeDetectorRef
   ) {}
 
-  readonly dialogRef = inject(MatDialogRef<DialogAnimationsExampleDialog>);
+  readonly dialogRef = inject(MatDialogRef<Dialog>);
 
   close() {
     this.dialogRef.close();
