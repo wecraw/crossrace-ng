@@ -20,6 +20,7 @@ import { Dialog } from '../dialog/dialog.component';
 import { Clipboard } from '@angular/cdk/clipboard';
 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { GameState, GameStateService } from '../game-state.service';
 
 interface Player {
   id: string;
@@ -66,6 +67,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
   localPlayerId: string = '';
   joining: boolean = false;
 
+  gameState!: GameState;
+
   isHost: boolean = false;
   players: Player[] = [];
   private messageSubscription!: Subscription;
@@ -80,6 +83,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   constructor(
     private webSocketService: WebSocketService,
+    private gameStateService: GameStateService,
     private router: Router,
     private route: ActivatedRoute,
     private fb: FormBuilder,
@@ -117,28 +121,45 @@ export class LobbyComponent implements OnInit, OnDestroy {
         ],
       ],
     });
-    if (this.webSocketService.isConnected()) {
-      console.log('Already connected to WebSocket');
-    } else {
-      try {
-        await this.webSocketService.connect();
 
-        this.messageSubscription = this.webSocketService
-          .getMessages()
-          .subscribe((message) => this.handleMessage(message));
-
-        this.route.params.subscribe((params) => {
-          if (params['gameCode']) {
-            this.openDialog(this.dialogSettingsJoin, true);
-            this.joinGameForm.patchValue({
-              gameCode: params['gameCode'].toUpperCase(),
-            });
-            this.joinGame();
-          }
-        });
-      } catch (error) {
-        console.error('Failed to connect to WebSocket:', error);
+    this.gameStateService.getGameState().subscribe((state) => {
+      this.gameState = state;
+      if (state.gameCode) {
+        this.gameCode = state.gameCode;
+        this.players = state.players;
+        this.gameShareUrl = this.getShareUrl();
       }
+      this.cdr.detectChanges();
+    });
+
+    if (this.gameState.isInGame) {
+      this.gameStateService.setGameState({
+        isInGame: false,
+      });
+      this.updateLobbyUI();
+    }
+    try {
+      await this.webSocketService.connect();
+
+      this.messageSubscription = this.webSocketService
+        .getMessages()
+        .subscribe((message) => this.handleMessage(message));
+
+      this.route.params.subscribe((params) => {
+        if (params['gameCode']) {
+          this.openDialog(this.dialogSettingsJoin, true);
+          let gameCode = params['gameCode'].toUpperCase();
+          this.joinGameForm.patchValue({
+            gameCode: gameCode,
+          });
+          this.gameStateService.setGameState({
+            gameCode: gameCode,
+          });
+          this.joinGame();
+        }
+      });
+    } catch (error) {
+      console.error('Failed to connect to WebSocket:', error);
     }
   }
 
@@ -165,6 +186,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     if (this.gameCode) {
       this.webSocketService.updateDisplayName(
         this.gameCode,
+        this.localPlayerId,
         this.displayNameInput
       );
     }
@@ -177,7 +199,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
     if (playerIndex !== -1) {
       this.players[playerIndex].ready = true;
     }
-    if (this.gameCode) this.webSocketService.readyUp(this.gameCode);
+    if (this.gameCode)
+      this.webSocketService.readyUp(this.gameCode, this.localPlayerId);
   }
 
   copyToClipboard() {
@@ -255,8 +278,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   startGame(): void {
-    if (this.isHost && this.gameCode) {
-      console.log('Starting game:', this.gameCode);
+    if (this.gameState.isHost && this.gameCode) {
       this.webSocketService.startGame(this.gameCode);
     } else {
       console.error('Cannot start game: not host or no game code');
@@ -268,9 +290,18 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   checkIfHost() {
-    this.players.forEach((player) => {
-      if (player.isHost && player.id === this.localPlayerId) this.isHost = true;
+    console.log(this.gameState.players);
+    console.log('local:', this.localPlayerId);
+    console.log('state:', this.gameState.localPlayerId);
+    this.gameState.players.forEach((player) => {
+      if (player.isHost && player.id === this.localPlayerId) {
+        this.isHost = true;
+        this.gameStateService.setGameState({
+          isHost: true,
+        });
+      }
     });
+    console.log(this.isHost);
   }
 
   anyNotReady() {
@@ -282,44 +313,57 @@ export class LobbyComponent implements OnInit, OnDestroy {
     return anyNotReady;
   }
 
+  private updateLobbyUI() {
+    this.gameCode = this.gameState.gameCode;
+    this.players = this.gameState.players;
+    this.localPlayerId = this.gameState.localPlayerId!;
+    this.gameShareUrl = this.getShareUrl();
+    this.creatingGame = false;
+    this.checkIfHost();
+  }
+
   private handleMessage(message: any) {
     console.log('Received message in lobby:', message);
     switch (message.type) {
       case 'gameCreated':
         this.closeDialog();
-        this.gameCode = message.gameCode;
-        this.gameShareUrl = this.getShareUrl();
-        this.isHost = true;
+        this.gameStateService.setGameState({
+          gameCode: message.gameCode,
+          isHost: true,
+          localPlayerId: message.playerId,
+          players: [
+            {
+              id: message.playerId,
+              displayName: message.displayName,
+              isHost: true,
+            },
+          ],
+        });
         this.localPlayerId = message.playerId;
-        this.players = [
-          {
-            id: message.playerId,
-            displayName: message.displayName,
-            isHost: true,
-          },
-        ];
-
+        this.updateLobbyUI();
         break;
       case 'playerList': //triggered when the player list is pushed from server
         if (this.joining) {
           //first join
-          this.gameCode = this.joinGameForm.get('gameCode')?.value;
           this.closeDialog();
           this.joining = false;
         }
-        this.gameShareUrl = this.getShareUrl();
-        this.players = message.players;
-        this.checkIfHost();
+        this.gameStateService.setGameState({
+          players: message.players,
+        });
+        this.updateLobbyUI();
         break;
-      case 'selfJoined':
+      case 'selfJoined': //emitted only to the user who joins when they join
+        this.gameStateService.setGameState({
+          localPlayerId: message.playerId,
+        });
         this.localPlayerId = message.playerId;
-        this.checkIfHost(); //might be unnecessary
-        break;
-      case 'playerLeft':
-        this.players = this.players.filter((p) => p.id !== message.playerId);
         break;
       case 'gameStarted':
         console.log('Game started, navigating to game page');
+        this.gameStateService.setGameState({
+          isInGame: true,
+        });
         this.router.navigate(['/game']);
         break;
       case 'error':

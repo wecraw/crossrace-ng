@@ -65,8 +65,12 @@ export class WebSocketService {
     this.send({ action: 'startGame', gameCode });
   }
 
-  updateDisplayName(gameCode: string, displayName: string): void {
-    this.send({ action: 'updateDisplayName', gameCode, displayName });
+  updateDisplayName(
+    gameCode: string,
+    playerId: string,
+    displayName: string
+  ): void {
+    this.send({ action: 'updateDisplayName', gameCode, displayName, playerId });
   }
 
   createGame(): void {
@@ -77,12 +81,12 @@ export class WebSocketService {
     this.send({ action: 'join', gameCode });
   }
 
-  readyUp(gameCode: string): void {
-    this.send({ action: 'playerReady', gameCode });
+  readyUp(gameCode: string, playerId: string): void {
+    this.send({ action: 'playerReady', gameCode, playerId });
   }
 
-  announceWin(): void {
-    this.send({ action: 'win' });
+  announceWin(playerId: string): void {
+    this.send({ action: 'win', playerId });
   }
 
   getMessages(): Observable<any> {

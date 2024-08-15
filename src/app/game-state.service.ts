@@ -6,6 +6,7 @@ export interface GameState {
   isInGame: boolean;
   isHost: boolean;
   players: any[]; // Replace 'any' with a proper Player interface if you have one
+  localPlayerId: string | null;
 }
 
 @Injectable({
@@ -17,6 +18,7 @@ export class GameStateService {
     isInGame: false,
     isHost: false,
     players: [],
+    localPlayerId: null,
   };
 
   private gameStateSubject = new BehaviorSubject<GameState>(this.gameState);
@@ -36,6 +38,7 @@ export class GameStateService {
       isInGame: false,
       isHost: false,
       players: [],
+      localPlayerId: null,
     };
     this.gameStateSubject.next(this.gameState);
   }

@@ -27,6 +27,7 @@ import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
 import * as confetti from 'canvas-confetti';
 import { Router } from '@angular/router';
+import { GameState, GameStateService } from '../game-state.service';
 
 interface ValidatedWord {
   word: string;
@@ -86,9 +87,13 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   isWinner: boolean = false;
   isGameStarted: boolean = false;
 
+  // Game State
+  gameState!: GameState;
+
   constructor(
     private renderer2: Renderer2,
     private elementRef: ElementRef,
+    private gameStateService: GameStateService,
     private router: Router
   ) {
     this.validWords = new Set(VALID_WORDS);
@@ -98,6 +103,12 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     this.initializeGrid();
     this.initializeValidLetterIndices();
     this.generateGridCellIds();
+
+    this.gameStateService.getGameState().subscribe((state) => {
+      this.gameState = state;
+      // this.cdr.detectChanges();
+    });
+
     this.wsSubscription = this.webSocketService
       .getMessages()
       .subscribe((message) => this.handleWebSocketMessage(message));
@@ -149,7 +160,10 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
       case 'gameEnded':
         console.log('heard game ended', message);
         this.isGameOver = true;
-        this.isWinner = message.winner;
+        this.isWinner = message.isWinner;
+        this.gameStateService.setGameState({
+          players: message.players,
+        });
         if (this.isWinner) {
           this.openDialog(
             {
@@ -228,7 +242,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
 
     // If all conditions are met, it's a win
     if (this.isMultiplayer) {
-      this.webSocketService.announceWin();
+      this.webSocketService.announceWin(this.gameState.localPlayerId!);
       console.log('announcing win');
     } else {
       this.toggleTimer();
@@ -245,6 +259,11 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     }
     this.renderConfetti();
     return true;
+  }
+
+  forceWin() {
+    this.renderConfetti();
+    this.webSocketService.announceWin(this.gameState.localPlayerId!);
   }
 
   // Helper function to check if all words are interconnected
