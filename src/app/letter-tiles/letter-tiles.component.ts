@@ -26,6 +26,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
 import * as confetti from 'canvas-confetti';
+import { Router } from '@angular/router';
 
 interface ValidatedWord {
   word: string;
@@ -85,7 +86,11 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   isWinner: boolean = false;
   isGameStarted: boolean = false;
 
-  constructor(private renderer2: Renderer2, private elementRef: ElementRef) {
+  constructor(
+    private renderer2: Renderer2,
+    private elementRef: ElementRef,
+    private router: Router
+  ) {
     this.validWords = new Set(VALID_WORDS);
   }
 
@@ -419,6 +424,12 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     if (!disableClose) {
       const dialogRef = this.dialog.open(Dialog, {
         data: data,
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result.event === 'confirm') {
+          this.router.navigate(['/lobby']);
+        }
       });
     } else {
       const dialogRef = this.dialog.open(Dialog, {

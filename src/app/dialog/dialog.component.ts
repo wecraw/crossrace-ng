@@ -53,4 +53,8 @@ export class Dialog {
   close() {
     this.dialogRef.close();
   }
+
+  confirm() {
+    this.dialogRef.close({ event: 'confirm', data: this.data.dialogText });
+  }
 }

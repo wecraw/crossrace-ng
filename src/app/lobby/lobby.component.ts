@@ -117,24 +117,28 @@ export class LobbyComponent implements OnInit, OnDestroy {
         ],
       ],
     });
-    try {
-      await this.webSocketService.connect();
+    if (this.webSocketService.isConnected()) {
+      console.log('Already connected to WebSocket');
+    } else {
+      try {
+        await this.webSocketService.connect();
 
-      this.messageSubscription = this.webSocketService
-        .getMessages()
-        .subscribe((message) => this.handleMessage(message));
+        this.messageSubscription = this.webSocketService
+          .getMessages()
+          .subscribe((message) => this.handleMessage(message));
 
-      this.route.params.subscribe((params) => {
-        if (params['gameCode']) {
-          this.openDialog(this.dialogSettingsJoin, true);
-          this.joinGameForm.patchValue({
-            gameCode: params['gameCode'].toUpperCase(),
-          });
-          this.joinGame();
-        }
-      });
-    } catch (error) {
-      console.error('Failed to connect to WebSocket:', error);
+        this.route.params.subscribe((params) => {
+          if (params['gameCode']) {
+            this.openDialog(this.dialogSettingsJoin, true);
+            this.joinGameForm.patchValue({
+              gameCode: params['gameCode'].toUpperCase(),
+            });
+            this.joinGame();
+          }
+        });
+      } catch (error) {
+        console.error('Failed to connect to WebSocket:', error);
+      }
     }
   }
 
