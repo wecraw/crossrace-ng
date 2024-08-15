@@ -1,0 +1,62 @@
+.wrapper {
+  // min-width: 300px;
+  // min-height: 300px;
+  height: 500px;
+  padding: 20px;
+}
+
+.spinner {
+  margin-top: 18px;
+}
+
+h1 {
+  line-height: 3 !important;
+  padding: 0;
+}
+
+h2 {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.action-buttons {
+  align-self: flex-end;
+  margin-top: auto;
+
+  button {
+    min-width: 75px;
+  }
+}
+
+.quit {
+  margin-right: 12px;
+}
+
+.chess-grid {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+.grid-row {
+  display: flex;
+}
+.grid-cell {
+  width: 27px;
+  height: 27px;
+  border: 1px solid #ccc;
+}
+
+.letter-tile {
+  min-width: 27px;
+  min-height: 27px;
+  background-color: green;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  border-radius: 6px;
+  font-size: 15px;
+}

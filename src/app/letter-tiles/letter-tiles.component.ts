@@ -21,6 +21,8 @@ import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
 import { Dialog } from '../dialog/dialog.component';
+import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
+
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { WebSocketService } from '../websocket.service';
@@ -59,6 +61,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   bankLetters: string[] = [];
   grid: string[][] = [];
   validLetterIndices: boolean[][] = [];
+  condensedGrid: string[][] = [];
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
   currentPuzzleIndex: number = 0;
@@ -68,6 +71,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
 
   // Grid DOM settings
   GRID_SIZE: number = 36;
+  CONDENSED_SIZE: number = 12;
   dragPosition = { x: -586, y: -586 };
 
   // Timer
@@ -126,7 +130,9 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   startRandomPuzzle() {
-    this.currentPuzzleIndex = Math.floor(Math.random() * 1000);
+    // this.currentPuzzleIndex = Math.floor(Math.random() * 1000);
+    this.currentPuzzleIndex = 0;
+
     this.startPuzzle();
   }
 
@@ -158,33 +164,15 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
         this.startAfterCountDown(message.gameSeed);
         break;
       case 'gameEnded':
-        console.log('heard game ended', message);
         this.isGameOver = true;
         this.isWinner = message.isWinner;
         this.gameStateService.setGameState({
           players: message.players,
         });
-        if (this.isWinner) {
-          this.openDialog(
-            {
-              dialogText: 'You win!',
-              showSpinner: false,
-              showConfirm: true,
-              confirmText: 'Play again',
-            },
-            false
-          );
-        } else {
-          this.openDialog(
-            {
-              dialogText:
-                'You lose! ' + message.winnerDisplayName + ' was the winner.',
-              showSpinner: false,
-              showConfirm: true,
-            },
-            false
-          );
-        }
+        this.openDialog({
+          winnerDisplayName: message.winnerDisplayName,
+          grid: message.condensedGrid,
+        });
         this.toggleTimer();
         break;
     }
@@ -242,19 +230,14 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
 
     // If all conditions are met, it's a win
     if (this.isMultiplayer) {
-      this.webSocketService.announceWin(this.gameState.localPlayerId!);
-      console.log('announcing win');
+      this.createCondensedGrid();
+      this.webSocketService.announceWin(
+        this.gameState.localPlayerId!,
+        this.condensedGrid
+      );
     } else {
       this.toggleTimer();
       this.isGameStarted = false;
-      this.openDialog(
-        {
-          dialogText: 'You win!',
-          showSpinner: false,
-          showConfirm: true,
-        },
-        false
-      );
       this.resetTimer();
     }
     this.renderConfetti();
@@ -263,7 +246,11 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
 
   forceWin() {
     this.renderConfetti();
-    this.webSocketService.announceWin(this.gameState.localPlayerId!);
+    this.createCondensedGrid();
+    this.webSocketService.announceWin(
+      this.gameState.localPlayerId!,
+      this.condensedGrid
+    );
   }
 
   // Helper function to check if all words are interconnected
@@ -439,23 +426,20 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
 
   // DOM Helpers=========================================================
 
-  openDialog(data: any, disableClose: boolean) {
-    if (!disableClose) {
-      const dialogRef = this.dialog.open(Dialog, {
-        data: data,
-      });
+  openDialog(data: any) {
+    const dialogRef = this.dialog.open(DialogPostGame, {
+      data: data,
+      minWidth: 370,
+    });
 
-      dialogRef.afterClosed().subscribe((result) => {
-        if (result.event === 'confirm') {
-          this.router.navigate(['/lobby']);
-        }
-      });
-    } else {
-      const dialogRef = this.dialog.open(Dialog, {
-        data: data,
-        disableClose: true,
-      });
-    }
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result.event === 'confirm') {
+        this.router.navigate(['/lobby']);
+      }
+      if (result.event === 'quit') {
+        location.reload();
+      }
+    });
   }
 
   closeDialog() {
@@ -629,5 +613,48 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     });
+  }
+
+  createCondensedGrid(): void {
+    let minRow = this.GRID_SIZE;
+    let minCol = this.GRID_SIZE;
+    let maxRow = 0;
+    let maxCol = 0;
+
+    // Find the boundaries of the valid letters
+    for (let i = 0; i < this.GRID_SIZE; i++) {
+      for (let j = 0; j < this.GRID_SIZE; j++) {
+        if (this.validLetterIndices[i][j]) {
+          minRow = Math.min(minRow, i);
+          minCol = Math.min(minCol, j);
+          maxRow = Math.max(maxRow, i);
+          maxCol = Math.max(maxCol, j);
+        }
+      }
+    }
+
+    // Calculate the size of the used area
+    const usedRows = maxRow - minRow + 1;
+    const usedCols = maxCol - minCol + 1;
+
+    // Calculate padding to center the grid
+    const paddingTop = Math.floor((this.CONDENSED_SIZE - usedRows) / 2);
+    const paddingLeft = Math.floor((this.CONDENSED_SIZE - usedCols) / 2);
+
+    // Create the condensed grid with the fixed size
+    this.condensedGrid = Array(this.CONDENSED_SIZE)
+      .fill(null)
+      .map(() => Array(this.CONDENSED_SIZE).fill(''));
+
+    // Fill the condensed grid with letters from valid positions, with padding
+    for (let i = minRow; i <= maxRow; i++) {
+      for (let j = minCol; j <= maxCol; j++) {
+        if (this.validLetterIndices[i][j]) {
+          const newRow = paddingTop + (i - minRow);
+          const newCol = paddingLeft + (j - minCol);
+          this.condensedGrid[newRow][newCol] = this.grid[i][j];
+        }
+      }
+    }
   }
 }

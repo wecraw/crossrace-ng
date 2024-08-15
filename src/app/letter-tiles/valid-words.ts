@@ -58365,6 +58365,8 @@ export const VALID_WORDS = [
   'reflood',
   'monardas',
   'palish',
+  'glam',
+  'glamp',
   'glamours',
   'carpetings',
   'fanzines',

@@ -5,15 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.4] - 2024-08-14
+## [0.2.4] - 2024-08-15
 
 ### Added
 
 - Countdown until game start for multiplayer
+- Ability to start a new game from the same lobby after a win
+- New post-game screen with view of winning grid
 
 ### Changed
 
 - Post-game screen uses dialog instead of alert
+- Lobby UI is managed by state in most cases rather than by the component
 
 ## [0.2.3] - 2024-08-14
 
