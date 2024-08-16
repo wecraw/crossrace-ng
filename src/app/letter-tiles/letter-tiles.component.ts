@@ -34,6 +34,9 @@ import { GameState, GameStateService } from '../game-state.service';
 interface ValidatedWord {
   word: string;
   isValid: boolean;
+  startI: number;
+  startJ: number;
+  direction: 'horizontal' | 'vertical';
 }
 
 @Component({
@@ -130,9 +133,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   startRandomPuzzle() {
-    // this.currentPuzzleIndex = Math.floor(Math.random() * 1000);
-    this.currentPuzzleIndex = 0;
-
+    this.currentPuzzleIndex = Math.floor(Math.random() * 1000);
     this.startPuzzle();
   }
 
@@ -181,6 +182,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   startPuzzle(continueTimer?: boolean) {
     if (!continueTimer) this.toggleTimer();
     this.setLettersFromPuzzle();
+    this.shuffleLetters();
     this.initializeGrid();
     this.initializeValidLetterIndices();
     this.generateGridCellIds();
@@ -193,6 +195,15 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     this.bankLetters = [...PUZZLES[this.currentPuzzleIndex].letters];
   }
 
+  shuffleLetters() {
+    for (let i = this.bankLetters.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.bankLetters[i], this.bankLetters[j]] = [
+        this.bankLetters[j],
+        this.bankLetters[i],
+      ];
+    }
+  }
   nextPuzzle() {
     this.currentPuzzleIndex = (this.currentPuzzleIndex + 1) % PUZZLES.length;
     this.startPuzzle();
@@ -295,14 +306,6 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     return this.bankLetters.length < 12;
   }
 
-  updateFormedWords() {
-    this.formedWords = [];
-    this.resetValidLetterIndices();
-    this.checkHorizontalWords();
-    this.checkVerticalWords();
-    this.checkWin();
-  }
-
   // Depth-First Search helper function
   private dfs(i: number, j: number, visited: boolean[][]) {
     if (
@@ -324,7 +327,6 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     this.dfs(i, j - 1, visited);
     this.dfs(i, j + 1, visited);
   }
-
   resetValidLetterIndices() {
     for (let i = 0; i < this.GRID_SIZE; i++) {
       for (let j = 0; j < this.GRID_SIZE; j++) {
@@ -333,7 +335,25 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
     }
   }
 
-  checkHorizontalWords() {
+  updateFormedWords() {
+    this.formedWords = [];
+    this.resetValidLetterIndices();
+
+    // First pass: Identify all words
+    this.identifyWords();
+
+    // Second pass: Validate words and update indices
+    this.validateWords();
+
+    this.checkWin();
+  }
+
+  identifyWords() {
+    this.identifyHorizontalWords();
+    this.identifyVerticalWords();
+  }
+
+  identifyHorizontalWords() {
     for (let i = 0; i < this.GRID_SIZE; i++) {
       let word = '';
       let startJ = 0;
@@ -341,16 +361,16 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
         if (!this.isEmpty(this.grid[i][j])) {
           word += this.grid[i][j];
         } else {
-          this.addWordIfValid(word, i, startJ, 'horizontal');
+          this.addWordToList(word, i, startJ, 'horizontal');
           word = '';
           startJ = j + 1;
         }
       }
-      this.addWordIfValid(word, i, startJ, 'horizontal');
+      this.addWordToList(word, i, startJ, 'horizontal');
     }
   }
 
-  checkVerticalWords() {
+  identifyVerticalWords() {
     for (let j = 0; j < this.GRID_SIZE; j++) {
       let word = '';
       let startI = 0;
@@ -358,37 +378,58 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
         if (!this.isEmpty(this.grid[i][j])) {
           word += this.grid[i][j];
         } else {
-          this.addWordIfValid(word, startI, j, 'vertical');
+          this.addWordToList(word, startI, j, 'vertical');
           word = '';
           startI = i + 1;
         }
       }
-      this.addWordIfValid(word, startI, j, 'vertical');
+      this.addWordToList(word, startI, j, 'vertical');
     }
   }
 
-  addWordIfValid(
+  addWordToList(
     word: string,
     startI: number,
     startJ: number,
     direction: 'horizontal' | 'vertical'
   ) {
-    if (word.length >= 2 && !this.formedWords.some((w) => w.word === word)) {
-      const isValid =
-        word.length >= 3 && this.validWords.has(word.toLowerCase());
-      this.formedWords.push({ word, isValid });
+    if (word.length >= 2) {
+      this.formedWords.push({
+        word,
+        isValid: word.length >= 3 && this.validWords.has(word.toLowerCase()),
+        startI,
+        startJ,
+        direction,
+      });
+    }
+  }
 
-      if (isValid) {
-        for (let k = 0; k < word.length; k++) {
-          if (direction === 'horizontal') {
-            this.validLetterIndices[startI][startJ + k] = true;
-          } else {
-            this.validLetterIndices[startI + k][startJ] = true;
-          }
-        }
-      } else if (word.length === 2) {
-        // Mark letters in two-letter words as invalid
-        this.markInvalidLetters(startI, startJ, direction, word.length);
+  validateWords() {
+    // Reset all indices to false
+    this.resetValidLetterIndices();
+
+    // Mark valid words
+    for (const wordInfo of this.formedWords) {
+      if (wordInfo.isValid) {
+        this.markWordLetters(wordInfo, true);
+      }
+    }
+
+    // Invalidate two-letter words
+    for (const wordInfo of this.formedWords) {
+      if (wordInfo.word.length === 2) {
+        this.markWordLetters(wordInfo, false);
+      }
+    }
+  }
+
+  markWordLetters(wordInfo: ValidatedWord, isValid: boolean) {
+    const { startI, startJ, direction, word } = wordInfo;
+    for (let k = 0; k < word.length; k++) {
+      if (direction === 'horizontal') {
+        this.validLetterIndices[startI][startJ + k] = isValid;
+      } else {
+        this.validLetterIndices[startI + k][startJ] = isValid;
       }
     }
   }

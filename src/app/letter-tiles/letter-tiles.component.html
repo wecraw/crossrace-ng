@@ -77,9 +77,9 @@
   >
   </app-timer>
   <i
-    class="material-icons refresh"
+    class="material-icons refresh noselect"
     (click)="startPuzzle(true)"
-    [ngClass]="{ disabled: !anyTilePlaced(), hidden: !isGameStarted }"
+    [ngClass]="{ hidden: !isGameStarted }"
     >refresh</i
   >
 </div>
