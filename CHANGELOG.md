@@ -12,11 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Countdown until game start for multiplayer
 - Ability to start a new game from the same lobby after a win
 - New post-game screen with view of winning grid
+- favicon
 
 ### Changed
 
 - Post-game screen uses dialog instead of alert
 - Lobby UI is managed by state in most cases rather than by the component
+- Letters are now shuffled at the start of a game, and whenever the grid is reset with the button
+- Header styling
+- Improved styling for mobile
 
 ## [0.2.3] - 2024-08-14
 
