@@ -11,7 +11,6 @@
         <div class="letter-tile">A</div>
         <div class="letter-tile">C</div>
         <div class="letter-tile">E</div>
-        <div class="version ms-2">(0.3.0)</div>
       </div>
 
       <nav>
@@ -38,20 +37,11 @@
 
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
-              <button
-                class="dropdown-item"
-                type="button"
-                (click)="navigateToSingleplayer()"
-              >
-                Singleplayer
-              </button>
+              <button class="dropdown-item" routerLink="/">Singleplayer</button>
             </li>
+            <hr />
             <li>
-              <button
-                class="dropdown-item"
-                type="button"
-                (click)="navigateToMultiplayer()"
-              >
+              <button class="dropdown-item" routerLink="/lobby">
                 Multiplayer
               </button>
             </li>

@@ -39,8 +39,10 @@ interface ValidatedWord {
   direction: 'horizontal' | 'vertical';
 }
 
+const DRAG_POSITION_INIT = { x: -182, y: -182 };
+
 @Component({
-  selector: 'app-letter-tiles',
+  selector: 'app-game',
   standalone: true,
   imports: [
     CdkDropListGroup,
@@ -50,10 +52,10 @@ interface ValidatedWord {
     TimerComponent,
     MatDialogModule,
   ],
-  templateUrl: './letter-tiles.component.html',
-  styleUrls: ['./letter-tiles.component.scss'],
+  templateUrl: './game.component.html',
+  styleUrls: ['./game.component.scss'],
 })
-export class LetterTilesComponent implements OnInit, OnDestroy {
+export class GameComponent implements OnInit, OnDestroy {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;
   @ViewChild('gridWrapper') gridWrapper!: ElementRef;
   @ViewChild('gridContainer') gridContainer!: ElementRef;
@@ -73,9 +75,9 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   countdown: number = 3;
 
   // Grid DOM settings
-  GRID_SIZE: number = 36;
+  GRID_SIZE: number = 24;
   CONDENSED_SIZE: number = 12;
-  dragPosition = { x: -586, y: -586 };
+  dragPosition = DRAG_POSITION_INIT;
 
   // Timer
   timerRunning = false;
@@ -96,6 +98,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
 
   // Game State
   gameState!: GameState;
+  isFirstNavigation: boolean = true;
 
   constructor(
     private renderer2: Renderer2,
@@ -107,13 +110,24 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.initializeGrid();
-    this.initializeValidLetterIndices();
-    this.generateGridCellIds();
+    this.isFirstNavigation = this.gameStateService.isFirstNavigation();
+
+    // if it's the first page load, do everything at once. otherwise, fade the grid in after waiting for it to load
+    // this is basically because the grid is a bit slow to load and this allows the page to load faster when changing routes or going into multiplayer
+    if (!this.isFirstNavigation) {
+      setTimeout(() => {
+        this.initializeValidLetterIndices();
+        this.generateGridCellIds();
+        this.initializeGrid();
+      }, 0);
+    } else {
+      this.initializeValidLetterIndices();
+      this.generateGridCellIds();
+      this.initializeGrid();
+    }
 
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
-      // this.cdr.detectChanges();
     });
 
     this.wsSubscription = this.webSocketService
@@ -535,7 +549,7 @@ export class LetterTilesComponent implements OnInit, OnDestroy {
   }
 
   initializeGrid() {
-    this.dragPosition = { x: -586, y: -586 };
+    this.dragPosition = DRAG_POSITION_INIT;
 
     this.grid = Array(this.GRID_SIZE)
       .fill(null)

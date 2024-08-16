@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { NavigationEnd, Router } from '@angular/router';
+import { BehaviorSubject, filter, Observable } from 'rxjs';
 
 export interface GameState {
   gameCode: string | null;
@@ -21,6 +22,14 @@ export class GameStateService {
     localPlayerId: null,
   };
 
+  constructor(private router: Router) {
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.navigationCount++;
+      });
+  }
+
   private gameStateSubject = new BehaviorSubject<GameState>(this.gameState);
 
   setGameState(state: Partial<GameState>) {
@@ -41,5 +50,11 @@ export class GameStateService {
       localPlayerId: null,
     };
     this.gameStateSubject.next(this.gameState);
+  }
+
+  private navigationCount = 0;
+
+  isFirstNavigation(): boolean {
+    return this.navigationCount === 1;
   }
 }

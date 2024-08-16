@@ -31,7 +31,11 @@
   </div>
 </div>
 
-<div #gridWrapper class="grid-wrapper">
+<div
+  #gridWrapper
+  [ngClass]="{ 'slide-in-fwd-center': !isFirstNavigation }"
+  class="slide-in-fwd-center grid-wrapper"
+>
   <div class="fade-out-edges m-lr-auto">
     <div
       #gridContainer

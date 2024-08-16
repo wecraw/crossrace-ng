@@ -8,14 +8,4 @@ import { Router, RouterModule } from '@angular/router';
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
-export class HeaderComponent {
-  constructor(private router: Router) {}
-
-  navigateToSingleplayer() {
-    this.router.navigate(['/']);
-  }
-
-  navigateToMultiplayer() {
-    this.router.navigate(['/lobby']);
-  }
-}
+export class HeaderComponent {}
