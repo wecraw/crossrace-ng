@@ -72,6 +72,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   isHost: boolean = false;
   players: Player[] = [];
   private messageSubscription!: Subscription;
+  isShareSupported: boolean = false;
 
   readonly dialog = inject(MatDialog);
   private cdr = inject(ChangeDetectorRef);
@@ -107,6 +108,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.isShareSupported = !!navigator.share;
+
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
       if (state.gameCode) {
@@ -190,7 +193,16 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   copyToClipboard() {
-    this.clipboard.copy(this.gameShareUrl);
+    const shareString = `Race me on Crossrace! \n${this.gameShareUrl}`;
+
+    if (navigator.share) {
+      navigator.share({
+        text: shareString,
+      });
+    } else {
+      navigator.clipboard.writeText(this.gameShareUrl);
+    }
+
     this.isCopied = true;
     setTimeout(() => {
       this.isCopied = false;

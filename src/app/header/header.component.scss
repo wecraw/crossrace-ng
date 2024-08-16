@@ -1,6 +1,6 @@
 .letter-tile {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   background-color: #3f51b5;
   display: flex;
   justify-content: center;
@@ -8,7 +8,7 @@
   font-weight: bold;
   color: white;
   border-radius: 6px;
-  margin-left: 2px;
+  margin-left: 1px;
 }
 
 h2 {
@@ -37,8 +37,9 @@ h2 {
 }
 .version {
   font-size: 10px;
+  color: #ccc;
   margin-top: 18px;
-  margin-left: 2px;
+  margin-left: 4px;
   margin-right: auto;
 }
 
@@ -56,6 +57,7 @@ h2 {
 .logo-wrapper {
   display: flex;
   margin-right: auto;
+  margin-top: 4px;
 }
 
 .divider {

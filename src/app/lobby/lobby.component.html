@@ -14,7 +14,11 @@
             <i
               class="copy-icon"
               [ngClass]="
-                isCopied ? 'fa-regular fa-circle-check' : 'fa-regular fa-copy'
+                isShareSupported
+                  ? 'fa-solid fa-share'
+                  : isCopied
+                  ? 'fa-regular fa-circle-check'
+                  : 'fa-regular fa-copy'
               "
             ></i>
           </div>
