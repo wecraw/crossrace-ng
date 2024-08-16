@@ -1,0 +1,55 @@
+.letter-tile {
+  width: 30px;
+  height: 30px;
+  background-color: #3f51b5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  border-radius: 6px;
+  margin-left: 2px;
+}
+
+h2 {
+  margin-bottom: 0;
+}
+.header {
+  height: 40px;
+  background-color: #ccc;
+  background-color: #fff;
+  width: 100vw;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+.nav-link {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+.version {
+  font-size: 10px;
+  margin-top: 18px;
+  margin-left: 2px;
+  margin-right: auto;
+}
+
+.menu-button-wrapper {
+  height: 40px;
+  width: 40px;
+  display: flex;
+  cursor: pointer;
+
+  i {
+    margin: auto;
+  }
+}
+
+.logo-wrapper {
+  display: flex;
+  margin-right: auto;
+  margin-top: 4px;
+}
