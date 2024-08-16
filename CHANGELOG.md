@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Countdown until game start for multiplayer
 - Ability to start a new game from the same lobby after a win
 - New post-game screen with view of winning grid
+- "GLAMP" and "GLAM" to valid word dictionary
 - favicon
 
 ### Changed
