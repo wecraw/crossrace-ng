@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.1.] - 2024-08-15
+## [0.3.2] - 2024-08-16
+
+### Changed
+
+- Broke lobby down into two components, versus (the create or join experience) and lobby (the waiting room)
+- Websocket service now uses subject instead of repeat subject to prevent multiple connections and duplicate messages
+- Game start and seed for multiplayer games now managed by game state
+
+## [0.3.1] - 2024-08-16
 
 ### Added
 
