@@ -86,7 +86,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private gameStateService: GameStateService,
     private router: Router,
     private route: ActivatedRoute,
-    private fb: FormBuilder,
     private clipboard: Clipboard
   ) {}
 
@@ -118,12 +117,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    if (this.gameState.isInGame) {
-      this.gameStateService.setGameState({
-        isInGame: false,
-      });
-      this.updateLobbyUI();
-    }
     try {
       await this.webSocketService.connect();
 
@@ -132,14 +125,20 @@ export class LobbyComponent implements OnInit, OnDestroy {
         .subscribe((message) => this.handleMessage(message));
 
       this.route.params.subscribe((params) => {
-        console.log('players1', this.players);
         if (params['gameCode']) {
           this.openDialog(this.dialogSettingsJoin, true);
           let gameCode = params['gameCode'].toUpperCase();
           this.gameState.gameCode = gameCode;
           this.joinGame();
         } else {
-          this.createGame();
+          if (!this.gameState.isInGame) {
+            this.createGame();
+          } else {
+            this.gameStateService.setGameState({
+              isInGame: false,
+            });
+            this.updateLobbyUI();
+          }
         }
       });
     } catch (error) {
@@ -149,11 +148,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (!this.gameState.isInGame) {
-      console.log('Leaving lobby');
       this.gameStateService.clearGameState();
     }
-
-    this.players = [];
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
@@ -294,7 +290,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   private updateLobbyUI() {
-    console.log('hiii p', this.players);
     this.gameCode = this.gameState.gameCode;
     this.players = this.gameState.players;
     this.localPlayerId = this.gameState.localPlayerId!;
@@ -344,6 +339,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'gameStarted':
         this.gameStateService.setGameState({
           isInGame: true,
+          gameSeed: message.gameSeed,
         });
         this.router.navigate(['/game']);
         break;

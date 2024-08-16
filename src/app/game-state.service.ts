@@ -4,6 +4,7 @@ import { BehaviorSubject, filter, Observable } from 'rxjs';
 
 export interface GameState {
   gameCode: string | null;
+  gameSeed: number | null;
   isInGame: boolean;
   isHost: boolean;
   players: any[]; // Replace 'any' with a proper Player interface if you have one
@@ -20,6 +21,7 @@ export class GameStateService {
     isHost: false,
     players: [],
     localPlayerId: null,
+    gameSeed: null,
   };
 
   constructor(private router: Router) {
@@ -44,6 +46,7 @@ export class GameStateService {
   clearGameState() {
     this.gameState = {
       gameCode: null,
+      gameSeed: null,
       isInGame: false,
       isHost: false,
       players: [],

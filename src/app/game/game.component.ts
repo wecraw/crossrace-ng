@@ -130,6 +130,11 @@ export class GameComponent implements OnInit, OnDestroy {
       this.gameState = state;
     });
 
+    if (this.gameState.gameSeed) {
+      this.isMultiplayer = true;
+      this.startAfterCountDown(this.gameState.gameSeed);
+    }
+
     this.wsSubscription = this.webSocketService
       .getMessages()
       .subscribe((message) => this.handleWebSocketMessage(message));
@@ -140,6 +145,9 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.gameStateService.setGameState({
+      gameSeed: null,
+    });
     this.removeTouchEventHandling();
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
