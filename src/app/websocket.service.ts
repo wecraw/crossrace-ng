@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject, Subject } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 
@@ -8,7 +8,7 @@ import { environment } from '../environments/environment';
 })
 export class WebSocketService {
   private socket!: WebSocket;
-  private messageSubject = new ReplaySubject<any>(1);
+  private messageSubject = new Subject<any>();
   private connectionStatus = new BehaviorSubject<boolean>(false);
 
   connect(): Promise<void> {

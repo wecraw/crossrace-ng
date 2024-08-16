@@ -5,10 +5,12 @@ import { LobbyComponent } from './app/lobby/lobby.component';
 import { GameComponent } from './app/game/game.component';
 import { WebSocketService } from './app/websocket.service';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { VersusComponent } from './app/versus/versus.component';
 
 const routes: Routes = [
   { path: '', component: GameComponent },
   { path: 'lobby', component: LobbyComponent },
+  { path: 'versus', component: VersusComponent },
   { path: 'game', component: GameComponent },
   { path: 'join/:gameCode', component: LobbyComponent },
   { path: '**', redirectTo: '' },

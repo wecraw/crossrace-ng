@@ -90,8 +90,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private clipboard: Clipboard
   ) {}
 
-  joinGameForm!: FormGroup;
-
   dialogSettingsJoin: any = {
     dialogText: 'Joining game',
     showSpinner: true,
@@ -110,18 +108,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    this.joinGameForm = this.fb.group({
-      gameCode: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(4),
-          Validators.maxLength(4),
-          Validators.pattern('^[A-Za-z]{4}$'),
-        ],
-      ],
-    });
-
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
       if (state.gameCode) {
@@ -146,11 +132,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
         .subscribe((message) => this.handleMessage(message));
 
       this.route.params.subscribe((params) => {
+        console.log('players1', this.players);
         if (params['gameCode']) {
           this.openDialog(this.dialogSettingsJoin, true);
           let gameCode = params['gameCode'].toUpperCase();
           this.gameState.gameCode = gameCode;
           this.joinGame();
+        } else {
+          this.createGame();
         }
       });
     } catch (error) {
@@ -159,6 +148,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (!this.gameState.isInGame) {
+      console.log('Leaving lobby');
+      this.gameStateService.clearGameState();
+    }
+
+    this.players = [];
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
@@ -226,15 +221,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     return player.id === this.localPlayerId;
   }
 
-  onInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    input.value = input.value
-      .toUpperCase()
-      .replace(/[^A-Z]/g, '')
-      .slice(0, 4);
-    this.joinGameForm.patchValue({ gameCode: input.value });
-  }
-
   editName() {
     this.editingName = true;
   }
@@ -261,28 +247,15 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.webSocketService.createGame();
   }
 
-  joinGameClick() {
-    this.gameStateService.setGameState({
-      gameCode: this.joinGameForm.value.gameCode,
-    });
-    this.joinGame();
-  }
-
   joinGame(): void {
     this.joining = true;
     let gameCode = this.gameState.gameCode;
-    this.joinGameForm.patchValue({
-      gameCode: gameCode,
-    });
     this.gameStateService.setGameState({
       gameCode: gameCode,
     });
     if (gameCode && gameCode.length === 4) {
       this.openDialog(this.dialogSettingsJoin, true);
       this.webSocketService.joinGame(gameCode.toUpperCase());
-    } else {
-      //this should never happen because the button is connected to the validation
-      alert('Please enter a valid 4-character game code.');
     }
   }
 
@@ -301,9 +274,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   checkIfHost() {
-    console.log(this.gameState.players);
-    console.log('local:', this.localPlayerId);
-    console.log('state:', this.gameState.localPlayerId);
     this.gameState.players.forEach((player) => {
       if (player.isHost && player.id === this.localPlayerId) {
         this.isHost = true;
@@ -312,7 +282,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         });
       }
     });
-    console.log(this.isHost);
   }
 
   anyNotReady() {
@@ -325,12 +294,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   private updateLobbyUI() {
+    console.log('hiii p', this.players);
     this.gameCode = this.gameState.gameCode;
     this.players = this.gameState.players;
     this.localPlayerId = this.gameState.localPlayerId!;
     this.gameShareUrl = this.getShareUrl();
     this.creatingGame = false;
     this.checkIfHost();
+    this.cdr.detectChanges();
   }
 
   private handleMessage(message: any) {
@@ -371,7 +342,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         this.localPlayerId = message.playerId;
         break;
       case 'gameStarted':
-        console.log('Game started, navigating to game page');
         this.gameStateService.setGameState({
           isInGame: true,
         });

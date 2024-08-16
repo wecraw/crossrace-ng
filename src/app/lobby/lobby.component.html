@@ -1,45 +1,6 @@
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-md-6 text-center">
-      <h1 *ngIf="!gameCode" class="mb-4">Versus</h1>
-
-      <div *ngIf="!gameCode">
-        <button class="btn btn-primary btn-lg mb-3" (click)="createGame()">
-          Create New Game
-        </button>
-
-        <hr />
-
-        <form [formGroup]="joinGameForm">
-          <div class="form-group">
-            <input
-              class="form-control form-control-lg mx-auto mb-3"
-              style="max-width: 185px; font-size: 20px"
-              formControlName="gameCode"
-              placeholder="Enter room code"
-              (input)="onInputChange($event)"
-              maxlength="4"
-            />
-            <div
-              class="invalid-feedback"
-              *ngIf="
-                joinGameForm.get('gameCode')!.invalid &&
-                joinGameForm.get('gameCode')!.touched
-              "
-            >
-              Please input a valid room code
-            </div>
-          </div>
-          <button
-            class="btn btn-secondary"
-            [disabled]="!joinGameForm.valid"
-            (click)="joinGameClick()"
-          >
-            Join Game
-          </button>
-        </form>
-      </div>
-
       <div *ngIf="gameCode">
         <h2>Room code: {{ gameCode }}</h2>
 
