@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Renamed LetterTileComponent to GameComponent
+- Loading strategy for game component to improve loading experience when entering a game
 
 ## [0.3.0] - 2024-08-15
 

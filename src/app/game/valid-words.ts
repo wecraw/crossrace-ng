@@ -219,6 +219,7 @@ export const VALID_WORDS = [
   'prophase',
   'niggards',
   'protist',
+  'prix',
   'ramming',
   'exiles',
   'prickers',
