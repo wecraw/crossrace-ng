@@ -149,12 +149,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
         if (params['gameCode']) {
           this.openDialog(this.dialogSettingsJoin, true);
           let gameCode = params['gameCode'].toUpperCase();
-          this.joinGameForm.patchValue({
-            gameCode: gameCode,
-          });
-          this.gameStateService.setGameState({
-            gameCode: gameCode,
-          });
+          this.gameState.gameCode = gameCode;
           this.joinGame();
         }
       });
@@ -266,13 +261,27 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.webSocketService.createGame();
   }
 
+  joinGameClick() {
+    this.gameStateService.setGameState({
+      gameCode: this.joinGameForm.value.gameCode,
+    });
+    this.joinGame();
+  }
+
   joinGame(): void {
     this.joining = true;
-    const gameCode = this.joinGameForm.get('gameCode')?.value;
+    let gameCode = this.gameState.gameCode;
+    this.joinGameForm.patchValue({
+      gameCode: gameCode,
+    });
+    this.gameStateService.setGameState({
+      gameCode: gameCode,
+    });
     if (gameCode && gameCode.length === 4) {
       this.openDialog(this.dialogSettingsJoin, true);
       this.webSocketService.joinGame(gameCode.toUpperCase());
     } else {
+      //this should never happen because the button is connected to the validation
       alert('Please enter a valid 4-character game code.');
     }
   }
@@ -284,6 +293,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
       console.error('Cannot start game: not host or no game code');
     }
   }
+
+  leaveLobby() {}
 
   getShareUrl() {
     return window.location.origin + '/join/' + this.gameCode;
