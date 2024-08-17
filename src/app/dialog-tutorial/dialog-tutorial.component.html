@@ -1,33 +1,45 @@
 <div class="wrapper">
   <div class="d-flex flex-column h-100">
     <div
-      *ngIf="scene === 0"
+      *ngIf="scene === 0 || scene === 2"
       class="animation-wrapper"
       [class.moved]="isAnimationStarted"
     >
       <div class="letter-tile blue" [ngClass]="{ blue: !isAnimationFinished }">
         Y
       </div>
-      <div *ngIf="showTouch && !isAnimationFinished" class="circle"></div>
+      <div
+        *ngIf="showTouch && !isAnimationFinished"
+        class="circle fade-in"
+      ></div>
     </div>
 
     <div id="letter-bank" class="ab-center letter-bank m-lr-auto"></div>
-    <div class="fade-out-edges chess-grid m-lr-auto">
-      <div *ngFor="let row of grid; let i = index" class="grid-row">
-        <div
-          *ngFor="let cell of row; let j = index"
-          class="grid-cell noselect"
-          [ngClass]="{
-            'letter-tile': activeGrid[i] && activeGrid[i][j],
-            blue: checkBlueLetter(activeGrid[i][j])
-          }"
-        >
-          @if(activeGrid[i] && activeGrid[i][j]){
-          {{ activeGrid[i][j] }}
-          }
+    <div class="fade-out-edges">
+      <div
+        class="chess-grid m-lr-auto"
+        [ngClass]="{ offset: scene === 2 }"
+        [class.moved]="isAnimation2Started"
+      >
+        <div *ngFor="let row of grid; let i = index" class="grid-row">
+          <div
+            *ngFor="let cell of row; let j = index"
+            class="grid-cell noselect"
+            [ngClass]="{
+              'letter-tile': activeGrid[i] && activeGrid[i][j],
+              blue: checkBlueLetter(activeGrid[i][j])
+            }"
+          >
+            @if(activeGrid[i] && activeGrid[i][j]){
+            {{ activeGrid[i][j].charAt(0) }}
+            } @if(i === 2 && j === 3 && scene === 2 && showTouch2){
+            <div class="circle fade-in circle-2"></div>
+            }
+          </div>
         </div>
       </div>
     </div>
+
     <div class="desc m-lr-auto">
       {{ descriptions[scene] }}
     </div>
@@ -35,11 +47,27 @@
       <button
         class="btn btn-outline-secondary quit"
         [tabIndex]="-1"
+        [disabled]="scene === 0"
         (click)="back()"
       >
         Back
       </button>
-      <button class="btn btn-primary" (click)="next()" autofocus>Next</button>
+      <button
+        *ngIf="scene < 2"
+        class="btn btn-primary"
+        (click)="next()"
+        autofocus
+      >
+        Next
+      </button>
+      <button
+        *ngIf="scene === 2"
+        class="btn btn-primary"
+        (click)="confirm()"
+        autofocus
+      >
+        Let's Play!
+      </button>
     </div>
   </div>
 </div>
