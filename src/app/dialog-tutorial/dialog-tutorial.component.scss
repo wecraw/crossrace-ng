@@ -1,0 +1,148 @@
+$grid-cell-size: 30px;
+
+.wrapper {
+  // min-width: 300px;
+  // min-height: 300px;
+  height: 500px;
+  padding: 35px;
+}
+
+.spinner {
+  margin-top: 18px;
+}
+
+// h1 {
+//   line-height: 3 !important;
+//   padding: 0;
+// }
+
+h1 {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.btn-primary {
+  margin-left: auto;
+}
+
+.action-buttons {
+  margin-top: auto;
+
+  button {
+    min-width: 75px;
+  }
+}
+
+.quit {
+  margin-right: auto;
+}
+
+.letter-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 5px;
+  width: 150px;
+  min-height: 45px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  // padding: 10px 10px 5px 10px;
+  border-radius: 16px;
+  margin-bottom: 0px;
+  top: 60px;
+}
+
+.fade-out-edges {
+  padding-top: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  --mask-size: 20px;
+  mask-image: linear-gradient(
+      to right,
+      transparent,
+      black var(--mask-size),
+      black calc(100% - var(--mask-size)),
+      transparent
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      black var(--mask-size),
+      black calc(100% - var(--mask-size)),
+      transparent
+    );
+  mask-size: 100% 100%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-composite: intersect;
+}
+
+.chess-grid {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+.grid-row {
+  display: flex;
+}
+.grid-cell {
+  width: $grid-cell-size;
+  height: $grid-cell-size;
+  border: 1px solid #ccc;
+}
+
+.desc {
+  max-width: 255px;
+  text-align: center;
+}
+
+.animation-wrapper {
+  position: absolute;
+  top: 43px;
+  left: 121px;
+  z-index: 1;
+  transition: all 1.1s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  .letter-tile {
+    min-width: 28px;
+    min-height: 28px;
+  }
+}
+
+.animation-wrapper.moved {
+  top: 191px;
+  left: 231px;
+}
+
+.circle {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background-color: #444;
+  opacity: 0.5;
+  position: absolute;
+  left: 15px;
+  top: 15px;
+}
+
+.letter-tile {
+  min-width: $grid-cell-size;
+  min-height: $grid-cell-size;
+  background-color: green;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.blue {
+  background-color: #3f51b5;
+}

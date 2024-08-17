@@ -1,0 +1,45 @@
+<div class="wrapper">
+  <div class="d-flex flex-column h-100">
+    <div
+      *ngIf="scene === 0"
+      class="animation-wrapper"
+      [class.moved]="isAnimationStarted"
+    >
+      <div class="letter-tile blue" [ngClass]="{ blue: !isAnimationFinished }">
+        Y
+      </div>
+      <div *ngIf="showTouch && !isAnimationFinished" class="circle"></div>
+    </div>
+
+    <div id="letter-bank" class="ab-center letter-bank m-lr-auto"></div>
+    <div class="fade-out-edges chess-grid m-lr-auto">
+      <div *ngFor="let row of grid; let i = index" class="grid-row">
+        <div
+          *ngFor="let cell of row; let j = index"
+          class="grid-cell noselect"
+          [ngClass]="{
+            'letter-tile': activeGrid[i] && activeGrid[i][j],
+            blue: checkBlueLetter(activeGrid[i][j])
+          }"
+        >
+          @if(activeGrid[i] && activeGrid[i][j]){
+          {{ activeGrid[i][j] }}
+          }
+        </div>
+      </div>
+    </div>
+    <div class="desc m-lr-auto">
+      {{ descriptions[scene] }}
+    </div>
+    <div class="action-buttons d-flex">
+      <button
+        class="btn btn-outline-secondary quit"
+        [tabIndex]="-1"
+        (click)="back()"
+      >
+        Back
+      </button>
+      <button class="btn btn-primary" (click)="next()" autofocus>Next</button>
+    </div>
+  </div>
+</div>

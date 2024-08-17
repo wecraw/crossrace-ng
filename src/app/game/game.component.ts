@@ -30,6 +30,7 @@ import { Subscription } from 'rxjs';
 import * as confetti from 'canvas-confetti';
 import { Router } from '@angular/router';
 import { GameState, GameStateService } from '../game-state.service';
+import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 
 interface ValidatedWord {
   word: string;
@@ -110,6 +111,8 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.openTutorialDialog({ mode: 'solo' });
+
     this.isFirstNavigation = this.gameStateService.isFirstNavigation();
 
     // if it's the first page load, do everything at once. otherwise, fade the grid in after waiting for it to load
@@ -529,6 +532,13 @@ export class GameComponent implements OnInit, OnDestroy {
 
     container.addEventListener('touchmove', this.touchMoveListener, {
       passive: false,
+    });
+  }
+
+  openTutorialDialog(data: any) {
+    const dialogRef = this.dialog.open(DialogTutorial, {
+      data: data,
+      minWidth: 370,
     });
   }
 
