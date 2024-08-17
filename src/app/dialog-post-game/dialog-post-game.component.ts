@@ -52,11 +52,12 @@ export class DialogPostGame implements OnInit {
   grid!: number[][];
 
   ngOnInit() {
-    this.grid = Array(12)
+    // dangerous because the longest word could theoretically be 12 characters long, however in practice this never happens
+    // TODO: get a longest word function (shared util with game?)
+    let gridSize = 10;
+    this.grid = Array(gridSize)
       .fill(0)
-      .map(() => Array(12).fill(0));
-
-    console.log(this.data.grid);
+      .map(() => Array(gridSize).fill(0));
   }
 
   close() {

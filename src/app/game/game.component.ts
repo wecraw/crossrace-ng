@@ -39,7 +39,7 @@ interface ValidatedWord {
   direction: 'horizontal' | 'vertical';
 }
 
-const DRAG_POSITION_INIT = { x: -182, y: -182 };
+const DRAG_POSITION_INIT = { x: -235, y: -237 };
 
 @Component({
   selector: 'app-game',

@@ -1,3 +1,5 @@
+$grid-cell-size: 35px;
+
 .tile-wrapper {
   height: 40px;
   width: 40px;
@@ -101,8 +103,8 @@
 }
 
 .grid-cell {
-  width: 32px;
-  height: 32px;
+  width: $grid-cell-size;
+  height: $grid-cell-size;
   border: 1px solid #aaa;
   display: flex;
   justify-content: center;
@@ -116,8 +118,8 @@
 }
 
 .letter-tile {
-  min-width: 32px;
-  min-height: 32px;
+  min-width: $grid-cell-size;
+  min-height: $grid-cell-size;
   background-color: #3f51b5;
   display: flex;
   justify-content: center;

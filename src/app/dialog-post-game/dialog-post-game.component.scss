@@ -1,3 +1,5 @@
+$grid-cell-size: 30px;
+
 .wrapper {
   // min-width: 300px;
   // min-height: 300px;
@@ -9,12 +11,12 @@
   margin-top: 18px;
 }
 
-h1 {
-  line-height: 3 !important;
-  padding: 0;
-}
+// h1 {
+//   line-height: 3 !important;
+//   padding: 0;
+// }
 
-h2 {
+h1 {
   margin-top: 15px;
   text-align: center;
 }
@@ -43,14 +45,14 @@ h2 {
   display: flex;
 }
 .grid-cell {
-  width: 27px;
-  height: 27px;
+  width: $grid-cell-size;
+  height: $grid-cell-size;
   border: 1px solid #ccc;
 }
 
 .letter-tile {
-  min-width: 27px;
-  min-height: 27px;
+  min-width: $grid-cell-size;
+  min-height: $grid-cell-size;
   background-color: green;
   display: flex;
   justify-content: center;
