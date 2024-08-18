@@ -9,6 +9,7 @@ export interface GameState {
   isHost: boolean;
   players: any[]; // Replace 'any' with a proper Player interface if you have one
   localPlayerId: string | null;
+  isCreating: boolean;
 }
 
 @Injectable({
@@ -22,6 +23,7 @@ export class GameStateService {
     players: [],
     localPlayerId: null,
     gameSeed: null,
+    isCreating: false,
   };
 
   constructor(private router: Router) {
@@ -51,6 +53,7 @@ export class GameStateService {
       isHost: false,
       players: [],
       localPlayerId: null,
+      isCreating: false,
     };
     this.gameStateSubject.next(this.gameState);
   }

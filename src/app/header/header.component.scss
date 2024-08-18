@@ -18,7 +18,7 @@ h2 {
   height: 50px;
   background-color: #ccc;
   background-color: #fff;
-  border-bottom: 1px solid #ccc;
+  // border-bottom: 1px solid #ccc;
   width: 100vw;
   display: flex;
   justify-content: flex-end;
@@ -78,4 +78,8 @@ ul {
 
 .dropdown-item {
   height: 50px;
+}
+
+button {
+  border-radius: 6px;
 }

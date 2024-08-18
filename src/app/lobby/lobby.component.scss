@@ -44,6 +44,17 @@ hr {
   padding-top: 2px;
   padding-bottom: 10px;
 }
+
+.btn-outline-secondary {
+  margin-left: 10px;
+  background-color: #fff;
+  color: #344452;
+
+  &:hover {
+    color: #344452;
+    background-color: #eee;
+  }
+}
 .player-avatar {
   width: 60px;
   height: 60px;

@@ -52,20 +52,10 @@
       >
         Back
       </button>
-      <button
-        *ngIf="scene < 2"
-        class="btn btn-primary"
-        (click)="next()"
-        autofocus
-      >
+      <button *ngIf="scene < 2" class="btn btn-primary" (click)="next()">
         Next
       </button>
-      <button
-        *ngIf="scene === 2"
-        class="btn btn-primary"
-        (click)="confirm()"
-        autofocus
-      >
+      <button *ngIf="scene === 2" class="btn btn-primary" (click)="confirm()">
         Let's Play!
       </button>
     </div>

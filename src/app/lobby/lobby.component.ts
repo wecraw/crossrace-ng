@@ -21,6 +21,7 @@ import { Clipboard } from '@angular/cdk/clipboard';
 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GameState, GameStateService } from '../game-state.service';
+import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 
 interface Player {
   id: string;
@@ -107,8 +108,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
     return { 'background-color': this.pastelRainbowColors[colorIndex] };
   }
 
+  isMobile(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  }
+
   async ngOnInit() {
-    this.isShareSupported = !!navigator.share;
+    this.isShareSupported = !!navigator.share && this.isMobile();
 
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
@@ -134,8 +141,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
           this.gameState.gameCode = gameCode;
           this.joinGame();
         } else {
-          if (!this.gameState.isInGame) {
+          if (!this.gameState.isInGame || this.gameState.isCreating) {
             this.createGame();
+            this.gameStateService.setGameState({
+              isCreating: false,
+            });
           } else {
             this.gameStateService.setGameState({
               isInGame: false,
@@ -195,7 +205,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   copyToClipboard() {
     const shareString = `Race me on Crossrace! \n${this.gameShareUrl}`;
 
-    if (navigator.share) {
+    if (navigator.share && this.isMobile()) {
       navigator.share({
         text: shareString,
       });
@@ -244,6 +254,13 @@ export class LobbyComponent implements OnInit, OnDestroy {
         disableClose: true,
       });
     }
+  }
+
+  openTutorialDialog(data: any) {
+    const dialogRef = this.dialog.open(DialogTutorial, {
+      data: data,
+      minWidth: 370,
+    });
   }
 
   closeDialog() {

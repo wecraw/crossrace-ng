@@ -2,7 +2,7 @@
   <div class="container">
     <div class="d-flex justify-content-between align-items-center">
       <div class="logo-wrapper d-flex">
-        <div class="letter-tile">C</div>
+        <!-- <div class="letter-tile">C</div>
         <div class="letter-tile">R</div>
         <div class="letter-tile">O</div>
         <div class="letter-tile">S</div>
@@ -11,7 +11,7 @@
         <div class="letter-tile">A</div>
         <div class="letter-tile">C</div>
         <div class="letter-tile">E</div>
-        <div class="version">(0.3.4)</div>
+        <div class="version">(0.3.4)</div> -->
       </div>
 
       <nav>
@@ -21,8 +21,15 @@
             >Solo</a
           >
           <div class="me-3 divider"></div>
-          <a class="nav-link" routerLink="/versus" routerLinkActive="active"
+          <a
+            class="nav-link me-3"
+            routerLink="/versus"
+            routerLinkActive="active"
             >Versus</a
+          >
+          <div class="me-3 divider"></div>
+          <a class="nav-link" (click)="openTutorialDialog({ mode: 'solo' })"
+            >How to play</a
           >
         </div>
 
@@ -43,6 +50,15 @@
             <hr />
             <li>
               <button class="dropdown-item" routerLink="/versus">Versus</button>
+            </li>
+            <hr />
+            <li>
+              <button
+                class="dropdown-item"
+                (click)="openTutorialDialog({ mode: 'solo' })"
+              >
+                How to play
+              </button>
             </li>
           </ul>
         </div>

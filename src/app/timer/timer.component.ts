@@ -20,7 +20,7 @@ import {
     `
       .time {
         font-size: 2em;
-        margin: 20px 0;
+        margin: 13px 0;
         color: #444;
       }
     `,

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2024-08-17
+
+### Added
+
+- Tutorials
+- Spork, spendy, lovey, frowny to valid word dictionary
+
+### Changed
+
+- Dramatic changes to header and main menu styles
+- Version now at bottom of home page
+
+### Removed
+
+- Footer component
+
 ## [0.3.4] - 2024-08-16
 
 ### Changed

@@ -100,6 +100,7 @@ export class GameComponent implements OnInit, OnDestroy {
   // Game State
   gameState!: GameState;
   isFirstNavigation: boolean = true;
+  isCountingDown: boolean = false;
 
   constructor(
     private renderer2: Renderer2,
@@ -111,8 +112,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.openTutorialDialog({ mode: 'solo' });
-
     this.isFirstNavigation = this.gameStateService.isFirstNavigation();
 
     // if it's the first page load, do everything at once. otherwise, fade the grid in after waiting for it to load
@@ -157,9 +156,8 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  startRandomPuzzle() {
-    this.currentPuzzleIndex = Math.floor(Math.random() * 1000);
-    this.startPuzzle();
+  getRandomPuzzleSeed() {
+    return Math.floor(Math.random() * 1000);
   }
 
   startSeededPuzzle(seed: number) {
@@ -167,10 +165,15 @@ export class GameComponent implements OnInit, OnDestroy {
     this.startPuzzle();
   }
 
-  startAfterCountDown(seed: number) {
+  startAfterCountDown(seed?: number) {
+    this.isCountingDown = true;
+    if (!seed) seed = this.getRandomPuzzleSeed();
+    this.setLettersFromPuzzle();
+    this.shuffleLetters();
     setTimeout(() => {
       this.isGameStarted = true;
       this.startSeededPuzzle(seed);
+      this.isCountingDown = false;
     }, 3000);
 
     const intervalId = setInterval(() => {
@@ -204,16 +207,25 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  startPuzzle(continueTimer?: boolean) {
-    if (!continueTimer) this.toggleTimer();
-    this.setLettersFromPuzzle();
-    this.shuffleLetters();
+  startPuzzle() {
+    this.toggleTimer();
     this.initializeGrid();
     this.initializeValidLetterIndices();
     this.generateGridCellIds();
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
     this.updateFormedWords();
     this.isGameStarted = true;
+  }
+
+  refreshPuzzle() {
+    this.initializeGrid();
+    this.initializeValidLetterIndices();
+    this.generateGridCellIds();
+    this.allDropListIds = ['letter-bank', ...this.gridCellIds];
+    this.updateFormedWords();
+    this.isGameStarted = true;
+    this.setLettersFromPuzzle();
+    this.shuffleLetters();
   }
 
   setLettersFromPuzzle() {
@@ -540,6 +552,11 @@ export class GameComponent implements OnInit, OnDestroy {
       data: data,
       minWidth: 370,
     });
+  }
+
+  getFlipInClass(i: number) {
+    if (!this.isGameStarted) return 'notouch flip-in-hor-bottom-' + i;
+    return '';
   }
 
   private removeTouchEventHandling() {

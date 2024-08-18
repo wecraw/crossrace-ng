@@ -7,6 +7,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { GameState, GameStateService } from '../game-state.service';
 
 @Component({
   selector: 'app-versus',
@@ -18,7 +19,11 @@ import { Router, RouterModule } from '@angular/router';
 export class VersusComponent implements OnInit {
   joinGameForm!: FormGroup;
 
-  constructor(private fb: FormBuilder, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private gameStateService: GameStateService
+  ) {}
 
   ngOnInit(): void {
     this.joinGameForm = this.fb.group({
@@ -41,6 +46,13 @@ export class VersusComponent implements OnInit {
     } else {
       console.log('Form is invalid');
     }
+  }
+
+  createGame() {
+    this.gameStateService.setGameState({
+      isCreating: true,
+    });
+    this.router.navigate(['/lobby']);
   }
 
   onInputChange(event: Event) {

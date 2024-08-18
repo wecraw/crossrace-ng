@@ -10,27 +10,96 @@
     (cdkDropListDropped)="drop($event)"
   >
     @for (letter of bankLetters; track $index) {
-    <div class="tile-wrapper" cdkDrag>
+    <div
+      *ngIf="isGameStarted || isMultiplayer || isCountingDown"
+      class="tile-wrapper"
+      [ngClass]="getFlipInClass($index)"
+      cdkDrag
+    >
       <div class="letter m-lr-auto">
         {{ letter }}
       </div>
     </div>
     }
-    <button
-      *ngIf="!isGameStarted && !isMultiplayer"
-      (click)="startRandomPuzzle()"
-      class="btn btn-primary m-auto"
-      style="max-height: 40px; min-width: 130px"
-    >
-      Start
-    </button>
-    <div class="m-auto countdown" *ngIf="isMultiplayer && !isGameStarted">
-      <h3>Get ready!</h3>
-      <h5>Game starting in {{ countdown }}...</h5>
+  </div>
+  <div
+    id="letter-bank"
+    *ngIf="!isGameStarted && !isMultiplayer && !isCountingDown"
+    class="ab-center letter-bank m-lr-auto"
+    cdkDropList
+    #letterbank="cdkDropList"
+    cdkDropListOrientation="mixed"
+    [cdkDropListData]="bankLetters"
+    [cdkDropListConnectedTo]="gridCellIds"
+    (cdkDropListDropped)="drop($event)"
+  >
+    <div class="row logo-row-1">
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">C</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">R</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">O</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">S</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">S</div>
+      </div>
+    </div>
+
+    <div class="row logo-row-2">
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">R</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">A</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">C</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">E</div>
+      </div>
     </div>
   </div>
 </div>
-
+<div class="countdown m-lr-auto" *ngIf="isCountingDown">
+  <h3>Get ready!</h3>
+  <h5>Game starting in {{ countdown }}...</h5>
+</div>
+<div
+  class="main-menu m-lr-auto"
+  *ngIf="!isGameStarted && !isMultiplayer && !isCountingDown"
+>
+  <div class="main-menu-buttons">
+    <button
+      (click)="startAfterCountDown()"
+      class="btn btn-primary btn-lg m-auto"
+      [ngClass]="{ 'fade-out': isCountingDown }"
+    >
+      Solo
+    </button>
+    <button
+      routerLink="/versus"
+      routerLinkActive="active"
+      class="btn btn-success btn-lg m-auto"
+      [ngClass]="{ 'fade-out': isCountingDown }"
+    >
+      Versus
+    </button>
+    <button
+      (click)="openTutorialDialog({ mode: 'solo' })"
+      class="btn btn-outline-secondary btn-lg m-auto"
+      [ngClass]="{ 'fade-out': isCountingDown }"
+    >
+      How to play
+    </button>
+  </div>
+</div>
 <div
   #gridWrapper
   [ngClass]="{ 'slide-in-fwd-center': !isFirstNavigation }"
@@ -82,10 +151,15 @@
   </app-timer>
   <i
     class="material-icons refresh noselect"
-    (click)="startPuzzle(true)"
+    (click)="refreshPuzzle()"
     [ngClass]="{ hidden: !isGameStarted }"
     >refresh</i
   >
 </div>
 
-<button *ngIf="debug" (click)="forceWin()">force win</button>
+<div
+  *ngIf="!isGameStarted && !isMultiplayer && !isCountingDown"
+  class="version"
+>
+  0.4.0
+</div>
