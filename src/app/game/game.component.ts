@@ -172,6 +172,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.initializeGrid();
     this.initializeValidLetterIndices();
     if (!seed) seed = this.getRandomPuzzleSeed();
+    this.currentPuzzleIndex = seed;
     this.setLettersFromPuzzle();
     this.shuffleLetters();
     setTimeout(() => {
