@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Footer component
 
+### Fixed
+
+- Creating game while already in lobby no longer returns you to the old lobby
+- Lambda fix: if a player joins an empty lobby, they automatically get host
+- Share should only trigger on mobile devices now
+
 ## [0.3.4] - 2024-08-16
 
 ### Changed
