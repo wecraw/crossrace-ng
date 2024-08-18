@@ -168,6 +168,8 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   startAfterCountDown(seed?: number) {
+    this.resetTimer();
+
     if (this.isMultiplayer) {
       this.ngLocation.replaceState('/versus-game');
     } else {
@@ -300,7 +302,6 @@ export class GameComponent implements OnInit, OnDestroy {
       this.toggleTimer();
       this.isGameStarted = false;
       this.waitingForRestart = true;
-      this.resetTimer();
     }
     this.renderConfetti();
     return true;
