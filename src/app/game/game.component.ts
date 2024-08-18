@@ -101,6 +101,7 @@ export class GameComponent implements OnInit, OnDestroy {
   gameState!: GameState;
   isFirstNavigation: boolean = true;
   isCountingDown: boolean = false;
+  waitingForRestart: boolean = false;
 
   constructor(
     private renderer2: Renderer2,
@@ -167,6 +168,9 @@ export class GameComponent implements OnInit, OnDestroy {
 
   startAfterCountDown(seed?: number) {
     this.isCountingDown = true;
+    this.waitingForRestart = false;
+    this.initializeGrid();
+    this.initializeValidLetterIndices();
     if (!seed) seed = this.getRandomPuzzleSeed();
     this.setLettersFromPuzzle();
     this.shuffleLetters();
@@ -175,6 +179,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.startSeededPuzzle(seed);
       this.isCountingDown = false;
     }, 3000);
+    this.countdown = 3;
 
     const intervalId = setInterval(() => {
       this.countdown--;
@@ -286,6 +291,7 @@ export class GameComponent implements OnInit, OnDestroy {
     } else {
       this.toggleTimer();
       this.isGameStarted = false;
+      this.waitingForRestart = true;
       this.resetTimer();
     }
     this.renderConfetti();
@@ -545,6 +551,10 @@ export class GameComponent implements OnInit, OnDestroy {
     container.addEventListener('touchmove', this.touchMoveListener, {
       passive: false,
     });
+  }
+
+  versus() {
+    this.router.navigate(['/versus']);
   }
 
   openTutorialDialog(data: any) {

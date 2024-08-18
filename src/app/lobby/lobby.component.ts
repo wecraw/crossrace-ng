@@ -97,6 +97,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
     showConfirm: false,
   };
 
+  dialogSettingsStart: any = {
+    dialogText: 'Starting game',
+    showSpinner: true,
+    showConfirm: false,
+  };
+
   dialogSettingsCreate: any = {
     dialogText: 'Creating game',
     showSpinner: true,
@@ -285,6 +291,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   startGame(): void {
+    this.openDialog(this.dialogSettingsStart, true);
     if (this.gameState.isHost && this.gameCode) {
       this.webSocketService.startGame(this.gameCode);
     } else {
@@ -366,6 +373,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
         this.localPlayerId = message.playerId;
         break;
       case 'gameStarted':
+        this.closeDialog();
         this.gameStateService.setGameState({
           isInGame: true,
           gameSeed: message.gameSeed,
