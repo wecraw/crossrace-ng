@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-header',
@@ -13,11 +14,24 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 export class HeaderComponent {
   // Dialog
   readonly dialog = inject(MatDialog);
+  private router = inject(Router);
+  private location = inject(Location);
 
   openTutorialDialog(data: any) {
     const dialogRef = this.dialog.open(DialogTutorial, {
       data: data,
       minWidth: 370,
     });
+  }
+
+  navigateToSolo() {
+    if (
+      this.location.path() === '/solo' ||
+      this.location.path() === '/versus-game'
+    ) {
+      window.location.reload();
+    } else {
+      this.router.navigate(['/solo']);
+    }
   }
 }

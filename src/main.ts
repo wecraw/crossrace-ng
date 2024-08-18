@@ -13,6 +13,7 @@ const routes: Routes = [
   { path: 'versus', component: VersusComponent },
   { path: 'game', component: GameComponent },
   { path: 'join/:gameCode', component: LobbyComponent },
+  { path: 'solo', component: GameComponent },
   { path: '**', redirectTo: '' },
 ];
 

@@ -1,23 +1,15 @@
 <header class="header">
   <div class="container">
     <div class="d-flex justify-content-between align-items-center">
-      <div class="logo-wrapper d-flex">
-        <!-- <div class="letter-tile">C</div>
-        <div class="letter-tile">R</div>
-        <div class="letter-tile">O</div>
-        <div class="letter-tile">S</div>
-        <div class="letter-tile">S</div>
-        <div class="letter-tile">R</div>
-        <div class="letter-tile">A</div>
-        <div class="letter-tile">C</div>
-        <div class="letter-tile">E</div>
-        <div class="version">(0.3.4)</div> -->
-      </div>
+      <div class="logo-wrapper d-flex"></div>
 
       <nav>
         <!-- Links for tablets and above -->
         <div class="d-none d-md-flex">
-          <a class="nav-link me-3" routerLink="/" routerLinkActive="active"
+          <a
+            class="nav-link me-3"
+            (click)="navigateToSolo()"
+            routerLinkActive="active"
             >Solo</a
           >
           <div class="me-3 divider"></div>
@@ -45,7 +37,9 @@
 
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
-              <button class="dropdown-item" routerLink="/">Solo</button>
+              <button class="dropdown-item" (click)="navigateToSolo()">
+                Solo
+              </button>
             </li>
             <hr />
             <li>

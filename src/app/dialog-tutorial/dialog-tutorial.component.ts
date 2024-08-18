@@ -60,7 +60,7 @@ const grids = [
 
 const descriptions = [
   'Race to use all 12 letters to form interconnected words!',
-  "Words must be three letters or longer, two letter words don't count!",
+  "Words must be 3 letters or longer, 2 letter words don't count!",
   'If you need more space, just drag the canvas around!',
 ];
 
@@ -120,10 +120,7 @@ export class DialogTutorial implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.ngZone.run(() => {
-      const timeout1 = setTimeout(() => {
-        this.startAnimation();
-      }, 400);
-      this.timeouts.push(timeout1);
+      this.startAnimation();
     });
   }
 
@@ -134,13 +131,13 @@ export class DialogTutorial implements OnInit, AfterViewInit {
       const timeout1 = setTimeout(() => {
         this.isAnimationStarted = true;
         this.cdr.detectChanges(); // Manually trigger change detection
-      }, 500);
+      }, 300);
       this.timeouts.push(timeout1);
 
       const timeout2 = setTimeout(() => {
         this.isAnimationFinished = true;
         this.cdr.detectChanges(); // Manually trigger change detection
-      }, 1600);
+      }, 1500);
       this.timeouts.push(timeout2);
     });
   }

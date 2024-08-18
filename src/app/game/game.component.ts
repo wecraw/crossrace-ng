@@ -15,7 +15,7 @@ import {
   transferArrayItem,
   CdkDragStart,
 } from '@angular/cdk/drag-drop';
-
+import { Location } from '@angular/common';
 import { PUZZLES } from './puzzles';
 import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
@@ -107,7 +107,8 @@ export class GameComponent implements OnInit, OnDestroy {
     private renderer2: Renderer2,
     private elementRef: ElementRef,
     private gameStateService: GameStateService,
-    private router: Router
+    private router: Router,
+    private ngLocation: Location
   ) {
     this.validWords = new Set(VALID_WORDS);
   }
@@ -167,6 +168,12 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   startAfterCountDown(seed?: number) {
+    if (this.isMultiplayer) {
+      this.ngLocation.replaceState('/versus-game');
+    } else {
+      this.ngLocation.replaceState('/solo');
+    }
+
     this.isCountingDown = true;
     this.waitingForRestart = false;
     this.initializeGrid();
