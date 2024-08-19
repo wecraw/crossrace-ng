@@ -1,9 +1,10 @@
 <div class="wrapper">
   <div class="d-flex flex-column h-100">
     <div class="row">
-      <h1 class="m-lr-auto">{{ data.winnerDisplayName }} wins!</h1>
+      <h1 class="m-lr-auto">{{ data.winnerDisplayName }} won!</h1>
+      <h4 class="m-lr-auto">{{ data.time }}</h4>
     </div>
-    <div class="chess-grid m-lr-auto">
+    <div class="chess-grid m-lr-auto fade-out-edges">
       <div *ngFor="let row of grid; let i = index" class="grid-row">
         <div
           *ngFor="let cell of row; let j = index"
@@ -16,9 +17,16 @@
         </div>
       </div>
     </div>
-    <div class="action-buttons">
+
+    <div *ngIf="!data.singlePlayer" class="action-buttons">
       <button class="btn btn-outline-secondary quit" (click)="quit()">
         Quit
+      </button>
+      <button class="btn btn-primary" (click)="confirm()">Play again</button>
+    </div>
+    <div *ngIf="data.singlePlayer" class="action-buttons">
+      <button class="btn btn-outline-secondary quit" (click)="challenge()">
+        Challenge a friend
       </button>
       <button class="btn btn-primary" (click)="confirm()">Play again</button>
     </div>

@@ -20,7 +20,9 @@ h1 {
   margin-top: 15px;
   text-align: center;
 }
-
+h4 {
+  text-align: center;
+}
 .action-buttons {
   align-self: flex-end;
   margin-top: auto;
@@ -32,6 +34,29 @@ h1 {
 
 .quit {
   margin-right: 12px;
+}
+
+.fade-out-edges {
+  overflow: hidden;
+  --mask-size: 20px;
+  mask-image: linear-gradient(
+      to right,
+      transparent,
+      black var(--mask-size),
+      black calc(100% - var(--mask-size)),
+      transparent
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      black var(--mask-size),
+      black calc(100% - var(--mask-size)),
+      transparent
+    );
+  mask-size: 100% 100%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-composite: intersect;
 }
 
 .chess-grid {

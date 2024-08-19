@@ -21,8 +21,6 @@ import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { Dialog } from '../dialog/dialog.component';
 import { Clipboard } from '@angular/cdk/clipboard';
-
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 
@@ -68,9 +66,10 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     '#264653',
   ];
   localPlayer!: Player;
+  localPlayerId: string = '';
+  localPlayerReady: boolean | null = null;
   gameCode: string | null = null;
   gameShareUrl: string = '';
-  localPlayerId: string = '';
   joining: boolean = false;
   editingNameInput: string = '';
   gameState!: GameState;
@@ -218,10 +217,27 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       (p) => p.id === this.localPlayerId
     );
     if (playerIndex !== -1) {
+      this.localPlayerReady = true;
       this.players[playerIndex].ready = true;
     }
-    if (this.gameCode)
+    if (this.gameCode) {
       this.webSocketService.readyUp(this.gameCode, this.localPlayerId);
+    }
+  }
+
+  toggleReady() {
+    const playerIndex = this.players.findIndex(
+      (p) => p.id === this.localPlayerId
+    );
+    if (playerIndex !== -1) {
+      this.localPlayerReady = !this.players[playerIndex].ready;
+      this.players[playerIndex].ready = this.localPlayerReady;
+    }
+    if (this.gameCode) {
+      if (this.localPlayerReady) {
+        this.webSocketService.readyUp(this.gameCode, this.localPlayerId);
+      }
+    }
   }
 
   copyToClipboard() {
@@ -347,9 +363,17 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   private updateLobbyUI() {
     this.players = this.gameState.players.map((player) => {
-      if (player.id === this.localPlayerId && this.editingName) {
-        // Preserve the local edit
-        return { ...player, displayName: this.editingNameInput };
+      if (player.id === this.localPlayerId) {
+        return {
+          ...player,
+          displayName: this.editingName
+            ? this.editingNameInput
+            : player.displayName,
+          ready:
+            this.localPlayerReady !== null
+              ? this.localPlayerReady
+              : player.ready,
+        };
       } else {
         return player;
       }

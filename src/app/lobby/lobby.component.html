@@ -50,6 +50,7 @@
                   [(ngModel)]="editingNameInput"
                   (keyup.enter)="submitName()"
                   (blur)="submitName()"
+                  maxlength="14"
                 />
               </ng-container>
             </div>
@@ -79,7 +80,7 @@
                 *ngIf="isPlayerSelf(player) && !player.ready"
                 (click)="readyUp()"
               >
-                Ready
+                Ready up!
               </button>
             </div>
           </div>

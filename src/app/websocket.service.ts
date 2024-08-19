@@ -85,8 +85,8 @@ export class WebSocketService {
     this.send({ action: 'playerReady', gameCode, playerId });
   }
 
-  announceWin(playerId: string, condensedGrid: string[][]): void {
-    this.send({ action: 'win', playerId, condensedGrid });
+  announceWin(playerId: string, condensedGrid: string[][], time: string): void {
+    this.send({ action: 'win', playerId, condensedGrid, time });
   }
 
   getMessages(): Observable<any> {

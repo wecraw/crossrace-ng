@@ -68,9 +68,10 @@ export class GameComponent implements OnInit, OnDestroy {
   grid: string[][] = [];
   validLetterIndices: boolean[][] = [];
   condensedGrid: string[][] = [];
+  condensedGridDisplaySize: number = 10;
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
-  currentPuzzleIndex: number = 0;
+  currentPuzzleSeed: number = 0;
   formedWords: ValidatedWord[] = [];
   validWords: Set<string>;
   countdown: number = 3;
@@ -82,7 +83,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   // Timer
   timerRunning = false;
-  currentTime = 0;
+  currentTimeString: string = '0:00';
 
   // Debug
   debug: boolean = false;
@@ -163,7 +164,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   startSeededPuzzle(seed: number) {
-    this.currentPuzzleIndex = seed;
+    this.currentPuzzleSeed = seed;
     this.startPuzzle();
   }
 
@@ -181,7 +182,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.initializeGrid();
     this.initializeValidLetterIndices();
     if (!seed) seed = this.getRandomPuzzleSeed();
-    this.currentPuzzleIndex = seed;
+    this.currentPuzzleSeed = seed;
     this.setLettersFromPuzzle();
     this.shuffleLetters();
     setTimeout(() => {
@@ -216,14 +217,15 @@ export class GameComponent implements OnInit, OnDestroy {
         this.openDialog({
           winnerDisplayName: message.winnerDisplayName,
           grid: message.condensedGrid,
+          time: message.time,
         });
-        this.toggleTimer();
+        this.stopTimer();
         break;
     }
   }
 
   startPuzzle() {
-    this.toggleTimer();
+    this.startTimer();
     this.initializeGrid();
     this.initializeValidLetterIndices();
     this.generateGridCellIds();
@@ -244,7 +246,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   setLettersFromPuzzle() {
-    this.bankLetters = [...PUZZLES[this.currentPuzzleIndex].letters];
+    this.bankLetters = [...PUZZLES[this.currentPuzzleSeed].letters];
   }
 
   shuffleLetters() {
@@ -257,7 +259,7 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
   nextPuzzle() {
-    this.currentPuzzleIndex = (this.currentPuzzleIndex + 1) % PUZZLES.length;
+    this.currentPuzzleSeed = (this.currentPuzzleSeed + 1) % PUZZLES.length;
     this.startPuzzle();
   }
 
@@ -266,7 +268,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   // Validators===========================================================
-
   checkWin(): boolean {
     // Check if all letters from the bank are used
     if (this.bankLetters.length > 0) {
@@ -291,15 +292,31 @@ export class GameComponent implements OnInit, OnDestroy {
       return false;
     }
 
+    // Check if all formed words are valid
+    if (!this.allWordsAreValid()) {
+      return false;
+    }
+
     // If all conditions are met, it's a win
+    this.createCondensedGrid();
+    this.stopTimer();
     if (this.isMultiplayer) {
-      this.createCondensedGrid();
       this.webSocketService.announceWin(
         this.gameState.localPlayerId!,
-        this.condensedGrid
+        this.condensedGrid,
+        this.currentTimeString
       );
     } else {
-      this.toggleTimer();
+      setTimeout(() => {
+        this.openDialog({
+          winnerDisplayName: 'You',
+          grid: this.condensedGrid,
+          time: this.currentTimeString,
+          singlePlayer: true,
+          shareLink: this.generateShareLink(),
+        });
+      }, 1100);
+
       this.isGameStarted = false;
       this.waitingForRestart = true;
     }
@@ -307,12 +324,20 @@ export class GameComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  generateShareLink() {
+    return window.location.origin + '/solo/' + this.currentPuzzleSeed;
+  }
+
+  private allWordsAreValid(): boolean {
+    return this.formedWords.every((word) => word.isValid);
+  }
   forceWin() {
     this.renderConfetti();
     this.createCondensedGrid();
     this.webSocketService.announceWin(
       this.gameState.localPlayerId!,
-      this.condensedGrid
+      this.condensedGrid,
+      this.currentTimeString
     );
   }
 
@@ -397,6 +422,9 @@ export class GameComponent implements OnInit, OnDestroy {
     // Second pass: Validate words and update indices
     this.validateWords();
 
+    // Third pass: Invalidate letters of invalid words
+    this.invalidateLettersOfInvalidWords();
+
     this.checkWin();
   }
 
@@ -466,15 +494,14 @@ export class GameComponent implements OnInit, OnDestroy {
         this.markWordLetters(wordInfo, true);
       }
     }
-
-    // Invalidate two-letter words
+  }
+  invalidateLettersOfInvalidWords() {
     for (const wordInfo of this.formedWords) {
-      if (wordInfo.word.length === 2) {
+      if (!wordInfo.isValid) {
         this.markWordLetters(wordInfo, false);
       }
     }
   }
-
   markWordLetters(wordInfo: ValidatedWord, isValid: boolean) {
     const { startI, startJ, direction, word } = wordInfo;
     for (let k = 0; k < word.length; k++) {
@@ -503,12 +530,20 @@ export class GameComponent implements OnInit, OnDestroy {
 
   // Timer===============================================================
 
-  toggleTimer() {
-    this.timerRunning = !this.timerRunning;
+  startTimer() {
+    this.timerRunning = true;
+  }
+
+  stopTimer() {
+    this.timerRunning = false;
   }
 
   onTimeChanged(time: number) {
-    this.currentTime = time;
+    const minutes = Math.floor(time / 60);
+    const remainingSeconds = time % 60;
+    this.currentTimeString = `${minutes}:${remainingSeconds
+      .toString()
+      .padStart(2, '0')}`;
   }
 
   private resetTimer() {
@@ -527,7 +562,8 @@ export class GameComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result.event === 'confirm') {
-        this.router.navigate(['/lobby']);
+        if (this.isMultiplayer) this.router.navigate(['/lobby']);
+        if (!this.isMultiplayer) this.startAfterCountDown();
       }
       if (result.event === 'quit') {
         location.reload();
@@ -759,8 +795,9 @@ export class GameComponent implements OnInit, OnDestroy {
     for (let i = minRow; i <= maxRow; i++) {
       for (let j = minCol; j <= maxCol; j++) {
         if (this.validLetterIndices[i][j]) {
-          const newRow = paddingTop + (i - minRow);
-          const newCol = paddingLeft + (j - minCol);
+          //subtracting one here so that it slightly aligns top left rather than bottom right
+          const newRow = paddingTop + (i - minRow) - 1;
+          const newCol = paddingLeft + (j - minCol) - 1;
           this.condensedGrid[newRow][newCol] = this.grid[i][j];
         }
       }

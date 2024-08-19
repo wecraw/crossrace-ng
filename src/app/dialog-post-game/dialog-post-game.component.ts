@@ -43,6 +43,9 @@ export class DialogPostGame implements OnInit {
     public data: {
       winnerDisplayName: string;
       grid: string[][];
+      time: string;
+      singlePlayer?: boolean;
+      shareLink?: string;
     },
     private cdr: ChangeDetectorRef
   ) {}
@@ -52,8 +55,8 @@ export class DialogPostGame implements OnInit {
   grid!: number[][];
 
   ngOnInit() {
-    // dangerous because the longest word could theoretically be 12 characters long, however in practice this never happens
-    // TODO: get a longest word function (shared util with game?)
+    // Slightly dangerous because the longest word could theoretically be 12 characters long
+    // In practice, this never happens
     let gridSize = 10;
     this.grid = Array(gridSize)
       .fill(0)
@@ -70,5 +73,34 @@ export class DialogPostGame implements OnInit {
 
   confirm() {
     this.dialogRef.close({ event: 'confirm' });
+  }
+
+  challenge() {
+    this.copyToClipboard();
+  }
+
+  isMobile(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  }
+
+  copyToClipboard() {
+    if (!this.data.shareLink) return;
+    const shareString = `Race me on Crossrace! \n${this.data.shareLink}`;
+
+    if (navigator.share && this.isMobile()) {
+      navigator.share({
+        text: shareString,
+      });
+    } else {
+      navigator.clipboard.writeText(this.data.shareLink);
+    }
+
+    // this.isCopied = true;
+    // setTimeout(() => {
+    //   this.isCopied = false;
+    //   this.cdr.detectChanges();
+    // }, 2500);
   }
 }
