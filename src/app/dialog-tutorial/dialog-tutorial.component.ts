@@ -64,6 +64,12 @@ const descriptions = [
   'If you need more space, just drag the canvas around!',
 ];
 
+const descriptionsVersus = [
+  'Race to use all 12 letters to form interconnected words. The first player to finish wins!',
+  "Words must be 3 letters or longer, 2 letter words don't count!",
+  'If you need more space, just drag the canvas around!',
+];
+
 @Component({
   selector: 'dialog',
   templateUrl: 'dialog-tutorial.component.html',
@@ -95,6 +101,7 @@ export class DialogTutorial implements OnInit, AfterViewInit {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       winnerDisplayName: string;
+      mode: string;
       grid: string[][];
     },
     private cdr: ChangeDetectorRef,
@@ -108,6 +115,7 @@ export class DialogTutorial implements OnInit, AfterViewInit {
   activeGrid: string[][] = this.grids[0];
 
   ngOnInit() {
+    if (this.data.mode === 'versus') this.descriptions = descriptionsVersus;
     this.generateGrid();
   }
 

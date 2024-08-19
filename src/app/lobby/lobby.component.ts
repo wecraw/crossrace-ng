@@ -326,8 +326,24 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   private updateLobbyUI() {
+    // let self;
+    // this.gameState.players.forEach((player) => {
+    //   if (this.isPlayerSelf(player)) self = player;
+    // });
+
+    // this.players = this.gameState.players;
+
+    this.players = this.players.map((player) => {
+      if (this.isPlayerSelf(player)) {
+        // Return the self player without updating
+        return player;
+      } else {
+        // Find and return the updated player from gameState
+        return this.gameState.players.find((p) => p.id === player.id) || player;
+      }
+    });
+
     this.gameCode = this.gameState.gameCode;
-    this.players = this.gameState.players;
     this.localPlayerId = this.gameState.localPlayerId!;
     this.gameShareUrl = this.getShareUrl();
     this.creatingGame = false;

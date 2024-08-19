@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.6] - 2024-08-19
+
+### Added
+
+- New puzzles, now with double and even triple letters!
+
+## [0.4.5] - 2024-08-17
+
+### Added
+
+- Blog to valid word dictionary
+- More explanatory copy in the MP tutorial
+
+### Changed
+
+- Made the grid a bit lighter
+
 ## [0.4.4] - 2024-08-17
 
 ### Fixed

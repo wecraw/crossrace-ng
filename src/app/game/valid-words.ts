@@ -24,6 +24,7 @@ export const VALID_WORDS = [
   'formols',
   'reship',
   'soar',
+  'blog',
   'saddhus',
   'copartners',
   'clinking',

@@ -159,7 +159,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   getRandomPuzzleSeed() {
-    console.log(PUZZLES.length);
     return Math.floor(Math.random() * PUZZLES.length);
   }
 
