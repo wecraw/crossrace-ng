@@ -67,6 +67,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   gameShareUrl: string = '';
   localPlayerId: string = '';
   joining: boolean = false;
+  private localPlayerNameEdit: string | null = null;
 
   gameState!: GameState;
 
@@ -182,12 +183,15 @@ export class LobbyComponent implements OnInit, OnDestroy {
   submitName() {
     this.editingName = false;
     if (this.displayNameInput === '') return;
+
     const playerIndex = this.players.findIndex(
       (p) => p.id === this.localPlayerId
     );
     if (playerIndex !== -1) {
       this.players[playerIndex].displayName = this.displayNameInput;
+      this.localPlayerNameEdit = null; // Clear the edit state
     }
+
     if (this.gameCode) {
       this.webSocketService.updateDisplayName(
         this.gameCode,
@@ -247,6 +251,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   editName() {
     this.editingName = true;
+    const localPlayer = this.players.find((p) => p.id === this.localPlayerId);
+    if (localPlayer) {
+      this.localPlayerNameEdit = localPlayer.displayName;
+    }
   }
 
   openDialog(data: DialogData, disableClose: boolean) {
@@ -326,20 +334,15 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   private updateLobbyUI() {
-    // let self;
-    // this.gameState.players.forEach((player) => {
-    //   if (this.isPlayerSelf(player)) self = player;
-    // });
-
-    // this.players = this.gameState.players;
-
-    this.players = this.players.map((player) => {
-      if (this.isPlayerSelf(player)) {
-        // Return the self player without updating
-        return player;
+    this.players = this.gameState.players.map((player) => {
+      if (
+        player.id === this.localPlayerId &&
+        this.localPlayerNameEdit !== null
+      ) {
+        // Preserve the local edit
+        return { ...player, displayName: this.localPlayerNameEdit };
       } else {
-        // Find and return the updated player from gameState
-        return this.gameState.players.find((p) => p.id === player.id) || player;
+        return player;
       }
     });
 
