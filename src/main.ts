@@ -6,9 +6,10 @@ import { GameComponent } from './app/game/game.component';
 import { WebSocketService } from './app/websocket.service';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { VersusComponent } from './app/versus/versus.component';
+import { MainMenuComponent } from './app/main-menu/main-menu.component';
 
 const routes: Routes = [
-  { path: '', component: GameComponent },
+  { path: '', component: MainMenuComponent },
   { path: 'lobby', component: LobbyComponent },
   { path: 'versus', component: VersusComponent },
   { path: 'game', component: GameComponent },

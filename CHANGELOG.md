@@ -7,13 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2024-08-19
 
+### Added
+
+- Challenge mode! After a single player game, challenge your friends to the same puzzle.
+
 ### Changed
 
 - Post game dialog styles
+- Post game for single player
 
 ### Fixed
 
 - Word validation behavior
+- UI inconsistencies when player list was pushed for lobby
 
 ## [0.4.8] - 2024-08-19
 

@@ -87,7 +87,10 @@ export class DialogPostGame implements OnInit {
 
   copyToClipboard() {
     if (!this.data.shareLink) return;
-    const shareString = `Race me on Crossrace! \n${this.data.shareLink}`;
+    const shareString =
+      `Can you beat my time on Crossrace? I finished in ` +
+      this.data.time +
+      `!\n${this.data.shareLink}`;
 
     if (navigator.share && this.isMobile()) {
       navigator.share({
@@ -95,6 +98,7 @@ export class DialogPostGame implements OnInit {
       });
     } else {
       navigator.clipboard.writeText(this.data.shareLink);
+      // navigator.clipboard.writeText(shareString);
     }
 
     // this.isCopied = true;

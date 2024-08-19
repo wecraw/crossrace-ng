@@ -1,0 +1,65 @@
+<div class="container game-container noselect">
+  <div id="letter-bank" class="ab-center letter-bank m-lr-auto">
+    <div class="row logo-row-1">
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">C</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">R</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">O</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">S</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">S</div>
+      </div>
+    </div>
+
+    <div class="row logo-row-2">
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">R</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">A</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">C</div>
+      </div>
+      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
+        <div class="letter m-lr-auto">E</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="main-menu m-lr-auto">
+  <div class="main-menu-buttons">
+    <button (click)="solo()" class="btn btn-primary btn-lg m-auto">Solo</button>
+    <button (click)="versus()" class="btn btn-success btn-lg m-auto">
+      Versus
+    </button>
+    <button
+      (click)="openTutorialDialog({ mode: 'solo' })"
+      class="btn btn-outline-secondary btn-lg m-auto"
+    >
+      How to play
+    </button>
+  </div>
+</div>
+<div #gridWrapper class="slide-in-fwd-center grid-wrapper">
+  <div class="fade-out-edges m-lr-auto">
+    <div #gridContainer class="grid-container">
+      @for (row of grid; track $index; let i = $index) {
+      <div class="grid-row">
+        @for (cell of row; track $index; let j = $index) {
+        <div class="grid-cell"></div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="version">0.5.0</div>
