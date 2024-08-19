@@ -5,6 +5,9 @@ import {
   inject,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  AfterViewChecked,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -53,7 +56,9 @@ interface DialogData {
   styleUrls: ['./lobby.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LobbyComponent implements OnInit, OnDestroy {
+export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
+  @ViewChild('nameInput') nameInputElement!: ElementRef;
+
   pastelRainbowColors = [
     '#F94144',
     '#43AA8B',
@@ -67,8 +72,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   gameShareUrl: string = '';
   localPlayerId: string = '';
   joining: boolean = false;
-  private localPlayerNameEdit: string | null = null;
-
+  editingNameInput: string = '';
   gameState!: GameState;
 
   isHost: boolean = false;
@@ -82,6 +86,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   displayNameInput: string = '';
   creatingGame: boolean = false;
   editingName: boolean = false;
+
   isCopied: boolean = false;
 
   constructor(
@@ -175,6 +180,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }
   }
 
+  ngAfterViewChecked(): void {
+    this.focusNameInput();
+  }
+  private focusNameInput() {
+    if (this.nameInputElement && this.editingName) {
+      this.nameInputElement.nativeElement.focus();
+    }
+  }
   onNameInputChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.displayNameInput = input.value;
@@ -182,21 +195,20 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   submitName() {
     this.editingName = false;
-    if (this.displayNameInput === '') return;
+    if (this.editingNameInput.trim() === '') return;
 
     const playerIndex = this.players.findIndex(
       (p) => p.id === this.localPlayerId
     );
     if (playerIndex !== -1) {
-      this.players[playerIndex].displayName = this.displayNameInput;
-      this.localPlayerNameEdit = null; // Clear the edit state
+      this.players[playerIndex].displayName = this.editingNameInput.trim();
     }
 
     if (this.gameCode) {
       this.webSocketService.updateDisplayName(
         this.gameCode,
         this.localPlayerId,
-        this.displayNameInput
+        this.editingNameInput.trim()
       );
     }
   }
@@ -253,7 +265,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.editingName = true;
     const localPlayer = this.players.find((p) => p.id === this.localPlayerId);
     if (localPlayer) {
-      this.localPlayerNameEdit = localPlayer.displayName;
+      this.editingNameInput = localPlayer.displayName;
     }
   }
 
@@ -335,12 +347,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   private updateLobbyUI() {
     this.players = this.gameState.players.map((player) => {
-      if (
-        player.id === this.localPlayerId &&
-        this.localPlayerNameEdit !== null
-      ) {
+      if (player.id === this.localPlayerId && this.editingName) {
         // Preserve the local edit
-        return { ...player, displayName: this.localPlayerNameEdit };
+        return { ...player, displayName: this.editingNameInput };
       } else {
         return player;
       }
@@ -351,6 +360,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.gameShareUrl = this.getShareUrl();
     this.creatingGame = false;
     this.checkIfHost();
+
+    // Schedule a micro-task to focus the input after view updates
+    if (this.editingName) {
+      Promise.resolve().then(() => {
+        this.focusNameInput();
+      });
+    }
+
     this.cdr.detectChanges();
   }
 

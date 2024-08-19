@@ -35,7 +35,7 @@
             <div [ngStyle]="getBackgroundColor(i)" class="player-avatar"></div>
             <div class="player-name">
               <ng-container *ngIf="!isPlayerSelf(player) || !editingName">
-                {{ player.displayName }}
+                <span>{{ player.displayName }}</span>
                 <i
                   *ngIf="isPlayerSelf(player)"
                   (click)="editName()"
@@ -45,12 +45,11 @@
               </ng-container>
               <ng-container *ngIf="isPlayerSelf(player) && editingName">
                 <input
-                  [value]="player.displayName"
-                  (input)="onNameInputChange($event)"
-                  (blur)="submitName()"
-                  (keyup.enter)="submitName()"
-                  maxlength="20"
                   #nameInput
+                  class="form-control"
+                  [(ngModel)]="editingNameInput"
+                  (keyup.enter)="submitName()"
+                  (blur)="submitName()"
                 />
               </ng-container>
             </div>
