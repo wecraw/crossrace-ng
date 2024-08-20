@@ -1,13 +1,19 @@
 .wrapper {
-  min-width: 300px;
-  min-height: 10px;
+  min-width: 275px;
+  min-height: 100px;
+  padding: 20px;
 }
 
 .spinner {
   margin-top: 18px;
+  margin-left: 20px;
+  margin-right: auto;
 }
 
-h1 {
-  line-height: 3 !important;
-  padding: 0;
+h4 {
+  margin-left: auto;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: black;
 }

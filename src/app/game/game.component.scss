@@ -103,6 +103,7 @@ $grid-cell-size: 35px;
 }
 
 .grid-cell {
+  background-color: #fff;
   width: $grid-cell-size;
   height: $grid-cell-size;
   border: 1px solid #ccc;
@@ -171,6 +172,12 @@ $grid-cell-size: 35px;
     color: #6c757d;
     background-color: #eee;
   }
+}
+
+//hover state for drag and drop
+.drop-list-highlight {
+  background-color: #ccc;
+  transition: background-color 0.3s ease;
 }
 
 .play-again {

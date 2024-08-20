@@ -1,18 +1,12 @@
 <div class="wrapper">
-  <mat-dialog-content [ngClass]="{ 'pb-0 pt-3': data.showConfirm }">
-    <div class="d-flex">
-      <h1 mat-dialog-title>
-        {{ data.dialogText }}
-      </h1>
-      @if(data.showSpinner) {
-      <mat-spinner
-        [diameter]="25"
-        class="spinner"
-        style="margin-left: auto; margin-right: auto"
-      ></mat-spinner>
-      }
-    </div>
-  </mat-dialog-content>
+  <div class="d-flex m-lr-auto">
+    <h4>
+      {{ data.dialogText }}
+    </h4>
+    @if(data.showSpinner) {
+    <mat-spinner [diameter]="25" class="spinner"></mat-spinner>
+    }
+  </div>
   @if(data.showConfirm){
   <mat-dialog-actions>
     <button

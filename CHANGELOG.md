@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Challenge mode! After a single player game, challenge your friends to the same puzzle.
+- Ability to join games in progress, players are kept in the lobby to await next game
+- Hover state for dropping tiles
 
 ### Changed
 

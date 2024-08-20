@@ -30,6 +30,7 @@ interface Player {
   displayName: string;
   ready?: boolean;
   isHost?: boolean;
+  inGame?: boolean;
 }
 
 interface DialogData {
@@ -134,7 +135,6 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.gameState = state;
       if (state.gameCode) {
         this.gameCode = state.gameCode;
-        // this.players = state.players;
         this.gameShareUrl = this.getShareUrl();
       }
       this.cdr.detectChanges();
@@ -149,17 +149,24 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
 
       this.route.params.subscribe((params) => {
         if (params['gameCode']) {
-          this.openDialog(this.dialogSettingsJoin, true);
-          let gameCode = params['gameCode'].toUpperCase();
-          this.gameState.gameCode = gameCode;
-          this.joinGame();
+          const gameCode = params['gameCode'].toUpperCase();
+          if (/^[A-Z]{4}$/.test(gameCode)) {
+            this.openDialog(this.dialogSettingsJoin, true);
+            this.gameState.gameCode = gameCode;
+            this.joinGame();
+          } else {
+            // Route to '/' if gameCode is not exactly 4 alphabet letters
+            this.router.navigate(['/']);
+          }
         } else {
           if (!this.gameState.isInGame || this.gameState.isCreating) {
             this.createGame();
             this.gameStateService.setGameState({
               isCreating: false,
             });
-          } else {
+          } else if (this.gameState.isInGame) {
+            //if rejoining after a versus game, get new player list in case players joined during the game
+            if (this.gameCode) this.webSocketService.getPlayers(this.gameCode);
             this.gameStateService.setGameState({
               isInGame: false,
             });
@@ -403,8 +410,6 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       }
     });
 
-    console.log(this.players);
-
     this.gameCode = this.gameState.gameCode;
     this.localPlayerId = this.gameState.localPlayerId!;
     this.gameShareUrl = this.getShareUrl();
@@ -465,6 +470,10 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
           gameSeed: message.gameSeed,
         });
         this.router.navigate(['/versus/' + message.gameSeed]);
+        break;
+      case 'gameEnded':
+        if (this.gameCode) this.webSocketService.getPlayers(this.gameCode);
+        this.updateLobbyUI();
         break;
       case 'error':
         console.error('Received error:', message.message);

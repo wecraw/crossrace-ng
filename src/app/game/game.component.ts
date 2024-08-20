@@ -15,6 +15,8 @@ import {
   CdkDropListGroup,
   transferArrayItem,
   CdkDragStart,
+  CdkDragEnter,
+  CdkDragExit,
 } from '@angular/cdk/drag-drop';
 import { Location } from '@angular/common';
 import { PUZZLES } from './puzzles';
@@ -684,6 +686,16 @@ export class GameComponent implements OnInit, OnDestroy {
     const [i, j] = this.getCellCoordinates(drop.id);
     return this.isEmpty(this.grid[i][j]);
   };
+
+  entered(event: CdkDragEnter) {
+    const dropList = event.container.element.nativeElement;
+    dropList.classList.add('drop-list-highlight');
+  }
+
+  exited(event: CdkDragExit) {
+    const dropList = event.container.element.nativeElement;
+    dropList.classList.remove('drop-list-highlight');
+  }
 
   drop(event: CdkDragDrop<string[]>) {
     if (event.previousContainer === event.container) {

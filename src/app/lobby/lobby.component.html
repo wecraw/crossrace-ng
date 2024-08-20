@@ -81,7 +81,7 @@
                 </div>
                 <div *ngIf="!player.ready">
                   <button class="btn btn-outline-danger" disabled>
-                    Not Ready
+                    {{ player.inGame ? "In Game" : "Not Ready" }}
                   </button>
                 </div>
               </div>
