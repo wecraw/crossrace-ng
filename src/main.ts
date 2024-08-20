@@ -17,6 +17,7 @@ const routes: Routes = [
   { path: 'join/:gameCode', component: LobbyComponent },
   { path: 'solo', component: GameComponent },
   { path: 'solo/:gameSeed', component: GameComponent },
+  { path: 'challenge/:gameSeed', component: MainMenuComponent },
   { path: 'versus/:gameSeed', component: GameComponent },
   { path: '**', redirectTo: '' },
 ];

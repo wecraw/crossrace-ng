@@ -104,7 +104,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
   // Game State
   gameState!: GameState;
-  isFirstNavigation: boolean = true;
   isCountingDown: boolean = false;
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
@@ -122,7 +121,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.isFirstNavigation = this.gameStateService.isFirstNavigation();
     this.generateGridCellIds();
 
     this.gameStateService.getGameState().subscribe((state) => {
@@ -208,8 +206,9 @@ export class GameComponent implements OnInit, OnDestroy {
     this.initializeValidLetterIndices();
     if (!this.gameSeed) {
       this.gameSeed = this.getRandomPuzzleSeed();
-      this.location.replaceState('/solo/' + this.gameSeed);
     }
+    if (!this.isMultiplayer)
+      this.location.replaceState('/challenge/' + this.gameSeed);
     this.setLettersFromPuzzle();
     this.shuffleLetters();
 
@@ -338,7 +337,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   generateShareLink() {
-    return window.location.origin + '/solo/' + this.gameSeed;
+    return window.location.origin + '/challenge/' + this.gameSeed;
   }
 
   private allWordsAreValid(): boolean {

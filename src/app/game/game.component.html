@@ -28,12 +28,7 @@
   <h5>Game starting in {{ countdown }}...</h5>
 </div>
 
-<div
-  #gridWrapper
-  *ngIf="isGridReady"
-  [ngClass]="{ 'slide-in-fwd-center': !isFirstNavigation }"
-  class="slide-in-fwd-center grid-wrapper"
->
+<div #gridWrapper *ngIf="isGridReady" class="slide-in-fwd-center grid-wrapper">
   <div class="fade-out-edges m-lr-auto">
     <div
       #gridContainer

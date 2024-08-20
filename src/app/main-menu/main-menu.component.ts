@@ -13,7 +13,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 
@@ -52,10 +52,13 @@ export class MainMenuComponent implements OnInit {
 
   // Game State
   gameState!: GameState;
+  isChallenge: boolean = false;
+  gameSeed?: number;
 
   constructor(
     private gameStateService: GameStateService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -64,12 +67,37 @@ export class MainMenuComponent implements OnInit {
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
     });
+
+    this.extractRouteInfo();
+  }
+
+  private extractRouteInfo() {
+    if (this.router.url.split('/')[1] === 'challenge') this.isChallenge = true;
+    // Get the seed from the current route
+    this.route.paramMap.subscribe((params) => {
+      const seedParam = params.get('gameSeed');
+
+      if (seedParam) {
+        const seedNumber = Number(seedParam);
+
+        if (!isNaN(seedNumber) && seedNumber >= 0 && seedNumber <= 3650) {
+          this.gameSeed = seedNumber;
+        } else {
+          console.error('Invalid seed value. Redirecting to home.');
+          this.router.navigate(['/']);
+        }
+      }
+    });
   }
 
   // DOM Helpers=========================================================
 
   versus() {
     this.router.navigate(['/versus-menu']);
+  }
+
+  challenge() {
+    this.router.navigate(['/solo/' + this.gameSeed]);
   }
 
   solo() {

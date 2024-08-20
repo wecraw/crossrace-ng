@@ -36,9 +36,26 @@
 </div>
 <div class="main-menu m-lr-auto">
   <div class="main-menu-buttons">
-    <button (click)="solo()" class="btn btn-primary btn-lg m-auto">Solo</button>
-    <button (click)="versus()" class="btn btn-success btn-lg m-auto">
+    <button
+      *ngIf="!isChallenge"
+      (click)="solo()"
+      class="btn btn-primary btn-lg m-auto"
+    >
+      Solo
+    </button>
+    <button
+      *ngIf="!isChallenge"
+      (click)="versus()"
+      class="btn btn-success btn-lg m-auto"
+    >
       Versus
+    </button>
+    <button
+      *ngIf="isChallenge"
+      (click)="challenge()"
+      class="btn btn-primary btn-lg m-auto"
+    >
+      Start Challenge!
     </button>
     <button
       (click)="openTutorialDialog({ mode: 'solo' })"
@@ -62,4 +79,4 @@
   </div>
 </div>
 
-<div class="version">0.5.1</div>
+<div class="version">0.5.2</div>

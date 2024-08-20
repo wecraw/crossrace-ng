@@ -25,8 +25,8 @@ export class HeaderComponent {
   }
 
   navigateToSolo() {
-    console.log(this.router.url);
     if (this.router.url === '/solo') {
+      this.location.replaceState('/solo'); //route is replaced in game component, but this.router.url still registers as solo, so need to replace again then reload
       window.location.reload();
     } else {
       this.router.navigate(['/solo']);
