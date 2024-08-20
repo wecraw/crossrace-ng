@@ -15,10 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Post game dialog styles
 - Post game for single player
+- Loading strategy for game to minimize initial load time
+- Share icon
+- Timer format
 
 ### Fixed
 
 - Word validation behavior
+- Grid position now resets properly
 - UI inconsistencies when player list was pushed for lobby
 
 ## [0.4.8] - 2024-08-19

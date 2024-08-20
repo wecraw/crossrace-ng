@@ -30,6 +30,7 @@
 
 <div
   #gridWrapper
+  *ngIf="isGridReady"
   [ngClass]="{ 'slide-in-fwd-center': !isFirstNavigation }"
   class="slide-in-fwd-center grid-wrapper"
 >

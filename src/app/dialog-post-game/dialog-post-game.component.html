@@ -18,15 +18,31 @@
       </div>
     </div>
 
-    <div *ngIf="!data.singlePlayer" class="action-buttons">
+    <div *ngIf="!data.singlePlayer" class="action-buttons d-flex">
       <button class="btn btn-outline-secondary quit" (click)="quit()">
         Quit
       </button>
       <button class="btn btn-primary" (click)="confirm()">Play again</button>
     </div>
-    <div *ngIf="data.singlePlayer" class="action-buttons">
-      <button class="btn btn-outline-secondary quit" (click)="challenge()">
+    <div *ngIf="data.singlePlayer" class="action-buttons d-flex">
+      <button
+        tabindex="-1"
+        class="btn btn-outline-secondary quit"
+        (click)="challenge()"
+      >
         Challenge a friend
+        <img
+          *ngIf="isShareSupported"
+          style="width: 18px; margin-top: -3px"
+          src="assets/share.svg"
+          alt="Share icon"
+        />
+        <i
+          *ngIf="!isShareSupported"
+          style="margin-left: 5px"
+          class="fa-regular fa-copy"
+        >
+        </i>
       </button>
       <button class="btn btn-primary" (click)="confirm()">Play again</button>
     </div>

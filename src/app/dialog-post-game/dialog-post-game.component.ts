@@ -38,6 +38,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DialogPostGame implements OnInit {
+  isShareSupported: boolean = false;
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -55,6 +56,8 @@ export class DialogPostGame implements OnInit {
   grid!: number[][];
 
   ngOnInit() {
+    this.isShareSupported = !!navigator.share && this.isMobile();
+
     // Slightly dangerous because the longest word could theoretically be 12 characters long
     // In practice, this never happens
     let gridSize = 10;
@@ -97,8 +100,8 @@ export class DialogPostGame implements OnInit {
         text: shareString,
       });
     } else {
-      navigator.clipboard.writeText(this.data.shareLink);
-      // navigator.clipboard.writeText(shareString);
+      // navigator.clipboard.writeText(this.data.shareLink);
+      navigator.clipboard.writeText(shareString);
     }
 
     // this.isCopied = true;

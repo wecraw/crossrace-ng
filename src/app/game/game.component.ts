@@ -2,6 +2,7 @@ import {
   Component,
   ElementRef,
   inject,
+  NgZone,
   OnDestroy,
   OnInit,
   Renderer2,
@@ -22,6 +23,8 @@ import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
 import { Dialog } from '../dialog/dialog.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
+
+import { GRID_DEFAULT } from './defaults';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
@@ -77,7 +80,7 @@ export class GameComponent implements OnInit, OnDestroy {
   gameSeed: number | null = null;
 
   // Grid DOM settings
-  GRID_SIZE: number = 48;
+  GRID_SIZE: number = 24;
   CONDENSED_SIZE: number = 12;
   dragPosition = DRAG_POSITION_INIT;
 
@@ -103,13 +106,16 @@ export class GameComponent implements OnInit, OnDestroy {
   isFirstNavigation: boolean = true;
   isCountingDown: boolean = false;
   waitingForRestart: boolean = false;
+  isGridReady: boolean = false;
 
   constructor(
     private renderer2: Renderer2,
     private elementRef: ElementRef,
     private gameStateService: GameStateService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private ngZone: NgZone,
+    private location: Location
   ) {
     this.validWords = new Set(VALID_WORDS);
   }
@@ -150,9 +156,17 @@ export class GameComponent implements OnInit, OnDestroy {
     });
   }
   ngAfterViewInit() {
-    this.setupTouchEventHandling();
+    requestAnimationFrame(() => this.prepareGrid());
   }
+  prepareGrid() {
+    // Simulate some preparation time
+    setTimeout(() => {
+      this.isGridReady = true;
+      this.setupTouchEventHandling();
 
+      // Perform any necessary grid setup here
+    }, 0);
+  }
   ngOnDestroy(): void {
     this.gameStateService.setGameState({
       gameSeed: null,
@@ -167,29 +181,39 @@ export class GameComponent implements OnInit, OnDestroy {
     return Math.floor(Math.random() * PUZZLES.length);
   }
 
+  private startCountdown(onComplete: () => void) {
+    this.countdown = 3;
+    this.ngZone.runOutsideAngular(() => {
+      const countInterval = setInterval(() => {
+        this.ngZone.run(() => {
+          this.countdown--;
+          if (this.countdown <= 0) {
+            clearInterval(countInterval);
+            onComplete();
+          }
+        });
+      }, 1000);
+    });
+  }
+
   startAfterCountDown() {
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
     this.initializeGrid();
     this.initializeValidLetterIndices();
-    if (!this.gameSeed) this.gameSeed = this.getRandomPuzzleSeed();
+    if (!this.gameSeed) {
+      this.gameSeed = this.getRandomPuzzleSeed();
+      this.location.replaceState('/solo/' + this.gameSeed);
+    }
     this.setLettersFromPuzzle();
     this.shuffleLetters();
-    setTimeout(() => {
+
+    this.startCountdown(() => {
       this.isGameStarted = true;
       this.startPuzzle();
       this.isCountingDown = false;
-    }, 3000);
-    this.countdown = 3;
-
-    const intervalId = setInterval(() => {
-      this.countdown--;
-
-      if (this.countdown <= 0) {
-        clearInterval(intervalId);
-      }
-    }, 1000);
+    });
   }
 
   handleWebSocketMessage(message: any): void {
@@ -561,6 +585,13 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private setupTouchEventHandling() {
+    //if the grid isn't ready yet, abort and try again in 100ms
+    if (!this.gridWrapper || !this.gridContainer) {
+      setTimeout(() => {
+        this.setupTouchEventHandling();
+      }, 100);
+      return;
+    }
     const wrapper = this.gridWrapper.nativeElement;
     const container = this.gridContainer.nativeElement;
 
@@ -628,9 +659,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   initializeValidLetterIndices() {
-    this.validLetterIndices = Array(this.GRID_SIZE)
-      .fill(null)
-      .map(() => Array(this.GRID_SIZE).fill(false));
+    this.validLetterIndices = GRID_DEFAULT;
   }
 
   generateGridCellIds() {

@@ -37,7 +37,7 @@ export class TimerComponent implements OnDestroy, OnChanges {
   get formattedTime(): string {
     const minutes = Math.floor(this.seconds / 60);
     const remainingSeconds = this.seconds % 60;
-    return `${this.padNumber(minutes)}:${this.padNumber(remainingSeconds)}`;
+    return `${minutes}:${this.padNumber(remainingSeconds)}`;
   }
 
   ngOnChanges(changes: SimpleChanges): void {

@@ -25,10 +25,8 @@ export class HeaderComponent {
   }
 
   navigateToSolo() {
-    if (
-      this.location.path() === '/solo' ||
-      this.location.path() === '/versus'
-    ) {
+    console.log(this.router.url);
+    if (this.router.url === '/solo') {
       window.location.reload();
     } else {
       this.router.navigate(['/solo']);

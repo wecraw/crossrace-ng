@@ -15,12 +15,18 @@
               class="copy-icon"
               [ngClass]="
                 isShareSupported
-                  ? 'fa-solid fa-share'
+                  ? 'd-none'
                   : isCopied
                   ? 'fa-regular fa-circle-check'
                   : 'fa-regular fa-copy'
               "
             ></i>
+            <img
+              *ngIf="isShareSupported"
+              src="assets/share.svg"
+              style="margin-top: -5px"
+              alt="Share icon"
+            />
           </div>
         </div>
         <div class="player-grid">
