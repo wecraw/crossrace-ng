@@ -27,7 +27,7 @@ export class HeaderComponent {
   navigateToSolo() {
     if (
       this.location.path() === '/solo' ||
-      this.location.path() === '/versus-game'
+      this.location.path() === '/versus'
     ) {
       window.location.reload();
     } else {

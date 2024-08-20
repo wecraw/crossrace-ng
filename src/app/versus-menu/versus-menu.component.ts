@@ -13,10 +13,10 @@ import { GameState, GameStateService } from '../game-state.service';
   selector: 'app-versus',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './versus.component.html',
-  styleUrl: './versus.component.scss',
+  templateUrl: './versus-menu.component.html',
+  styleUrl: './versus-menu.component.scss',
 })
-export class VersusComponent implements OnInit {
+export class VersusMenuComponent implements OnInit {
   joinGameForm!: FormGroup;
 
   constructor(

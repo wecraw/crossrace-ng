@@ -22,88 +22,12 @@
     </div>
     }
   </div>
-
-  <div
-    id="letter-bank"
-    *ngIf="
-      !isGameStarted && !isMultiplayer && !isCountingDown && !waitingForRestart
-    "
-    class="ab-center letter-bank m-lr-auto"
-    cdkDropList
-    #letterbank="cdkDropList"
-    cdkDropListOrientation="mixed"
-    [cdkDropListData]="bankLetters"
-    [cdkDropListConnectedTo]="gridCellIds"
-    (cdkDropListDropped)="drop($event)"
-  >
-    <div class="row logo-row-1">
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">C</div>
-      </div>
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">R</div>
-      </div>
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">O</div>
-      </div>
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">S</div>
-      </div>
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">S</div>
-      </div>
-    </div>
-
-    <div class="row logo-row-2">
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">R</div>
-      </div>
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">A</div>
-      </div>
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">C</div>
-      </div>
-      <div class="tile-wrapper" [ngClass]="getFlipInClass(0)">
-        <div class="letter m-lr-auto">E</div>
-      </div>
-    </div>
-  </div>
 </div>
 <div class="countdown m-lr-auto" *ngIf="isCountingDown">
   <h3>Get ready!</h3>
   <h5>Game starting in {{ countdown }}...</h5>
 </div>
-<div
-  class="main-menu m-lr-auto"
-  *ngIf="
-    !isGameStarted && !isMultiplayer && !isCountingDown && !waitingForRestart
-  "
->
-  <div class="main-menu-buttons">
-    <button
-      (click)="startAfterCountDown()"
-      class="btn btn-primary btn-lg m-auto"
-      [ngClass]="{ 'fade-out': isCountingDown }"
-    >
-      Solo
-    </button>
-    <button
-      (click)="versus()"
-      class="btn btn-success btn-lg m-auto"
-      [ngClass]="{ 'fade-out': isCountingDown }"
-    >
-      Versus
-    </button>
-    <button
-      (click)="openTutorialDialog({ mode: 'solo' })"
-      class="btn btn-outline-secondary btn-lg m-auto"
-      [ngClass]="{ 'fade-out': isCountingDown }"
-    >
-      How to play
-    </button>
-  </div>
-</div>
+
 <div
   #gridWrapper
   [ngClass]="{ 'slide-in-fwd-center': !isFirstNavigation }"
@@ -159,13 +83,4 @@
     [ngClass]="{ hidden: !isGameStarted }"
     >refresh</i
   >
-</div>
-
-<div
-  *ngIf="
-    !isGameStarted && !isMultiplayer && !isCountingDown && !waitingForRestart
-  "
-  class="version"
->
-  0.5.0
 </div>

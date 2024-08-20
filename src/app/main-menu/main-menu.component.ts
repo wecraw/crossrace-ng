@@ -69,7 +69,7 @@ export class MainMenuComponent implements OnInit {
   // DOM Helpers=========================================================
 
   versus() {
-    this.router.navigate(['/versus']);
+    this.router.navigate(['/versus-menu']);
   }
 
   solo() {

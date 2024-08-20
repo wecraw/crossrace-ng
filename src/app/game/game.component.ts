@@ -28,7 +28,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
 import * as confetti from 'canvas-confetti';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 
@@ -71,13 +71,13 @@ export class GameComponent implements OnInit, OnDestroy {
   condensedGridDisplaySize: number = 10;
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
-  currentPuzzleSeed: number = 0;
   formedWords: ValidatedWord[] = [];
   validWords: Set<string>;
   countdown: number = 3;
+  gameSeed: number | null = null;
 
   // Grid DOM settings
-  GRID_SIZE: number = 24;
+  GRID_SIZE: number = 48;
   CONDENSED_SIZE: number = 12;
   dragPosition = DRAG_POSITION_INIT;
 
@@ -109,42 +109,46 @@ export class GameComponent implements OnInit, OnDestroy {
     private elementRef: ElementRef,
     private gameStateService: GameStateService,
     private router: Router,
-    private ngLocation: Location
+    private route: ActivatedRoute
   ) {
     this.validWords = new Set(VALID_WORDS);
   }
 
   ngOnInit(): void {
     this.isFirstNavigation = this.gameStateService.isFirstNavigation();
-
-    // if it's the first page load, do everything at once. otherwise, fade the grid in after waiting for it to load
-    // this is basically because the grid is a bit slow to load and this allows the page to load faster when changing routes or going into multiplayer
-    if (!this.isFirstNavigation) {
-      setTimeout(() => {
-        this.initializeValidLetterIndices();
-        this.generateGridCellIds();
-        this.initializeGrid();
-      }, 0);
-    } else {
-      this.initializeValidLetterIndices();
-      this.generateGridCellIds();
-      this.initializeGrid();
-    }
+    this.generateGridCellIds();
 
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
     });
 
-    if (this.gameState.gameSeed) {
-      this.isMultiplayer = true;
-      this.startAfterCountDown(this.gameState.gameSeed);
-    }
+    this.extractRouteInfo();
+
+    this.startAfterCountDown();
 
     this.wsSubscription = this.webSocketService
       .getMessages()
       .subscribe((message) => this.handleWebSocketMessage(message));
   }
 
+  private extractRouteInfo() {
+    if (this.router.url.split('/')[1] === 'versus') this.isMultiplayer = true;
+    // Get the seed from the current route
+    this.route.paramMap.subscribe((params) => {
+      const seedParam = params.get('gameSeed');
+
+      if (seedParam) {
+        const seedNumber = Number(seedParam);
+
+        if (!isNaN(seedNumber) && seedNumber >= 0 && seedNumber <= 3650) {
+          this.gameSeed = seedNumber;
+        } else {
+          console.error('Invalid seed value. Redirecting to home.');
+          this.router.navigate(['/']);
+        }
+      }
+    });
+  }
   ngAfterViewInit() {
     this.setupTouchEventHandling();
   }
@@ -163,31 +167,18 @@ export class GameComponent implements OnInit, OnDestroy {
     return Math.floor(Math.random() * PUZZLES.length);
   }
 
-  startSeededPuzzle(seed: number) {
-    this.currentPuzzleSeed = seed;
-    this.startPuzzle();
-  }
-
-  startAfterCountDown(seed?: number) {
+  startAfterCountDown() {
     this.resetTimer();
-
-    if (this.isMultiplayer) {
-      this.ngLocation.replaceState('/versus-game');
-    } else {
-      this.ngLocation.replaceState('/solo');
-    }
-
     this.isCountingDown = true;
     this.waitingForRestart = false;
     this.initializeGrid();
     this.initializeValidLetterIndices();
-    if (!seed) seed = this.getRandomPuzzleSeed();
-    this.currentPuzzleSeed = seed;
+    if (!this.gameSeed) this.gameSeed = this.getRandomPuzzleSeed();
     this.setLettersFromPuzzle();
     this.shuffleLetters();
     setTimeout(() => {
       this.isGameStarted = true;
-      this.startSeededPuzzle(seed);
+      this.startPuzzle();
       this.isCountingDown = false;
     }, 3000);
     this.countdown = 3;
@@ -206,7 +197,7 @@ export class GameComponent implements OnInit, OnDestroy {
     switch (message.type) {
       case 'gameStarted':
         this.isMultiplayer = true;
-        this.startAfterCountDown(message.gameSeed);
+        this.startAfterCountDown();
         break;
       case 'gameEnded':
         this.isGameOver = true;
@@ -228,7 +219,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.startTimer();
     this.initializeGrid();
     this.initializeValidLetterIndices();
-    this.generateGridCellIds();
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
     this.updateFormedWords();
     this.isGameStarted = true;
@@ -237,7 +227,6 @@ export class GameComponent implements OnInit, OnDestroy {
   refreshPuzzle() {
     this.initializeGrid();
     this.initializeValidLetterIndices();
-    this.generateGridCellIds();
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
     this.updateFormedWords();
     this.isGameStarted = true;
@@ -246,7 +235,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   setLettersFromPuzzle() {
-    this.bankLetters = [...PUZZLES[this.currentPuzzleSeed].letters];
+    if (this.gameSeed) this.bankLetters = [...PUZZLES[this.gameSeed].letters];
   }
 
   shuffleLetters() {
@@ -257,10 +246,6 @@ export class GameComponent implements OnInit, OnDestroy {
         this.bankLetters[i],
       ];
     }
-  }
-  nextPuzzle() {
-    this.currentPuzzleSeed = (this.currentPuzzleSeed + 1) % PUZZLES.length;
-    this.startPuzzle();
   }
 
   resetPuzzle() {
@@ -325,7 +310,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   generateShareLink() {
-    return window.location.origin + '/solo/' + this.currentPuzzleSeed;
+    return window.location.origin + '/solo/' + this.gameSeed;
   }
 
   private allWordsAreValid(): boolean {
@@ -598,10 +583,6 @@ export class GameComponent implements OnInit, OnDestroy {
     });
   }
 
-  versus() {
-    this.router.navigate(['/versus']);
-  }
-
   openTutorialDialog(data: any) {
     const dialogRef = this.dialog.open(DialogTutorial, {
       data: data,
@@ -639,7 +620,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   initializeGrid() {
-    this.dragPosition = DRAG_POSITION_INIT;
+    this.dragPosition = { x: -235, y: -237 };
 
     this.grid = Array(this.GRID_SIZE)
       .fill(null)
@@ -660,6 +641,7 @@ export class GameComponent implements OnInit, OnDestroy {
       }
     }
   }
+
   getCellCoordinates(id: string): [number, number] {
     if (id === 'letter-bank') return [-1, -1];
     const [_, i, j] = id.split('-').map(Number);

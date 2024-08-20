@@ -438,7 +438,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
           isInGame: true,
           gameSeed: message.gameSeed,
         });
-        this.router.navigate(['/game']);
+        this.router.navigate(['/versus/' + message.gameSeed]);
         break;
       case 'error':
         console.error('Received error:', message.message);
