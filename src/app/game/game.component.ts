@@ -698,6 +698,9 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   drop(event: CdkDragDrop<string[]>) {
+    const dropList = event.container.element.nativeElement;
+    dropList.classList.remove('drop-list-highlight');
+
     if (event.previousContainer === event.container) {
       transferArrayItem(
         event.previousContainer.data,
