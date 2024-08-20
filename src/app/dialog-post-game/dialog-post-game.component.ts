@@ -5,19 +5,20 @@ import {
   Inject,
   ChangeDetectorRef,
   OnInit,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import {
-  MatDialog,
   MatDialogActions,
   MatDialogClose,
   MatDialogContent,
-  MatDialogModule,
   MatDialogRef,
   MatDialogTitle,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -34,11 +35,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatDialogContent,
     MatProgressSpinnerModule,
     CommonModule,
+    MatTooltipModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DialogPostGame implements OnInit {
+  @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
+
   isShareSupported: boolean = false;
+  isCopied: boolean = false;
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -100,8 +105,14 @@ export class DialogPostGame implements OnInit {
         text: shareString,
       });
     } else {
-      // navigator.clipboard.writeText(this.data.shareLink);
-      navigator.clipboard.writeText(shareString);
+      this.copiedTooltip.show();
+      this.isCopied = true;
+      setTimeout(() => {
+        this.copiedTooltip.hide();
+        this.isCopied = false;
+        this.cdr.detectChanges();
+      }, 1500);
+      navigator.clipboard.writeText(this.data.shareLink);
     }
 
     // this.isCopied = true;

@@ -10,12 +10,13 @@ import {
   ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebSocketService } from '../websocket.service';
 import { Subscription } from 'rxjs';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
@@ -48,7 +49,7 @@ interface DialogData {
     MatButtonModule,
     MatListModule,
     MatInputModule,
-    ReactiveFormsModule,
+    MatTooltipModule,
   ],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
@@ -56,6 +57,7 @@ interface DialogData {
 })
 export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('nameInput') nameInputElement!: ElementRef;
+  @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
 
   pastelRainbowColors = [
     '#F94144',
@@ -132,7 +134,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.gameState = state;
       if (state.gameCode) {
         this.gameCode = state.gameCode;
-        this.players = state.players;
+        // this.players = state.players;
         this.gameShareUrl = this.getShareUrl();
       }
       this.cdr.detectChanges();
@@ -248,14 +250,16 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         text: shareString,
       });
     } else {
+      this.isCopied = true;
+      this.copiedTooltip.show();
+      setTimeout(() => {
+        this.copiedTooltip.hide();
+        this.isCopied = false;
+        this.cdr.detectChanges();
+      }, 1500);
+
       navigator.clipboard.writeText(this.gameShareUrl);
     }
-
-    this.isCopied = true;
-    setTimeout(() => {
-      this.isCopied = false;
-      this.cdr.detectChanges();
-    }, 2500);
   }
 
   getDisplayUrl() {
@@ -362,22 +366,44 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   private updateLobbyUI() {
-    this.players = this.gameState.players.map((player) => {
-      if (player.id === this.localPlayerId) {
-        return {
-          ...player,
-          displayName: this.editingName
+    // Create a map of existing players for quick lookup
+    const existingPlayers = new Map(
+      this.players.map((player) => [player.id, player])
+    );
+
+    // Update existing players and add new ones
+    this.gameState.players.forEach((player) => {
+      if (existingPlayers.has(player.id)) {
+        // Update existing player
+        const existingPlayer = existingPlayers.get(player.id)!;
+        if (player.id === this.localPlayerId) {
+          existingPlayer.displayName = this.editingName
             ? this.editingNameInput
-            : player.displayName,
-          ready:
+            : player.displayName;
+          existingPlayer.ready =
             this.localPlayerReady !== null
               ? this.localPlayerReady
-              : player.ready,
-        };
+              : player.ready;
+          existingPlayer.isHost = player.isHost;
+        } else {
+          Object.assign(existingPlayer, player);
+        }
+        existingPlayers.delete(player.id);
       } else {
-        return player;
+        // Add new player
+        this.players.push(player);
       }
     });
+
+    // Remove players that are no longer in the game state
+    existingPlayers.forEach((player) => {
+      const index = this.players.findIndex((p) => p.id === player.id);
+      if (index !== -1) {
+        this.players.splice(index, 1);
+      }
+    });
+
+    console.log(this.players);
 
     this.gameCode = this.gameState.gameCode;
     this.localPlayerId = this.gameState.localPlayerId!;

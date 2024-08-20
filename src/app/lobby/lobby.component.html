@@ -7,6 +7,10 @@
         <div class="mt-4">
           <h3 class="text-lg font-semibold mb-2">Invite link:</h3>
           <div
+            #copiedTooltip="matTooltip"
+            matTooltip="Copied!"
+            (mouseenter)="$event.stopImmediatePropagation()"
+            (mouseleave)="$event.stopImmediatePropagation()"
             class="d-flex link-container m-lr-auto"
             (click)="copyToClipboard()"
           >
@@ -32,7 +36,7 @@
         <div class="player-grid">
           <div
             *ngFor="let player of players; let i = index"
-            class="player-card"
+            class="player-card fade-in"
           >
             <i
               [ngClass]="{ transparent: !player.isHost }"

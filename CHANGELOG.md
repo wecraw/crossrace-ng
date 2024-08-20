@@ -18,12 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loading strategy for game to minimize initial load time
 - Share icon
 - Timer format
+- New players have fade in on join
+- Better copy link feedback
 
 ### Fixed
 
 - Word validation behavior
 - Grid position now resets properly
 - UI inconsistencies when player list was pushed for lobby
+- Handling for win conflicts in close games
 
 ## [0.4.8] - 2024-08-19
 

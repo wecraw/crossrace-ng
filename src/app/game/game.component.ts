@@ -21,7 +21,6 @@ import { PUZZLES } from './puzzles';
 import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
-import { Dialog } from '../dialog/dialog.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
 
 import { GRID_DEFAULT } from './defaults';
@@ -129,6 +128,9 @@ export class GameComponent implements OnInit, OnDestroy {
     });
 
     this.extractRouteInfo();
+
+    if (this.isMultiplayer && !this.gameState.isInGame)
+      this.router.navigate(['/']);
 
     this.startAfterCountDown();
 

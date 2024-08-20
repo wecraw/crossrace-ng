@@ -28,6 +28,11 @@
       <button
         tabindex="-1"
         class="btn btn-outline-secondary quit"
+        #copiedTooltip="matTooltip"
+        matTooltipPosition="above"
+        matTooltip="Copied!"
+        (mouseenter)="$event.stopImmediatePropagation()"
+        (mouseleave)="$event.stopImmediatePropagation()"
         (click)="challenge()"
       >
         Challenge a friend
@@ -40,7 +45,9 @@
         <i
           *ngIf="!isShareSupported"
           style="margin-left: 5px"
-          class="fa-regular fa-copy"
+          [ngClass]="
+            isCopied ? 'fa-regular fa-circle-check' : 'fa-regular fa-copy'
+          "
         >
         </i>
       </button>
