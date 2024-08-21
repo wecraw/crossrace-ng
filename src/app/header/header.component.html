@@ -7,19 +7,27 @@
         <!-- Links for tablets and above -->
         <div class="d-none d-md-flex">
           <a
-            class="nav-link me-3"
+            class="nav-link me-2"
+            (click)="navigateToDaily()"
+            routerLinkActive="active"
+            >Daily</a
+          >
+          <div class="me-2 divider"></div>
+
+          <a
+            class="nav-link me-2"
             (click)="navigateToSolo()"
             routerLinkActive="active"
-            >Solo</a
+            >Endless</a
           >
-          <div class="me-3 divider"></div>
+          <div class="me-2 divider"></div>
           <a
-            class="nav-link me-3"
+            class="nav-link me-2"
             routerLink="/versus-menu"
             routerLinkActive="active"
             >Versus</a
           >
-          <div class="me-3 divider"></div>
+          <div class="me-2 divider"></div>
           <a class="nav-link" (click)="openTutorialDialog({ mode: 'solo' })"
             >How to play</a
           >
@@ -37,8 +45,14 @@
 
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
+              <button class="dropdown-item" (click)="navigateToDaily()">
+                Daily
+              </button>
+            </li>
+            <hr />
+            <li>
               <button class="dropdown-item" (click)="navigateToSolo()">
-                Solo
+                Endless
               </button>
             </li>
             <hr />

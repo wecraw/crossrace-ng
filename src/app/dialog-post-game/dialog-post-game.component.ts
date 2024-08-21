@@ -51,6 +51,7 @@ export class DialogPostGame implements OnInit {
       grid: string[][];
       time: string;
       singlePlayer?: boolean;
+      daily?: boolean;
       shareLink?: string;
     },
     private cdr: ChangeDetectorRef
@@ -94,11 +95,13 @@ export class DialogPostGame implements OnInit {
   }
 
   copyToClipboard() {
-    if (!this.data.shareLink) return;
-    const shareString =
-      `Can you beat my time on Crossrace? I finished in ` +
-      this.data.time +
-      `!\n${this.data.shareLink}`;
+    const shareString = this.data.daily
+      ? `I finished today's Crossrace in ` +
+        this.data.time +
+        `!\n${this.data.shareLink}`
+      : `Can you beat my time on Crossrace? I finished in ` +
+        this.data.time +
+        `!\n${this.data.shareLink}`;
 
     if (navigator.share && this.isMobile()) {
       navigator.share({
@@ -112,13 +115,11 @@ export class DialogPostGame implements OnInit {
         this.isCopied = false;
         this.cdr.detectChanges();
       }, 1500);
-      navigator.clipboard.writeText(this.data.shareLink);
+      if (this.data.shareLink) {
+        navigator.clipboard.writeText(this.data.shareLink);
+      } else {
+        navigator.clipboard.writeText(shareString);
+      }
     }
-
-    // this.isCopied = true;
-    // setTimeout(() => {
-    //   this.isCopied = false;
-    //   this.cdr.detectChanges();
-    // }, 2500);
   }
 }

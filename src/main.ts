@@ -19,6 +19,7 @@ const routes: Routes = [
   { path: 'solo/:gameSeed', component: GameComponent },
   { path: 'challenge/:gameSeed', component: MainMenuComponent },
   { path: 'versus/:gameSeed', component: GameComponent },
+  { path: 'daily', component: MainMenuComponent },
   { path: '**', redirectTo: '' },
 ];
 

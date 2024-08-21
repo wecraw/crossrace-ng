@@ -54,6 +54,7 @@ export class MainMenuComponent implements OnInit {
   gameState!: GameState;
   isChallenge: boolean = false;
   gameSeed?: number;
+  isDaily: boolean = false;
 
   constructor(
     private gameStateService: GameStateService,
@@ -72,6 +73,7 @@ export class MainMenuComponent implements OnInit {
   }
 
   private extractRouteInfo() {
+    if (this.router.url.split('/')[1] === 'daily') this.isDaily = true;
     if (this.router.url.split('/')[1] === 'challenge') this.isChallenge = true;
     // Get the seed from the current route
     this.route.paramMap.subscribe((params) => {
@@ -98,6 +100,10 @@ export class MainMenuComponent implements OnInit {
 
   challenge() {
     this.router.navigate(['/solo/' + this.gameSeed]);
+  }
+
+  daily() {
+    this.router.navigate(['/solo/daily']);
   }
 
   solo() {

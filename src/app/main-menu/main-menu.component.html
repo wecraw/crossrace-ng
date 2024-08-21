@@ -37,14 +37,14 @@
 <div class="main-menu m-lr-auto">
   <div class="main-menu-buttons">
     <button
-      *ngIf="!isChallenge"
+      *ngIf="!isChallenge && !isDaily"
       (click)="solo()"
       class="btn btn-primary btn-lg m-auto"
     >
       Solo
     </button>
     <button
-      *ngIf="!isChallenge"
+      *ngIf="!isChallenge && !isDaily"
       (click)="versus()"
       class="btn btn-success btn-lg m-auto"
     >
@@ -56,6 +56,13 @@
       class="btn btn-primary btn-lg m-auto"
     >
       Start Challenge!
+    </button>
+    <button
+      *ngIf="isDaily"
+      (click)="daily()"
+      class="btn btn-primary btn-lg m-auto"
+    >
+      Start Daily Challenge!
     </button>
     <button
       (click)="openTutorialDialog({ mode: 'solo' })"

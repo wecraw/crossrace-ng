@@ -35,6 +35,7 @@ import * as confetti from 'canvas-confetti';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
+import { GameSeedService } from '../game-seed.service';
 
 interface ValidatedWord {
   word: string;
@@ -107,6 +108,7 @@ export class GameComponent implements OnInit, OnDestroy {
   isCountingDown: boolean = false;
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
+  isDaily: boolean = false;
 
   constructor(
     private renderer2: Renderer2,
@@ -115,7 +117,8 @@ export class GameComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private ngZone: NgZone,
-    private location: Location
+    private location: Location,
+    private gameSeedService: GameSeedService
   ) {
     this.validWords = new Set(VALID_WORDS);
   }
@@ -146,6 +149,13 @@ export class GameComponent implements OnInit, OnDestroy {
       const seedParam = params.get('gameSeed');
 
       if (seedParam) {
+        if (seedParam === 'daily') {
+          this.isDaily = true;
+          this.gameSeed = this.gameSeedService.getDailySeed();
+          console.log('Daily seed:', this.gameSeed);
+          return;
+        }
+
         const seedNumber = Number(seedParam);
 
         if (!isNaN(seedNumber) && seedNumber >= 0 && seedNumber <= 3650) {
@@ -199,6 +209,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   startAfterCountDown() {
+    console.log(this.gameSeed);
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
@@ -207,8 +218,14 @@ export class GameComponent implements OnInit, OnDestroy {
     if (!this.gameSeed) {
       this.gameSeed = this.getRandomPuzzleSeed();
     }
-    if (!this.isMultiplayer)
-      this.location.replaceState('/challenge/' + this.gameSeed);
+    if (!this.isMultiplayer) {
+      // Update the URL to reflect the game seed or daily, for easier sharing
+      if (this.isDaily) {
+        this.location.replaceState('/daily');
+      } else {
+        this.location.replaceState('/challenge/' + this.gameSeed);
+      }
+    }
     this.setLettersFromPuzzle();
     this.shuffleLetters();
 
@@ -326,6 +343,7 @@ export class GameComponent implements OnInit, OnDestroy {
           time: this.currentTimeString,
           singlePlayer: true,
           shareLink: this.generateShareLink(),
+          daily: this.isDaily,
         });
       }, 1100);
 
@@ -337,6 +355,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   generateShareLink() {
+    if (this.isDaily) return window.location.origin + '/daily';
     return window.location.origin + '/challenge/' + this.gameSeed;
   }
 

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Location } from '@angular/common';
@@ -16,6 +16,7 @@ export class HeaderComponent {
   readonly dialog = inject(MatDialog);
   private router = inject(Router);
   private location = inject(Location);
+  private route = inject(ActivatedRoute);
 
   openTutorialDialog(data: any) {
     const dialogRef = this.dialog.open(DialogTutorial, {
@@ -30,6 +31,12 @@ export class HeaderComponent {
       window.location.reload();
     } else {
       this.router.navigate(['/solo']);
+    }
+  }
+
+  navigateToDaily() {
+    if (this.location.path() !== '/daily') {
+      this.router.navigate(['/daily']);
     }
   }
 }
