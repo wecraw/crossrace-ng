@@ -47,6 +47,7 @@ export class DialogPostGame implements OnInit, OnDestroy {
   isShareSupported: boolean = false;
   isCopied: boolean = false;
   countdownTime: string = '';
+  averageTime: string = '';
   private countdownSubscription?: Subscription;
   constructor(
     @Inject(MAT_DIALOG_DATA)
@@ -78,6 +79,21 @@ export class DialogPostGame implements OnInit, OnDestroy {
     if (this.data.daily) {
       this.updateCountdown(); // Immediately calculate and display the countdown
       this.startCountdown();
+    }
+  }
+
+  getAverageTime(): string {
+    let times = localStorage.getItem('allTimes');
+    if (times) {
+      let timesArray: number[] = JSON.parse(times);
+      if (timesArray.length === 0) this.averageTime = '0:00';
+      const sum = timesArray.reduce((acc, num) => acc + num, 0);
+      let averageSeconds = Math.round(sum / timesArray.length);
+      const minutes = Math.floor(averageSeconds / 60);
+      const seconds = averageSeconds % 60;
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      return '0:00';
     }
   }
 

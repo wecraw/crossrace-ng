@@ -2,7 +2,12 @@
   <div class="d-flex flex-column h-100">
     <div class="row">
       <h1 class="m-lr-auto">{{ data.winnerDisplayName }} won!</h1>
-      <h4 class="m-lr-auto">{{ data.time }}</h4>
+      <h4 *ngIf="!this.data.daily" class="m-lr-auto">
+        {{ data.time }}
+      </h4>
+      <h4 *ngIf="this.data.daily" class="m-lr-auto">
+        Today: {{ data.time }} | Average: {{ getAverageTime() }}
+      </h4>
     </div>
     <div class="chess-grid m-lr-auto fade-out-edges">
       <div *ngFor="let row of grid; let i = index" class="grid-row">

@@ -214,7 +214,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   startAfterCountDown() {
-    console.log(this.gameSeed);
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
@@ -342,9 +341,7 @@ export class GameComponent implements OnInit, OnDestroy {
       );
     } else {
       if (this.isDaily) {
-        localStorage.setItem('finishedDaily', 'true');
-        localStorage.setItem('finalGrid', JSON.stringify(this.condensedGrid));
-        localStorage.setItem('finalTime', this.currentTimeString);
+        this.updateDailyLocalStorage();
       }
       setTimeout(() => {
         this.openDialog({
@@ -362,6 +359,23 @@ export class GameComponent implements OnInit, OnDestroy {
     }
     this.renderConfetti();
     return true;
+  }
+
+  updateDailyLocalStorage() {
+    localStorage.setItem('finishedDaily', 'true');
+    localStorage.setItem('finalGrid', JSON.stringify(this.condensedGrid));
+    localStorage.setItem('finalTime', this.currentTimeString);
+
+    let timesString = localStorage.getItem('allTimes');
+    let times = [];
+    let finalTimeNumber = +localStorage.getItem('dailyCurrentTime')!;
+    if (timesString) {
+      times = JSON.parse(timesString);
+      times.push(finalTimeNumber);
+    } else {
+      times = [finalTimeNumber];
+    }
+    localStorage.setItem('allTimes', JSON.stringify(times));
   }
 
   generateShareLink() {
@@ -605,13 +619,17 @@ export class GameComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result.event === 'confirm') {
-        if (this.isMultiplayer) this.router.navigate(['/lobby']);
-        if (this.isDaily) this.router.navigate(['/solo']);
-        if (!this.isDaily && !this.isMultiplayer) this.startAfterCountDown();
-      }
-      if (result.event === 'quit') {
+      if (!result) {
         this.router.navigate(['/']);
+      } else {
+        if (result.event === 'confirm') {
+          if (this.isMultiplayer) this.router.navigate(['/lobby']);
+          if (this.isDaily) this.router.navigate(['/solo']);
+          if (!this.isDaily && !this.isMultiplayer) this.startAfterCountDown();
+        }
+        if (result.event === 'quit') {
+          this.router.navigate(['/']);
+        }
       }
     });
   }
