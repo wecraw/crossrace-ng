@@ -25,8 +25,6 @@ import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
 
-import { GRID_DEFAULT } from './defaults';
-
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { WebSocketService } from '../websocket.service';
@@ -109,6 +107,7 @@ export class GameComponent implements OnInit, OnDestroy {
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
   isDaily: boolean = false;
+  timerStartTime: number = 0;
 
   constructor(
     private renderer2: Renderer2,
@@ -135,6 +134,13 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.isMultiplayer && !this.gameState.isInGame)
       this.router.navigate(['/']);
 
+    if (this.isDaily) {
+      let time = localStorage.getItem('dailyCurrentTime');
+      if (time) {
+        this.timerStartTime = +time;
+      }
+    }
+
     this.startAfterCountDown();
 
     this.wsSubscription = this.webSocketService
@@ -152,7 +158,6 @@ export class GameComponent implements OnInit, OnDestroy {
         if (seedParam === 'daily') {
           this.isDaily = true;
           this.gameSeed = this.gameSeedService.getDailySeed();
-          console.log('Daily seed:', this.gameSeed);
           return;
         }
 
@@ -336,6 +341,11 @@ export class GameComponent implements OnInit, OnDestroy {
         this.currentTimeString
       );
     } else {
+      if (this.isDaily) {
+        localStorage.setItem('finishedDaily', 'true');
+        localStorage.setItem('finalGrid', JSON.stringify(this.condensedGrid));
+        localStorage.setItem('finalTime', this.currentTimeString);
+      }
       setTimeout(() => {
         this.openDialog({
           winnerDisplayName: 'You',
@@ -570,6 +580,9 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   onTimeChanged(time: number) {
+    if (this.isDaily) {
+      localStorage.setItem('dailyCurrentTime', '' + time);
+    }
     const minutes = Math.floor(time / 60);
     const remainingSeconds = time % 60;
     this.currentTimeString = `${minutes}:${remainingSeconds
@@ -594,10 +607,11 @@ export class GameComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe((result) => {
       if (result.event === 'confirm') {
         if (this.isMultiplayer) this.router.navigate(['/lobby']);
-        if (!this.isMultiplayer) this.startAfterCountDown();
+        if (this.isDaily) this.router.navigate(['/solo']);
+        if (!this.isDaily && !this.isMultiplayer) this.startAfterCountDown();
       }
       if (result.event === 'quit') {
-        location.reload();
+        this.router.navigate(['/']);
       }
     });
   }
@@ -681,7 +695,9 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   initializeValidLetterIndices() {
-    this.validLetterIndices = GRID_DEFAULT;
+    this.validLetterIndices = Array(this.GRID_SIZE)
+      .fill(null)
+      .map(() => Array(this.GRID_SIZE).fill(false));
   }
 
   generateGridCellIds() {

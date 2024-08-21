@@ -6,6 +6,7 @@ import {
   ChangeDetectorRef,
   OnInit,
   ViewChild,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -21,6 +22,7 @@ import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'dialog',
@@ -39,11 +41,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DialogPostGame implements OnInit {
+export class DialogPostGame implements OnInit, OnDestroy {
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
 
   isShareSupported: boolean = false;
   isCopied: boolean = false;
+  countdownTime: string = '';
+  private countdownSubscription?: Subscription;
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -70,6 +74,11 @@ export class DialogPostGame implements OnInit {
     this.grid = Array(gridSize)
       .fill(0)
       .map(() => Array(gridSize).fill(0));
+
+    if (this.data.daily) {
+      this.updateCountdown(); // Immediately calculate and display the countdown
+      this.startCountdown();
+    }
   }
 
   close() {
@@ -121,5 +130,49 @@ export class DialogPostGame implements OnInit {
         navigator.clipboard.writeText(shareString);
       }
     }
+  }
+
+  ngOnDestroy() {
+    if (this.countdownSubscription) {
+      this.countdownSubscription.unsubscribe();
+    }
+  }
+
+  startCountdown() {
+    this.countdownSubscription = interval(1000).subscribe(() => {
+      this.updateCountdown();
+    });
+  }
+
+  updateCountdown() {
+    const now = new Date();
+    const easternTime = this.getEasternTime(now);
+    const nextMidnight = new Date(easternTime);
+    nextMidnight.setHours(24, 0, 0, 0);
+
+    const diff = nextMidnight.getTime() - easternTime.getTime();
+
+    if (diff > 0) {
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      this.countdownTime = `${hours.toString().padStart(2, '0')}:${minutes
+        .toString()
+        .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      this.cdr.detectChanges();
+    } else {
+      this.countdownTime = '00:00:00';
+      if (this.countdownSubscription) {
+        this.countdownSubscription.unsubscribe();
+      }
+    }
+  }
+
+  getEasternTime(date: Date): Date {
+    const easternTimeString = date.toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+    });
+    return new Date(easternTimeString);
   }
 }

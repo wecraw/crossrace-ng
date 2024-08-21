@@ -16,6 +16,8 @@ import { Subscription } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
+import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
+import { GameSeedService } from '../game-seed.service';
 
 interface ValidatedWord {
   word: string;
@@ -55,11 +57,14 @@ export class MainMenuComponent implements OnInit {
   isChallenge: boolean = false;
   gameSeed?: number;
   isDaily: boolean = false;
+  isResuming: boolean = false;
+  finishedDaily: boolean = false;
 
   constructor(
     private gameStateService: GameStateService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private gameSeedService: GameSeedService
   ) {}
 
   ngOnInit(): void {
@@ -70,6 +75,33 @@ export class MainMenuComponent implements OnInit {
     });
 
     this.extractRouteInfo();
+
+    if (this.isDaily) {
+      let storageSeed = localStorage.getItem('dailySeed');
+      let dailySeed = this.gameSeedService.getDailySeed();
+      if (storageSeed && +storageSeed === dailySeed) {
+        let finishedDaily = localStorage.getItem('finishedDaily');
+        if (finishedDaily === 'true') {
+          this.isDaily = false;
+          let finalTime = localStorage.getItem('finalTime');
+          let finalGrid = localStorage.getItem('finalGrid');
+          if (finalTime && finalGrid) {
+            this.openPostGameDialog({
+              time: localStorage.getItem('finalTime'),
+              grid: JSON.parse(finalGrid),
+              winnerDisplayName: 'You',
+              daily: true,
+              singlePlayer: true,
+              shareLink: window.location.origin + '/daily',
+            });
+          }
+
+          //TODO SHOW POST GAME DIALOG HERE
+        } else {
+          this.isResuming = true;
+        }
+      }
+    }
   }
 
   private extractRouteInfo() {
@@ -103,7 +135,24 @@ export class MainMenuComponent implements OnInit {
   }
 
   daily() {
+    let storageSeed = localStorage.getItem('dailySeed');
+    let dailySeed = this.gameSeedService.getDailySeed();
+    if (storageSeed === null) {
+      localStorage.setItem('dailySeed', '' + dailySeed);
+      localStorage.setItem('dailyCurrentTime', '0');
+      localStorage.setItem('finishedDaily', 'false');
+    } else {
+      if (+storageSeed !== dailySeed) {
+        localStorage.setItem('finishedDaily', 'false');
+        localStorage.setItem('dailyCurrentTime', '0');
+        localStorage.setItem('dailySeed', '' + dailySeed);
+      }
+    }
     this.router.navigate(['/solo/daily']);
+  }
+
+  dailyLobby() {
+    this.router.navigate(['/daily']);
   }
 
   solo() {
@@ -118,6 +167,23 @@ export class MainMenuComponent implements OnInit {
     const dialogRef = this.dialog.open(DialogTutorial, {
       data: data,
       minWidth: 370,
+    });
+  }
+
+  openPostGameDialog(data: any) {
+    const dialogRef = this.dialog.open(DialogPostGame, {
+      data: data,
+      minWidth: 370,
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        if (result.event === 'confirm') {
+          this.router.navigate(['/solo']);
+        }
+      } else {
+        //closed modal by clicking outside
+        this.router.navigate(['/']);
+      }
     });
   }
 

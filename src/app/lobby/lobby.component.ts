@@ -301,6 +301,16 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       const dialogRef = this.dialog.open(Dialog, {
         data: data,
       });
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          if (result.event === 'confirm') {
+            this.router.navigate(['/']);
+          }
+        } else {
+          //closed modal by clicking outside
+          this.router.navigate(['/']);
+        }
+      });
     } else {
       const dialogRef = this.dialog.open(Dialog, {
         data: data,

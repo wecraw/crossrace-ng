@@ -18,6 +18,10 @@
       </div>
     </div>
 
+    <div *ngIf="data.daily" class="countdown-timer m-lr-auto">
+      <h5>Next puzzle in: {{ countdownTime }}</h5>
+    </div>
+
     <div *ngIf="!data.singlePlayer" class="action-buttons d-flex">
       <button class="btn btn-outline-secondary quit" (click)="quit()">
         Quit
@@ -51,7 +55,9 @@
         >
         </i>
       </button>
-      <button class="btn btn-primary" (click)="confirm()">Play again</button>
+      <button class="btn btn-primary" (click)="confirm()">
+        {{ data.daily ? "Play endless" : "Play again" }}
+      </button>
     </div>
   </div>
 </div>

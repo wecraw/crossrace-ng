@@ -71,6 +71,7 @@
 <div class="lower-menu m-lr-auto">
   <app-timer
     [ngClass]="{ hidden: !isGameStarted && !waitingForRestart }"
+    [startTime]="timerStartTime"
     [isRunning]="timerRunning"
     (timeChanged)="onTimeChanged($event)"
   >

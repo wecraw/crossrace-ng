@@ -36,20 +36,18 @@
 </div>
 <div class="main-menu m-lr-auto">
   <div class="main-menu-buttons">
-    <button
-      *ngIf="!isChallenge && !isDaily"
-      (click)="solo()"
-      class="btn btn-primary btn-lg m-auto"
-    >
-      Solo
+    @if(!isChallenge && !isDaily){
+    <button (click)="dailyLobby()" class="btn btn-primary btn-lg m-auto">
+      Daily Challenge
     </button>
-    <button
-      *ngIf="!isChallenge && !isDaily"
-      (click)="versus()"
-      class="btn btn-success btn-lg m-auto"
-    >
+    <button (click)="solo()" class="btn btn-primary btn-lg m-auto">
+      Endless
+    </button>
+    <button (click)="versus()" class="btn btn-success btn-lg m-auto">
       Versus
     </button>
+    }
+
     <button
       *ngIf="isChallenge"
       (click)="challenge()"
@@ -62,7 +60,7 @@
       (click)="daily()"
       class="btn btn-primary btn-lg m-auto"
     >
-      Start Daily Challenge!
+      {{ isResuming ? "Resume Daily Challenge" : "Start Daily Challenge!" }}
     </button>
     <button
       (click)="openTutorialDialog({ mode: 'solo' })"
@@ -86,4 +84,4 @@
   </div>
 </div>
 
-<div class="version">0.5.2</div>
+<div class="version">0.6.0</div>

@@ -1,6 +1,6 @@
 <div class="wrapper">
   <div class="d-flex m-lr-auto">
-    <h4>
+    <h4 [ngClass]="{ 'm-lr-auto': data.showConfirm }">
       {{ data.dialogText }}
     </h4>
     @if(data.showSpinner) {
@@ -8,15 +8,15 @@
     }
   </div>
   @if(data.showConfirm){
-  <mat-dialog-actions>
+  <div class="d-flex w-100">
     <button
-      style="margin-left: auto"
-      mat-button
-      cdkFocusInitial
+      style="min-width: 75px; margin-top: 15px"
+      class="m-lr-auto btn btn-primary"
       (click)="confirm()"
     >
       {{ data.confirmText ? data.confirmText : "Ok" }}
     </button>
-  </mat-dialog-actions>
+  </div>
+
   }
 </div>

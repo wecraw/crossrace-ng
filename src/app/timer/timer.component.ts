@@ -6,6 +6,7 @@ import {
   EventEmitter,
   OnChanges,
   SimpleChanges,
+  OnInit,
 } from '@angular/core';
 
 @Component({
@@ -26,8 +27,9 @@ import {
     `,
   ],
 })
-export class TimerComponent implements OnDestroy, OnChanges {
+export class TimerComponent implements OnInit, OnDestroy, OnChanges {
   @Input() isRunning = false;
+  @Input() startTime: number = 0;
   @Output() timeChanged = new EventEmitter<number>();
   @Output() restart = new EventEmitter<String>();
 
@@ -38,6 +40,10 @@ export class TimerComponent implements OnDestroy, OnChanges {
     const minutes = Math.floor(this.seconds / 60);
     const remainingSeconds = this.seconds % 60;
     return `${minutes}:${this.padNumber(remainingSeconds)}`;
+  }
+
+  ngOnInit(): void {
+    this.seconds = this.startTime;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
