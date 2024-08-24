@@ -625,7 +625,10 @@ export class GameComponent implements OnInit, OnDestroy {
         if (result.event === 'confirm') {
           if (this.isMultiplayer) this.router.navigate(['/lobby']);
           if (this.isDaily) this.router.navigate(['/solo']);
-          if (!this.isDaily && !this.isMultiplayer) this.startAfterCountDown();
+          if (!this.isDaily && !this.isMultiplayer) {
+            this.gameSeed = this.getRandomPuzzleSeed();
+            this.startAfterCountDown();
+          }
         }
         if (result.event === 'quit') {
           this.router.navigate(['/']);
