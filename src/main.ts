@@ -14,6 +14,7 @@ const routes: Routes = [
   { path: 'versus-menu', component: VersusMenuComponent },
   { path: 'game', component: MainMenuComponent }, //deprecated, now goes to main menu
   { path: 'versus', component: MainMenuComponent },
+  { path: 'join', component: LobbyComponent },
   { path: 'join/:gameCode', component: LobbyComponent },
   { path: 'solo', component: GameComponent },
   { path: 'solo/:gameSeed', component: GameComponent },

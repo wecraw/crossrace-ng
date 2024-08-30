@@ -11,10 +11,7 @@ import { TimerComponent } from '../timer/timer.component';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
-import { WebSocketService } from '../websocket.service';
-import { Subscription } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
 import { GameSeedService } from '../game-seed.service';
@@ -53,7 +50,6 @@ export class MainMenuComponent implements OnInit {
   readonly dialog = inject(MatDialog);
 
   // Game State
-  gameState!: GameState;
   isChallenge: boolean = false;
   gameSeed?: number;
   isDaily: boolean = false;
@@ -61,7 +57,6 @@ export class MainMenuComponent implements OnInit {
   finishedDaily: boolean = false;
 
   constructor(
-    private gameStateService: GameStateService,
     private router: Router,
     private route: ActivatedRoute,
     private gameSeedService: GameSeedService
@@ -69,11 +64,6 @@ export class MainMenuComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeGrid();
-
-    this.gameStateService.getGameState().subscribe((state) => {
-      this.gameState = state;
-    });
-
     this.extractRouteInfo();
 
     if (this.isDaily) {

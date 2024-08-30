@@ -24,6 +24,7 @@ import { Dialog } from '../dialog/dialog.component';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
+import { Location } from '@angular/common';
 
 interface Player {
   id: string;
@@ -59,6 +60,8 @@ interface DialogData {
 export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('nameInput') nameInputElement!: ElementRef;
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
+
+  private location = inject(Location);
 
   pastelRainbowColors = [
     '#F94144',
@@ -165,12 +168,9 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
             this.router.navigate(['/']);
           }
         } else {
-          if (!this.gameState.isInGame || this.gameState.isCreating) {
+          if (!this.gameState.isInGame) {
             this.createGame();
-            this.gameStateService.setGameState({
-              isCreating: false,
-            });
-          } else if (this.gameState.isInGame) {
+          } else {
             //if rejoining after a versus game, get new player list in case players joined during the game
             if (this.gameCode) this.webSocketService.getPlayers(this.gameCode);
             this.gameStateService.setGameState({
@@ -451,6 +451,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     switch (message.type) {
       case 'gameCreated':
         this.closeDialog();
+        this.location.replaceState('/join/' + message.gameCode);
         this.gameStateService.setGameState({
           gameCode: message.gameCode,
           isHost: true,
