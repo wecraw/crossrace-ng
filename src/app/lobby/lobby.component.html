@@ -115,3 +115,24 @@
     </div>
   </div>
 </div>
+<!-- <div class="connection-status">
+  <p>Connection Status: {{ connectionStatus }}</p>
+  <button
+    (click)="simulateDisconnect()"
+    [disabled]="connectionStatus !== 'connected'"
+  >
+    Simulate Disconnect
+  </button>
+</div>
+
+<div *ngIf="connectionStatus !== 'connected'" class="connection-status-alert">
+  <ng-container [ngSwitch]="connectionStatus">
+    <span *ngSwitchCase="'disconnected'"
+      >Disconnected from server. Attempting to reconnect...</span
+    >
+    <span *ngSwitchCase="'reconnecting'">Reconnecting to server...</span>
+    <span *ngSwitchCase="'failed'"
+      >Failed to reconnect. Please try again later.</span
+    >
+  </ng-container>
+</div> -->

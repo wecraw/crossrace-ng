@@ -76,6 +76,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   joining: boolean = false;
   editingNameInput: string = '';
   gameState!: GameState;
+  connectionStatus: string = 'disconnected';
 
   isHost: boolean = false;
   players: Player[] = [];
@@ -142,6 +143,11 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     try {
       await this.webSocketService.connect();
+
+      this.webSocketService.getConnectionStatus().subscribe((status) => {
+        this.connectionStatus = status;
+        this.cdr.detectChanges();
+      });
 
       this.messageSubscription = this.webSocketService
         .getMessages()
@@ -219,6 +225,10 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.editingNameInput.trim()
       );
     }
+  }
+
+  simulateDisconnect() {
+    this.webSocketService.manualDisconnect();
   }
 
   readyUp() {

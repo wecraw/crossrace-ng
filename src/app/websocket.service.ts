@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, ReplaySubject, Subject } from 'rxjs';
-import { filter, take } from 'rxjs/operators';
+import { filter, map, take } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -9,46 +9,90 @@ import { environment } from '../environments/environment';
 export class WebSocketService {
   private socket!: WebSocket;
   private messageSubject = new Subject<any>();
-  private connectionStatus = new BehaviorSubject<boolean>(false);
+  private connectionStatus = new BehaviorSubject<string>('disconnected');
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectInterval = 1000;
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.socket = new WebSocket(`${environment.apiGatewayUrl}`);
-
-      this.socket.onopen = () => {
-        this.connectionStatus.next(true);
-        resolve();
-      };
-
-      this.socket.onclose = (event) => {
-        this.connectionStatus.next(false);
-      };
-
-      this.socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        reject(error);
-      };
-
-      this.socket.onmessage = (event) => {
-        this.messageSubject.next(JSON.parse(event.data));
-      };
+      this.initializeWebSocket(resolve, reject);
     });
   }
 
-  isConnected(): Observable<boolean> {
+  private initializeWebSocket(
+    resolve: () => void,
+    reject: (reason?: any) => void
+  ): void {
+    this.socket = new WebSocket(`${environment.apiGatewayUrl}`);
+
+    this.socket.onopen = () => {
+      this.connectionStatus.next('connected');
+      this.reconnectAttempts = 0;
+      resolve();
+    };
+
+    this.socket.onclose = (event) => {
+      this.connectionStatus.next('disconnected');
+      this.attemptReconnect();
+    };
+
+    this.socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      reject(error);
+    };
+
+    this.socket.onmessage = (event) => {
+      this.messageSubject.next(JSON.parse(event.data));
+    };
+
+    // Handle app visibility changes
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        this.checkConnection();
+      }
+    });
+  }
+
+  private attemptReconnect(): void {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      this.connectionStatus.next('reconnecting');
+      setTimeout(() => {
+        this.initializeWebSocket(() => {}, console.error);
+      }, this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1));
+    } else {
+      this.connectionStatus.next('failed');
+    }
+  }
+
+  private checkConnection(): void {
+    if (this.socket.readyState !== WebSocket.OPEN) {
+      this.attemptReconnect();
+    }
+  }
+
+  getConnectionStatus(): Observable<string> {
     return this.connectionStatus.asObservable();
+  }
+
+  isConnected(): Observable<boolean> {
+    return this.connectionStatus
+      .asObservable()
+      .pipe(map((status) => status === 'connected'));
   }
 
   waitForConnection(): Promise<void> {
     return new Promise<void>((resolve) => {
       this.connectionStatus
         .pipe(
-          filter((isConnected) => isConnected),
+          filter((status) => status === 'connected'),
           take(1)
         )
         .subscribe(() => resolve());
     });
   }
+
   send(message: any): void {
     if (this.socket.readyState === WebSocket.OPEN) {
       try {
@@ -95,5 +139,17 @@ export class WebSocketService {
 
   getMessages(): Observable<any> {
     return this.messageSubject.asObservable();
+  }
+
+  manualDisconnect(): void {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.close();
+    }
+    // The onclose event will trigger the reconnection process
+  }
+
+  manualReconnect(): void {
+    this.reconnectAttempts = 0;
+    this.attemptReconnect();
   }
 }
