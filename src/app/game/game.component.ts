@@ -620,7 +620,11 @@ export class GameComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) {
-        this.router.navigate(['/']);
+        if (this.isMultiplayer) {
+          this.router.navigate(['/lobby']);
+        } else {
+          this.router.navigate(['/']);
+        }
       } else {
         if (result.event === 'confirm') {
           if (this.isMultiplayer) this.router.navigate(['/lobby']);
