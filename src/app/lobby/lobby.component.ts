@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebSocketService } from '../websocket.service';
-import { Subscription } from 'rxjs';
+import { firstValueFrom, Subscription, take } from 'rxjs';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
@@ -85,6 +85,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   players: Player[] = [];
   private messageSubscription!: Subscription;
   isShareSupported: boolean = false;
+  private connectionStatusSubscription: Subscription | undefined;
 
   readonly dialog = inject(MatDialog);
   private cdr = inject(ChangeDetectorRef);
@@ -132,8 +133,25 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     );
   }
 
+  private subscribeToConnectionStatus() {
+    this.connectionStatusSubscription = this.webSocketService
+      .getConnectionStatus()
+      .subscribe((status) => {
+        console.log('Connection status changed:', status);
+        this.connectionStatus = status;
+        this.cdr.detectChanges();
+      });
+  }
+
+  manualReconnect() {
+    console.log('Manual reconnect requested');
+    this.webSocketService.manualReconnect();
+  }
   async ngOnInit() {
     this.isShareSupported = !!navigator.share && this.isMobile();
+
+    this.subscribeToConnectionStatus();
+    this.subscribeToMessages();
 
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
@@ -144,24 +162,24 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.cdr.detectChanges();
     });
 
-    try {
-      await this.webSocketService.connect();
+    this.webSocketService.getConnectionStatus().subscribe((status) => {
+      this.connectionStatus = status;
+    });
 
+    try {
       this.webSocketService.getConnectionStatus().subscribe((status) => {
         this.connectionStatus = status;
         this.cdr.detectChanges();
       });
 
-      this.messageSubscription = this.webSocketService
-        .getMessages()
-        .subscribe((message) => this.handleMessage(message));
-
       this.route.params.subscribe((params) => {
         if (params['gameCode']) {
           const gameCode = params['gameCode'].toUpperCase();
+          console.log(gameCode);
           if (/^[A-Z]{4}$/.test(gameCode)) {
             this.openDialog(this.dialogSettingsJoin, true);
-            this.gameState.gameCode = gameCode;
+            this.gameState.gameCode = gameCode; // TODO REMOVE
+            this.gameCode = gameCode;
             this.joinGame();
           } else {
             // Route to '/' if gameCode is not exactly 4 alphabet letters
@@ -169,6 +187,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
           }
         } else {
           if (!this.gameState.isInGame) {
+            this.openDialog(this.dialogSettingsCreate, true);
             this.createGame();
           } else {
             //if rejoining after a versus game, get new player list in case players joined during the game
@@ -183,6 +202,8 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     } catch (error) {
       console.error('Failed to connect to WebSocket:', error);
     }
+
+    this.checkConnection();
   }
 
   ngOnDestroy() {
@@ -192,6 +213,34 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
+  }
+
+  private async checkConnection() {
+    console.log('Checking connection');
+    try {
+      const isConnected = await firstValueFrom(
+        this.webSocketService.isConnected()
+      );
+      if (!isConnected) {
+        console.log('Not connected, attempting to connect');
+        await this.webSocketService.connect();
+        this.subscribeToMessages();
+      } else {
+        console.log('Already connected');
+        this.subscribeToMessages();
+      }
+    } catch (error) {
+      console.error('Error checking connection:', error);
+    }
+  }
+
+  private subscribeToMessages() {
+    this.messageSubscription = this.webSocketService
+      .getMessages()
+      .subscribe((message) => {
+        console.log('Received message:', message);
+        this.handleMessage(message);
+      });
   }
 
   ngAfterViewChecked(): void {
@@ -340,20 +389,38 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.dialog.closeAll();
   }
 
-  createGame(): void {
-    this.openDialog(this.dialogSettingsCreate, true);
-    this.webSocketService.createGame();
+  async createGame() {
+    try {
+      await this.webSocketService.connect();
+      this.messageSubscription = this.webSocketService
+        .getMessages()
+        .subscribe((message) => this.handleMessage(message));
+      this.webSocketService.send({ action: 'create' });
+    } catch (error) {
+      console.error('Failed to connect:', error);
+      // Handle connection error (e.g., show an error message to the user)
+    }
   }
 
-  joinGame(): void {
+  async joinGame() {
+    if (!this.gameCode) return;
+
     this.joining = true;
-    let gameCode = this.gameState.gameCode;
-    this.gameStateService.setGameState({
-      gameCode: gameCode,
-    });
-    if (gameCode && gameCode.length === 4) {
-      this.openDialog(this.dialogSettingsJoin, true);
-      this.webSocketService.joinGame(gameCode.toUpperCase());
+    try {
+      console.log('attempting join');
+      await this.webSocketService.connect();
+      this.messageSubscription = this.webSocketService
+        .getMessages()
+        .subscribe((message) => this.handleMessage(message));
+      this.webSocketService.send({ action: 'join', gameCode: this.gameCode });
+      this.joining = false;
+      this.closeDialog();
+    } catch (error) {
+      console.error('Failed to connect:', error);
+      this.joining = false;
+      this.closeDialog();
+
+      // Handle connection error (e.g., show an error message to the user)
     }
   }
 
@@ -476,9 +543,11 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.gameStateService.setGameState({
           players: message.players,
         });
+
         this.updateLobbyUI();
         break;
       case 'selfJoined': //emitted only to the user who joins when they join
+        this.webSocketService.setCurrentGame(this.gameCode!, message.playerId);
         this.gameStateService.setGameState({
           localPlayerId: message.playerId,
         });

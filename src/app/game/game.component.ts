@@ -100,6 +100,7 @@ export class GameComponent implements OnInit, OnDestroy {
   isGameOver: boolean = false;
   isWinner: boolean = false;
   isGameStarted: boolean = false;
+  connectionStatus: string = 'disconnected';
 
   // Game State
   gameState!: GameState;
@@ -123,6 +124,14 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.webSocketService.getConnectionStatus().subscribe((status) => {
+      this.connectionStatus = status;
+    });
+
+    this.wsSubscription = this.webSocketService
+      .getMessages()
+      .subscribe((message) => this.handleWebSocketMessage(message));
+
     this.generateGridCellIds();
 
     this.gameStateService.getGameState().subscribe((state) => {
@@ -142,10 +151,6 @@ export class GameComponent implements OnInit, OnDestroy {
     }
 
     this.startAfterCountDown();
-
-    this.wsSubscription = this.webSocketService
-      .getMessages()
-      .subscribe((message) => this.handleWebSocketMessage(message));
   }
 
   private extractRouteInfo() {
