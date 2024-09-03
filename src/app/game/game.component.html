@@ -11,7 +11,7 @@
   >
     @for (letter of bankLetters; track $index) {
     <div
-      *ngIf="isGameStarted || isMultiplayer || isCountingDown"
+      *ngIf="isGameStarted || gameState.gameMode === 'versus' || isCountingDown"
       class="tile-wrapper"
       [ngClass]="getFlipInClass($index)"
       cdkDrag

@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2024-09-02
+
+### Changed
+
+- Refactored usage of game state so that it is more centralized and easier to manage
+- Refactored websocket connection management so that it persists between routes and supports reconnecting
+- "Challenge a friend" copy changed to "Share"
+- Changed route names to better reflect the underlying game state (solo -> endless)
+
 ## [0.6.5] - 2024-08-29
 
 - Dismissing postgame modal in versus returns you to the lobby

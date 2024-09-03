@@ -16,14 +16,14 @@
 
           <a
             class="nav-link me-2"
-            (click)="navigateToSolo()"
+            (click)="navigateToEndless()"
             routerLinkActive="active"
             >Endless</a
           >
           <div class="me-2 divider"></div>
           <a
             class="nav-link me-2"
-            routerLink="/versus-menu"
+            (click)="navigateToVersus()"
             routerLinkActive="active"
             >Versus</a
           >
@@ -53,13 +53,13 @@
             </li>
             <hr />
             <li>
-              <button class="dropdown-item" (click)="navigateToSolo()">
+              <button class="dropdown-item" (click)="navigateToEndless()">
                 Endless
               </button>
             </li>
             <hr />
             <li>
-              <button class="dropdown-item" routerLink="/versus-menu">
+              <button class="dropdown-item" (click)="navigateToVersus()">
                 Versus
               </button>
             </li>

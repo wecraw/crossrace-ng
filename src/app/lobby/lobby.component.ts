@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebSocketService } from '../websocket.service';
-import { firstValueFrom, Subscription, take } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
@@ -25,6 +25,7 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { Location } from '@angular/common';
+import { DialogSettings } from '../dialog/dialog-settings';
 
 interface Player {
   id: string;
@@ -81,7 +82,6 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   gameState!: GameState;
   connectionStatus: string = 'disconnected';
 
-  isHost: boolean = false;
   players: Player[] = [];
   isShareSupported: boolean = false;
 
@@ -105,24 +105,6 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     private clipboard: Clipboard
   ) {}
 
-  dialogSettingsJoin: any = {
-    dialogText: 'Joining game',
-    showSpinner: true,
-    showConfirm: false,
-  };
-
-  dialogSettingsStart: any = {
-    dialogText: 'Starting game',
-    showSpinner: true,
-    showConfirm: false,
-  };
-
-  dialogSettingsCreate: any = {
-    dialogText: 'Creating game',
-    showSpinner: true,
-    showConfirm: false,
-  };
-
   getBackgroundColor(index: number): { 'background-color': string } {
     const colorIndex = index % this.pastelRainbowColors.length;
     return { 'background-color': this.pastelRainbowColors[colorIndex] };
@@ -134,12 +116,11 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     );
   }
 
-  manualReconnect() {
-    console.log('Manual reconnect requested');
-    this.webSocketService.manualReconnect();
-  }
-
   async ngOnInit() {
+    this.gameStateService.setGameState({
+      gameMode: 'versus',
+    });
+
     this.isShareSupported = !!navigator.share && this.isMobile();
 
     this.setupSubscriptions();
@@ -148,26 +129,31 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.route.params.subscribe((params) => {
         if (params['gameCode']) {
           const gameCode = params['gameCode'].toUpperCase();
-          if (/^[A-Z]{4}$/.test(gameCode)) {
-            this.openDialog(this.dialogSettingsJoin, true);
-            this.gameState.gameCode = gameCode; // TODO REMOVE
-            this.gameCode = gameCode;
-            this.joinGame();
-          } else {
-            // Route to '/' if gameCode is not exactly 4 alphabet letters
-            this.router.navigate(['/']);
-          }
-        } else {
-          if (!this.gameState.isInGame) {
-            this.openDialog(this.dialogSettingsCreate, true);
-            this.createGame();
-          } else {
+          console.log(this.gameState);
+          if (this.gameState.isInGame) {
             //if rejoining after a versus game, get new player list in case players joined during the game
-            if (this.gameCode) this.webSocketService.getPlayers(this.gameCode);
+            this.webSocketService.getPlayers(gameCode);
             this.gameStateService.setGameState({
               isInGame: false,
             });
             this.updateLobbyUI();
+          } else {
+            if (/^[A-Z]{4}$/.test(gameCode)) {
+              this.openDialog(DialogSettings.dialogSettingsJoin, true);
+              this.gameStateService.setGameState({
+                gameCode: gameCode,
+              });
+              // this.gameCode = gameCode;
+              this.joinGame();
+            } else {
+              // Route to '/' if gameCode is not exactly 4 alphabet letters
+              this.router.navigate(['/']);
+            }
+          }
+        } else {
+          if (!this.gameState.isInGame) {
+            this.openDialog(DialogSettings.dialogSettingsCreate, true);
+            this.createGame();
           }
         }
       });
@@ -207,10 +193,13 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.players[playerIndex].displayName = this.editingNameInput.trim();
     }
 
-    if (this.gameCode) {
+    if (this.gameState.gameCode) {
       this.webSocketService.updateDisplayName(
-        this.gameCode,
+        this.gameState.gameCode,
         this.localPlayerId,
+        this.editingNameInput.trim()
+      );
+      this.webSocketService.updateCurrentPlayerDisplayName(
         this.editingNameInput.trim()
       );
     }
@@ -228,8 +217,11 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.localPlayerReady = true;
       this.players[playerIndex].ready = true;
     }
-    if (this.gameCode) {
-      this.webSocketService.readyUp(this.gameCode, this.localPlayerId);
+    if (this.gameState.gameCode) {
+      this.webSocketService.readyUp(
+        this.gameState.gameCode,
+        this.localPlayerId
+      );
     }
   }
 
@@ -241,9 +233,12 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.localPlayerReady = !this.players[playerIndex].ready;
       this.players[playerIndex].ready = this.localPlayerReady;
     }
-    if (this.gameCode) {
+    if (this.gameState.gameCode) {
       if (this.localPlayerReady) {
-        this.webSocketService.readyUp(this.gameCode, this.localPlayerId);
+        this.webSocketService.readyUp(
+          this.gameState.gameCode,
+          this.localPlayerId
+        );
       }
     }
   }
@@ -340,14 +335,15 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   async joinGame() {
-    if (!this.gameCode) return;
+    if (!this.gameState.gameCode) return;
 
     this.joining = true;
     try {
       await this.webSocketService.connect();
-      this.webSocketService.send({ action: 'join', gameCode: this.gameCode });
-      this.joining = false;
-      this.closeDialog();
+      this.webSocketService.send({
+        action: 'join',
+        gameCode: this.gameState.gameCode,
+      });
     } catch (error) {
       console.error('Failed to connect:', error);
       this.joining = false;
@@ -357,22 +353,21 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   startGame(): void {
-    this.openDialog(this.dialogSettingsStart, true);
-    if (this.gameState.isHost && this.gameCode) {
-      this.webSocketService.startGame(this.gameCode);
+    this.openDialog(DialogSettings.dialogSettingsStart, true);
+    if (this.gameState.isHost && this.gameState.gameCode) {
+      this.webSocketService.startGame(this.gameState.gameCode);
     } else {
       console.error('Cannot start game: not host or no game code');
     }
   }
 
   getShareUrl() {
-    return window.location.origin + '/join/' + this.gameCode;
+    return window.location.origin + '/join/' + this.gameState.gameCode;
   }
 
   checkIfHost() {
     this.gameState.players.forEach((player) => {
       if (player.isHost && player.id === this.localPlayerId) {
-        this.isHost = true;
         this.gameStateService.setGameState({
           isHost: true,
         });
@@ -427,7 +422,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       }
     });
 
-    this.gameCode = this.gameState.gameCode;
+    // this.gameCode = this.gameState.gameCode;
     this.localPlayerId = this.gameState.localPlayerId!;
     this.gameShareUrl = this.getShareUrl();
     this.creatingGame = false;
@@ -459,6 +454,12 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
       .getConnectionStatus()
       .subscribe((status) => {
         this.connectionStatus = status;
+        if (status === 'disconnected') {
+          this.gameStateService.setGameState({
+            isHost: false,
+          });
+          this.webSocketService.reconnect();
+        }
         this.cdr.detectChanges();
       });
 
@@ -471,7 +472,6 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
       if (state.gameCode) {
-        this.gameCode = state.gameCode;
         this.gameShareUrl = this.getShareUrl();
       }
       this.cdr.detectChanges();
@@ -512,7 +512,11 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.updateLobbyUI();
         break;
       case 'selfJoined': //emitted only to the user who joins when they join
-        this.webSocketService.setCurrentGame(this.gameCode!, message.playerId);
+        this.webSocketService.setCurrentGame(
+          this.gameState.gameCode!,
+          message.playerId,
+          message.displayName
+        );
         this.gameStateService.setGameState({
           localPlayerId: message.playerId,
         });
@@ -527,7 +531,8 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.router.navigate(['/versus/' + message.gameSeed]);
         break;
       case 'gameEnded':
-        if (this.gameCode) this.webSocketService.getPlayers(this.gameCode);
+        if (this.gameState.gameCode)
+          this.webSocketService.getPlayers(this.gameState.gameCode);
         this.updateLobbyUI();
         break;
       case 'error':

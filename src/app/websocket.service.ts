@@ -9,7 +9,7 @@ import { environment } from '../environments/environment';
 export class WebSocketService {
   private socket: WebSocket | null = null;
   private messageSubject = new Subject<any>();
-  private connectionStatus = new BehaviorSubject<string>('disconnected');
+  private connectionStatus = new BehaviorSubject<string>('initializing');
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectInterval = 1000;
@@ -18,6 +18,7 @@ export class WebSocketService {
 
   private currentGameCode: string | null = null;
   private currentPlayerId: string | null = null;
+  private currentPlayerDisplayName: string | null = null;
 
   constructor() {
     window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
@@ -32,6 +33,13 @@ export class WebSocketService {
     this.disconnect();
   }
 
+  clearAndDisconnect() {
+    this.currentGameCode = null;
+    this.currentPlayerId = null;
+    this.currentPlayerDisplayName = null;
+    this.disconnect();
+  }
+
   private clearConnectionTimeout(): void {
     if (this.connectionTimeout !== undefined) {
       clearTimeout(this.connectionTimeout);
@@ -40,42 +48,64 @@ export class WebSocketService {
   }
 
   // New method to set current game information
-  setCurrentGame(gameCode: string, playerId: string): void {
-    console.log('Setting current game information');
+  setCurrentGame(
+    gameCode: string,
+    playerId: string,
+    displayName: string
+  ): void {
     this.currentGameCode = gameCode;
     this.currentPlayerId = playerId;
+    this.currentPlayerDisplayName = displayName;
   }
 
-  // New method to rejoin the game after reconnection
+  updateCurrentPlayerDisplayName(displayName: string): void {
+    this.currentPlayerDisplayName = displayName;
+  }
+
   private rejoinGame(): void {
-    console.log(this.currentGameCode);
-    console.log(this.currentPlayerId);
     if (this.currentGameCode && this.currentPlayerId) {
-      console.log('yeah!');
       console.log(`Attempting to rejoin game: ${this.currentGameCode}`);
       this.send({
         action: 'join',
         gameCode: this.currentGameCode,
         playerId: this.currentPlayerId,
+        displayName: this.currentPlayerDisplayName,
       });
     }
   }
 
+  private saveGameState() {
+    localStorage.setItem(
+      'gameState',
+      JSON.stringify({
+        gameCode: this.currentGameCode,
+        playerId: this.currentPlayerId,
+        playerName: this.currentPlayerDisplayName,
+      })
+    );
+  }
+
+  private restoreGameState() {
+    const savedState = localStorage.getItem('gameState');
+    if (savedState) {
+      const { gameCode, playerId, playerName } = JSON.parse(savedState);
+      this.currentGameCode = gameCode;
+      this.currentPlayerId = playerId;
+      this.currentPlayerDisplayName = playerName;
+    }
+  }
+
   connect(): Promise<void> {
-    console.log('Connect method called');
     if (this.connectionPromise) {
-      console.log('Connection already in progress, returning existing promise');
       return this.connectionPromise;
     }
 
     this.connectionPromise = new Promise((resolve, reject) => {
       if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-        console.log('WebSocket already open, resolving immediately');
         resolve();
         return;
       }
 
-      console.log('Creating new WebSocket connection');
       this.socket = new WebSocket(`${environment.apiGatewayUrl}`);
 
       this.connectionTimeout = window.setTimeout(() => {
@@ -86,12 +116,10 @@ export class WebSocketService {
 
       this.socket.onopen = () => {
         this.clearConnectionTimeout();
-        console.log('WebSocket connection opened');
         this.connectionStatus.next('connected');
         this.reconnectAttempts = 0;
         this.connectionPromise = null;
         resolve();
-        console.log('Attempting to rejoin game');
         this.rejoinGame(); // Attempt to rejoin the game after successful connection
       };
 
@@ -115,7 +143,6 @@ export class WebSocketService {
       };
 
       this.socket.onmessage = (event) => {
-        console.log('Received WebSocket message:', event.data);
         this.messageSubject.next(JSON.parse(event.data));
       };
     });
@@ -124,7 +151,6 @@ export class WebSocketService {
   }
 
   disconnect(): void {
-    console.log('Disconnect method called');
     if (this.socket) {
       this.send({ action: 'disconnect' });
       this.socket.close(1000, 'User disconnected');
@@ -232,9 +258,5 @@ export class WebSocketService {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.close();
     }
-  }
-
-  manualReconnect(): void {
-    this.reconnect();
   }
 }

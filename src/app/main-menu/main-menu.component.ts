@@ -121,7 +121,7 @@ export class MainMenuComponent implements OnInit {
   }
 
   challenge() {
-    this.router.navigate(['/solo/' + this.gameSeed]);
+    this.router.navigate(['/endless/' + this.gameSeed]);
   }
 
   daily() {
@@ -138,15 +138,15 @@ export class MainMenuComponent implements OnInit {
         localStorage.setItem('dailySeed', '' + dailySeed);
       }
     }
-    this.router.navigate(['/solo/daily']);
+    this.router.navigate(['/endless/daily']);
   }
 
   dailyLobby() {
     this.router.navigate(['/daily']);
   }
 
-  solo() {
-    this.router.navigate(['/solo']);
+  endless() {
+    this.router.navigate(['/endless']);
   }
 
   closeDialog() {
@@ -168,7 +168,7 @@ export class MainMenuComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         if (result.event === 'confirm') {
-          this.router.navigate(['/solo']);
+          this.router.navigate(['/endless']);
         }
       } else {
         //closed modal by clicking outside

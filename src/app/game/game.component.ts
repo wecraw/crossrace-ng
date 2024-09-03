@@ -96,7 +96,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
   //MP
   private wsSubscription!: Subscription;
-  isMultiplayer: boolean = false;
   isGameOver: boolean = false;
   isWinner: boolean = false;
   isGameStarted: boolean = false;
@@ -107,7 +106,6 @@ export class GameComponent implements OnInit, OnDestroy {
   isCountingDown: boolean = false;
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
-  isDaily: boolean = false;
   timerStartTime: number = 0;
 
   constructor(
@@ -140,10 +138,10 @@ export class GameComponent implements OnInit, OnDestroy {
 
     this.extractRouteInfo();
 
-    if (this.isMultiplayer && !this.gameState.isInGame)
+    if (this.gameState.gameMode === 'versus' && !this.gameState.isInGame)
       this.router.navigate(['/']);
 
-    if (this.isDaily) {
+    if (this.gameState.gameMode === 'daily') {
       let time = localStorage.getItem('dailyCurrentTime');
       if (time) {
         this.timerStartTime = +time;
@@ -154,16 +152,24 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private extractRouteInfo() {
-    if (this.router.url.split('/')[1] === 'versus') this.isMultiplayer = true;
     // Get the seed from the current route
     this.route.paramMap.subscribe((params) => {
       const seedParam = params.get('gameSeed');
 
       if (seedParam) {
         if (seedParam === 'daily') {
-          this.isDaily = true;
+          this.gameStateService.setGameState({
+            gameMode: 'daily',
+          });
           this.gameSeed = this.gameSeedService.getDailySeed();
           return;
+        } else {
+          // Seeded endless mode
+          if (this.gameState.gameMode !== 'versus') {
+            this.gameStateService.setGameState({
+              gameMode: 'endless',
+            });
+          }
         }
 
         const seedNumber = Number(seedParam);
@@ -173,6 +179,13 @@ export class GameComponent implements OnInit, OnDestroy {
         } else {
           console.error('Invalid seed value. Redirecting to home.');
           this.router.navigate(['/']);
+        }
+      } else {
+        // non-seeded endless mode
+        if (this.gameState.gameMode !== 'versus') {
+          this.gameStateService.setGameState({
+            gameMode: 'endless',
+          });
         }
       }
     });
@@ -227,9 +240,12 @@ export class GameComponent implements OnInit, OnDestroy {
     if (!this.gameSeed) {
       this.gameSeed = this.getRandomPuzzleSeed();
     }
-    if (!this.isMultiplayer) {
-      // Update the URL to reflect the game seed or daily, for easier sharing
-      if (this.isDaily) {
+    if (this.gameState.gameMode === 'daily') {
+      // Update the URL to reflect daily, for easier sharing
+      this.location.replaceState('/daily');
+    }
+    if (this.gameState.gameMode !== 'versus') {
+      if (this.gameState.gameMode === 'daily') {
         this.location.replaceState('/daily');
       } else {
         this.location.replaceState('/challenge/' + this.gameSeed);
@@ -249,7 +265,6 @@ export class GameComponent implements OnInit, OnDestroy {
     console.log(message);
     switch (message.type) {
       case 'gameStarted':
-        this.isMultiplayer = true;
         this.startAfterCountDown();
         break;
       case 'gameEnded':
@@ -338,14 +353,14 @@ export class GameComponent implements OnInit, OnDestroy {
     // If all conditions are met, it's a win
     this.createCondensedGrid();
     this.stopTimer();
-    if (this.isMultiplayer) {
+    if (this.gameState.gameMode === 'versus') {
       this.webSocketService.announceWin(
         this.gameState.localPlayerId!,
         this.condensedGrid,
         this.currentTimeString
       );
     } else {
-      if (this.isDaily) {
+      if (this.gameState.gameMode === 'daily') {
         this.updateDailyLocalStorage();
       }
       setTimeout(() => {
@@ -355,7 +370,7 @@ export class GameComponent implements OnInit, OnDestroy {
           time: this.currentTimeString,
           singlePlayer: true,
           shareLink: this.generateShareLink(),
-          daily: this.isDaily,
+          daily: this.gameState.gameMode === 'daily',
         });
       }, 1100);
 
@@ -384,7 +399,8 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   generateShareLink() {
-    if (this.isDaily) return window.location.origin + '/daily';
+    if (this.gameState.gameMode === 'daily')
+      return window.location.origin + '/daily';
     return window.location.origin + '/challenge/' + this.gameSeed;
   }
 
@@ -599,7 +615,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   onTimeChanged(time: number) {
-    if (this.isDaily) {
+    if (this.gameState.gameMode === 'daily') {
       localStorage.setItem('dailyCurrentTime', '' + time);
     }
     const minutes = Math.floor(time / 60);
@@ -624,17 +640,21 @@ export class GameComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
+      console.log('result', result);
       if (!result) {
-        if (this.isMultiplayer) {
-          this.router.navigate(['/lobby']);
+        if (this.gameState.gameMode === 'versus') {
+          this.router.navigate(['/join/' + this.gameState.gameCode]);
         } else {
           this.router.navigate(['/']);
         }
       } else {
         if (result.event === 'confirm') {
-          if (this.isMultiplayer) this.router.navigate(['/lobby']);
-          if (this.isDaily) this.router.navigate(['/solo']);
-          if (!this.isDaily && !this.isMultiplayer) {
+          if (this.gameState.gameMode === 'versus')
+            this.router.navigate(['/join/' + this.gameState.gameCode]);
+          if (this.gameState.gameMode === 'daily')
+            this.router.navigate(['/endless']);
+          if (this.gameState.gameMode === 'endless') {
+            console.log('resetting game seed');
             this.gameSeed = this.getRandomPuzzleSeed();
             this.startAfterCountDown();
           }
