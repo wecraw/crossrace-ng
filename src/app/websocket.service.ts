@@ -51,7 +51,7 @@ export class WebSocketService {
   setCurrentGame(
     gameCode: string,
     playerId: string,
-    displayName: string
+    displayName: string,
   ): void {
     this.currentGameCode = gameCode;
     this.currentPlayerId = playerId;
@@ -74,26 +74,26 @@ export class WebSocketService {
     }
   }
 
-  private saveGameState() {
-    localStorage.setItem(
-      'gameState',
-      JSON.stringify({
-        gameCode: this.currentGameCode,
-        playerId: this.currentPlayerId,
-        playerName: this.currentPlayerDisplayName,
-      })
-    );
-  }
+  // private saveGameState() {
+  //   localStorage.setItem(
+  //     'gameState',
+  //     JSON.stringify({
+  //       gameCode: this.currentGameCode,
+  //       playerId: this.currentPlayerId,
+  //       playerName: this.currentPlayerDisplayName,
+  //     })
+  //   );
+  // }
 
-  private restoreGameState() {
-    const savedState = localStorage.getItem('gameState');
-    if (savedState) {
-      const { gameCode, playerId, playerName } = JSON.parse(savedState);
-      this.currentGameCode = gameCode;
-      this.currentPlayerId = playerId;
-      this.currentPlayerDisplayName = playerName;
-    }
-  }
+  // private restoreGameState() {
+  //   const savedState = localStorage.getItem('gameState');
+  //   if (savedState) {
+  //     const { gameCode, playerId, playerName } = JSON.parse(savedState);
+  //     this.currentGameCode = gameCode;
+  //     this.currentPlayerId = playerId;
+  //     this.currentPlayerDisplayName = playerName;
+  //   }
+  // }
 
   connect(): Promise<void> {
     if (this.connectionPromise) {
@@ -200,7 +200,7 @@ export class WebSocketService {
       this.connectionStatus
         .pipe(
           filter((status) => status === 'connected'),
-          take(1)
+          take(1),
         )
         .subscribe(() => resolve());
     });
@@ -229,9 +229,25 @@ export class WebSocketService {
   updateDisplayName(
     gameCode: string,
     playerId: string,
-    displayName: string
+    displayName: string,
   ): void {
     this.send({ action: 'updateDisplayName', gameCode, displayName, playerId });
+  }
+
+  updatePlayerColor(
+    gameCode: string,
+    playerId: string,
+    playerColor: string,
+  ): void {
+    this.send({ action: 'updatePlayerColor', gameCode, playerColor, playerId });
+  }
+
+  updatePlayerEmoji(
+    gameCode: string,
+    playerId: string,
+    playerEmoji: string,
+  ): void {
+    this.send({ action: 'updatePlayerEmoji', gameCode, playerEmoji, playerId });
   }
 
   createGame(): void {

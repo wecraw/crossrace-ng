@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] - 2024-09-02
 
+### Added
+
+- Players can now choose their color and emoji in multiplayer lobbies
+
 ### Changed
 
 - Refactored usage of game state so that it is more centralized and easier to manage

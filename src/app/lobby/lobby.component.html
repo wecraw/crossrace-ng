@@ -57,6 +57,8 @@
                 [playerIndex]="$index"
                 (onNameEdit)="submitName($event)"
                 (onReadyUp)="readyUp()"
+                (onColorSelect)="selectColor($event)"
+                (onEmojiSelect)="selectEmoji($event)"
               ></player-card>
             }
           }

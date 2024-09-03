@@ -18,6 +18,8 @@ interface Player {
   ready?: boolean;
   isHost?: boolean;
   inGame?: boolean;
+  playerColor: string;
+  playerEmoji: string;
 }
 
 @Component({
@@ -51,13 +53,13 @@ export class PlayerCardComponent implements AfterViewChecked {
 
   @Output() onNameEdit: EventEmitter<string> = new EventEmitter<string>();
   @Output() onReadyUp: EventEmitter<void> = new EventEmitter<void>();
+  @Output() onColorSelect: EventEmitter<string> = new EventEmitter<string>();
+  @Output() onEmojiSelect: EventEmitter<string> = new EventEmitter<string>();
 
   editingName: boolean = false;
   editingNameInput: string = '';
 
   selectedTab: number = 0;
-
-  emoji: string = '🕋';
 
   orderedCategories: any[] = [
     'search',
@@ -97,22 +99,9 @@ export class PlayerCardComponent implements AfterViewChecked {
     '#8B008B',
     '#DAA520',
   ];
-  selectedColor: string = '#FF4500';
+  selectedColor: string = '#e6194b';
 
-  pastelRainbowColors = [
-    '#F94144',
-    '#43AA8B',
-    '#277DA1',
-    '#F8961E',
-    '#ff006e',
-    '#264653',
-  ];
   editingEmoji: boolean = false;
-
-  getBackgroundColor(index: number): { 'background-color': string } {
-    const colorIndex = index % this.pastelRainbowColors.length;
-    return { 'background-color': this.pastelRainbowColors[colorIndex] };
-  }
 
   editName() {
     this.editingName = true;
@@ -153,8 +142,8 @@ export class PlayerCardComponent implements AfterViewChecked {
   submitEmoji(event: any) {
     this.editingEmoji = false;
     this.clickOutsideEnabled = false;
-    this.emoji = event.emoji.native;
-    console.log(event);
+    this.player.playerEmoji = event.emoji.native;
+    this.onEmojiSelect.emit(event.emoji.native);
   }
 
   readyUp() {
@@ -163,7 +152,8 @@ export class PlayerCardComponent implements AfterViewChecked {
   }
 
   selectColor(color: string) {
-    this.selectedColor = color;
+    this.player.playerColor = color;
+    this.onColorSelect.emit(color);
   }
 
   selectTab(tabIndex: number) {

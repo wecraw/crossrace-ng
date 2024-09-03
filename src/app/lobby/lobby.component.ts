@@ -33,6 +33,8 @@ interface Player {
   ready?: boolean;
   isHost?: boolean;
   inGame?: boolean;
+  playerColor: string;
+  playerEmoji: string;
 }
 
 interface DialogData {
@@ -65,14 +67,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   private location = inject(Location);
 
-  pastelRainbowColors = [
-    '#F94144',
-    '#43AA8B',
-    '#277DA1',
-    '#F8961E',
-    '#ff006e',
-    '#264653',
-  ];
   localPlayer!: Player;
   localPlayerId: string = '';
   localPlayerReady: boolean | null = null;
@@ -105,11 +99,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private clipboard: Clipboard,
   ) {}
-
-  getBackgroundColor(index: number): { 'background-color': string } {
-    const colorIndex = index % this.pastelRainbowColors.length;
-    return { 'background-color': this.pastelRainbowColors[colorIndex] };
-  }
 
   isMobile(): boolean {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -193,6 +182,22 @@ export class LobbyComponent implements OnInit, OnDestroy {
         this.localPlayerId,
       );
     }
+  }
+
+  selectColor(color: string) {
+    this.webSocketService.updatePlayerColor(
+      this.gameState.gameCode!,
+      this.localPlayerId,
+      color,
+    );
+  }
+
+  selectEmoji(emoji: string) {
+    this.webSocketService.updatePlayerEmoji(
+      this.gameState.gameCode!,
+      this.localPlayerId,
+      emoji,
+    );
   }
 
   copyToClipboard() {

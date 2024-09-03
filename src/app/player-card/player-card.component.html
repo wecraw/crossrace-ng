@@ -49,11 +49,11 @@
       class="fa-solid fa-crown crown"
     ></i>
     <div
-      [ngStyle]="{ 'background-color': selectedColor }"
+      [ngStyle]="{ 'background-color': player.playerColor }"
       class="player-avatar"
       (click)="editEmoji()"
     >
-      <div class="emoji">{{ emoji }}</div>
+      <div class="emoji">{{ player.playerEmoji }}</div>
     </div>
     <div class="player-name">
       <ng-container *ngIf="!editingName">
@@ -100,9 +100,11 @@
       class="fa-solid fa-crown crown"
     ></i>
     <div
-      [ngStyle]="getBackgroundColor(playerIndex)"
+      [ngStyle]="{ 'background-color': player.playerColor }"
       class="player-avatar"
-    ></div>
+    >
+      <div class="emoji">{{ player.playerEmoji }}</div>
+    </div>
     <div class="player-name">
       <span>{{ player.displayName }}</span>
     </div>
