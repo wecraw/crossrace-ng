@@ -1,128 +1,165 @@
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-md-6 text-center">
-      @if(gameState && gameState.gameCode && !joining){
-      <h2>Room code: {{ gameState.gameCode }}</h2>
+      @if (gameState && gameState.gameCode && !joining) {
+        <h2>Room code: {{ gameState.gameCode }}</h2>
 
-      <div class="mt-4">
-        <h3 class="text-lg font-semibold mb-2">Invite link:</h3>
-        <div
-          #copiedTooltip="matTooltip"
-          matTooltip="Copied!"
-          (mouseenter)="$event.stopImmediatePropagation()"
-          (mouseleave)="$event.stopImmediatePropagation()"
-          class="d-flex link-container m-lr-auto"
-          (click)="copyToClipboard()"
-        >
-          <div class="url">{{ getDisplayUrl() }}</div>
-          <i
-            class="copy-icon"
-            [ngClass]="
-              isShareSupported
-                ? 'd-none'
-                : isCopied
-                ? 'fa-regular fa-circle-check'
-                : 'fa-regular fa-copy'
-            "
-          ></i>
-          <img
-            *ngIf="isShareSupported"
-            src="assets/share.svg"
-            style="margin-top: -5px"
-            alt="Share icon"
-          />
-        </div>
-      </div>
-      <div
-        *ngIf="connectionStatus !== 'connected'"
-        class="connection-status-alert"
-      >
-        <ng-container [ngSwitch]="connectionStatus">
-          <span *ngSwitchCase="'disconnected'"
-            >Disconnected from server. Attempting to reconnect...</span
-          >
-          <span *ngSwitchCase="'reconnecting'">Reconnecting to server...</span>
-          <span *ngSwitchCase="'failed'"
-            >Failed to reconnect. Please try again later.</span
-          >
-        </ng-container>
-      </div>
-
-      <div class="player-grid">
-        <div
-          *ngFor="let player of players; let i = index"
-          class="player-card fade-in"
-        >
-          <i
-            [ngClass]="{ transparent: !player.isHost }"
-            class="fa-solid fa-crown crown"
-          ></i>
-          <div [ngStyle]="getBackgroundColor(i)" class="player-avatar"></div>
-          <div class="player-name">
-            <ng-container *ngIf="!isPlayerSelf(player) || !editingName">
-              <span>{{ player.displayName }}</span>
-              <i
-                *ngIf="isPlayerSelf(player)"
-                (click)="editName()"
-                (blur)="submitName()"
-                class="fa-solid fa-pencil pencil"
-              ></i>
-            </ng-container>
-            <ng-container *ngIf="isPlayerSelf(player) && editingName">
-              <input
-                #nameInput
-                class="form-control"
-                [(ngModel)]="editingNameInput"
-                (keyup.enter)="submitName()"
-                (blur)="submitName()"
-                maxlength="14"
-              />
-            </ng-container>
-          </div>
+        <div class="mt-4">
+          <h3 class="text-lg font-semibold mb-2">Invite link:</h3>
           <div
-            class="player-status"
-            [ngClass]="{ ready: player.ready, 'not-ready': !player.ready }"
+            #copiedTooltip="matTooltip"
+            matTooltip="Copied!"
+            (mouseenter)="$event.stopImmediatePropagation()"
+            (mouseleave)="$event.stopImmediatePropagation()"
+            class="d-flex link-container m-lr-auto"
+            (click)="copyToClipboard()"
           >
-            <div
-              *ngIf="
-                !isPlayerSelf(player) || (isPlayerSelf(player) && player.ready)
+            <div class="url">{{ getDisplayUrl() }}</div>
+            <i
+              class="copy-icon"
+              [ngClass]="
+                isShareSupported
+                  ? 'd-none'
+                  : isCopied
+                    ? 'fa-regular fa-circle-check'
+                    : 'fa-regular fa-copy'
               "
-            >
-              <div *ngIf="player.ready">
-                <button class="btn btn-outline-success" disabled>Ready</button>
-              </div>
-              <div *ngIf="!player.ready">
-                <button class="btn btn-outline-danger" disabled>
-                  {{ player.inGame ? "In Game" : "Not Ready" }}
-                </button>
-              </div>
-            </div>
-            <button
-              class="btn btn-success"
-              *ngIf="isPlayerSelf(player) && !player.ready"
-              (click)="readyUp()"
-            >
-              Ready up!
-            </button>
+            ></i>
+            <img
+              *ngIf="isShareSupported"
+              src="assets/share.svg"
+              style="margin-top: -5px"
+              alt="Share icon"
+            />
           </div>
         </div>
-      </div>
+        <div
+          *ngIf="connectionStatus !== 'connected'"
+          class="connection-status-alert"
+        >
+          <ng-container [ngSwitch]="connectionStatus">
+            <span *ngSwitchCase="'disconnected'"
+              >Disconnected from server. Attempting to reconnect...</span
+            >
+            <span *ngSwitchCase="'reconnecting'"
+              >Reconnecting to server...</span
+            >
+            <span *ngSwitchCase="'failed'"
+              >Failed to reconnect. Please try again later.</span
+            >
+          </ng-container>
+        </div>
+        <div class="self">
+          @for (player of players; track $index) {
+            @if (isPlayerSelf(player)) {
+              <div class="player-card fade-in">
+                <i
+                  [ngClass]="{ transparent: !player.isHost }"
+                  class="fa-solid fa-crown crown"
+                ></i>
+                <div
+                  [ngStyle]="getBackgroundColor($index)"
+                  class="player-avatar"
+                ></div>
+                <div class="player-name">
+                  <ng-container *ngIf="!editingName">
+                    <span>{{ player.displayName }}</span>
+                    <i
+                      (click)="editName()"
+                      (blur)="submitName()"
+                      class="fa-solid fa-pencil pencil"
+                    ></i>
+                  </ng-container>
+                  <ng-container *ngIf="editingName">
+                    <input
+                      #nameInput
+                      class="form-control"
+                      [(ngModel)]="editingNameInput"
+                      (keyup.enter)="submitName()"
+                      (blur)="submitName()"
+                      maxlength="14"
+                    />
+                  </ng-container>
+                </div>
+                <div
+                  class="player-status"
+                  [ngClass]="{
+                    ready: player.ready,
+                    'not-ready': !player.ready,
+                  }"
+                >
+                  <div *ngIf="player.ready">
+                    <button class="btn btn-outline-success" disabled>
+                      Ready
+                    </button>
+                  </div>
 
-      <button
-        class="btn btn-lg btn-primary mt-4"
-        color="primary"
-        *ngIf="gameState.isHost"
-        (click)="startGame()"
-        [disabled]="anyNotReady() || players.length < 2"
-      >
-        Start Game
-      </button>
-      <button
-        class="btn btn-lg btn-outline-secondary mt-4"
-        (click)="openTutorialDialog({ mode: 'versus' })"
-      >
-        How to play
-      </button>
+                  <button
+                    class="btn btn-success"
+                    *ngIf="!player.ready"
+                    (click)="readyUp()"
+                  >
+                    Ready up!
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="player-grid">
+          @for (player of players; track $index) {
+            @if (!isPlayerSelf(player)) {
+              <div class="player-card fade-in">
+                <i
+                  [ngClass]="{ transparent: !player.isHost }"
+                  class="fa-solid fa-crown crown"
+                ></i>
+                <div
+                  [ngStyle]="getBackgroundColor($index)"
+                  class="player-avatar"
+                ></div>
+                <div class="player-name">
+                  <span>{{ player.displayName }}</span>
+                </div>
+                <div
+                  class="player-status"
+                  [ngClass]="{
+                    ready: player.ready,
+                    'not-ready': !player.ready,
+                  }"
+                >
+                  <div *ngIf="player.ready">
+                    <button class="btn btn-outline-success" disabled>
+                      Ready
+                    </button>
+                  </div>
+                  <div *ngIf="!player.ready">
+                    <button class="btn btn-outline-danger" disabled>
+                      {{ player.inGame ? "In Game" : "Not Ready" }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <button
+          class="btn btn-lg btn-primary mt-4"
+          color="primary"
+          *ngIf="gameState.isHost"
+          (click)="startGame()"
+          [disabled]="anyNotReady() || players.length < 2"
+        >
+          Start Game
+        </button>
+        <button
+          class="btn btn-lg btn-outline-secondary mt-4"
+          (click)="openTutorialDialog({ mode: 'versus' })"
+        >
+          How to play
+        </button>
       }
     </div>
   </div>
