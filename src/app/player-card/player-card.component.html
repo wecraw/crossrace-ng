@@ -1,0 +1,79 @@
+@if (allowEdit) {
+  <div class="player-card fade-in">
+    <i
+      [ngClass]="{ transparent: !player.isHost }"
+      class="fa-solid fa-crown crown"
+    ></i>
+    <div
+      [ngStyle]="getBackgroundColor(playerIndex)"
+      class="player-avatar"
+    ></div>
+    <div class="player-name">
+      <ng-container *ngIf="!editingName">
+        <span>{{ player.displayName }}</span>
+        <i
+          (click)="editName()"
+          (blur)="submitName()"
+          class="fa-solid fa-pencil pencil"
+        ></i>
+      </ng-container>
+      <ng-container *ngIf="editingName">
+        <input
+          #nameInput
+          class="form-control"
+          [(ngModel)]="editingNameInput"
+          (keyup.enter)="submitName()"
+          (blur)="submitName()"
+          maxlength="14"
+        />
+      </ng-container>
+    </div>
+    <div
+      class="player-status"
+      [ngClass]="{
+        ready: player.ready,
+        'not-ready': !player.ready,
+      }"
+    >
+      <div *ngIf="player.ready">
+        <button class="btn btn-outline-success" disabled>Ready</button>
+      </div>
+
+      <button class="btn btn-success" *ngIf="!player.ready" (click)="readyUp()">
+        Ready up!
+      </button>
+    </div>
+  </div>
+}
+
+@if (!allowEdit) {
+  <div class="player-card fade-in">
+    <i
+      [ngClass]="{ transparent: !player.isHost }"
+      class="fa-solid fa-crown crown"
+    ></i>
+    <div
+      [ngStyle]="getBackgroundColor(playerIndex)"
+      class="player-avatar"
+    ></div>
+    <div class="player-name">
+      <span>{{ player.displayName }}</span>
+    </div>
+    <div
+      class="player-status"
+      [ngClass]="{
+        ready: player.ready,
+        'not-ready': !player.ready,
+      }"
+    >
+      <div *ngIf="player.ready">
+        <button class="btn btn-outline-success" disabled>Ready</button>
+      </div>
+      <div *ngIf="!player.ready">
+        <button class="btn btn-outline-danger" disabled>
+          {{ player.inGame ? "In Game" : "Not Ready" }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

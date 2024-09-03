@@ -1,0 +1,76 @@
+.player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-radius: 20px;
+  padding-top: 2px;
+  padding-bottom: 10px;
+}
+
+.form-control {
+  max-width: 140px;
+  text-align: center;
+  height: 35px;
+}
+
+.btn-outline-secondary {
+  margin-left: 10px;
+  background-color: #fff;
+  color: #344452;
+
+  &:hover {
+    color: #344452;
+    background-color: #eee;
+  }
+}
+.player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #2196f3;
+  margin-bottom: 8px;
+}
+.player-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+  height: 35px;
+  span {
+    line-height: 2;
+    margin-right: 5px;
+  }
+}
+.player-status {
+  font-size: 0.9em;
+}
+.ready {
+  color: #2e8b57;
+}
+.not-ready {
+  color: #b50000;
+}
+
+.btn-success {
+  height: 30px;
+  line-height: 0;
+}
+
+.crown {
+  font-size: 24px;
+  color: #d4af37;
+}
+
+.pencil {
+  cursor: pointer;
+}
+
+.transparent {
+  opacity: 0;
+}
+
+.btn-outline-success,
+.btn-outline-danger {
+  border-color: transparent;
+  height: 30px;
+  line-height: 0;
+}

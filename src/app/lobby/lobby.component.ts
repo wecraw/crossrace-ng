@@ -5,7 +5,6 @@ import {
   inject,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-  AfterViewChecked,
   ViewChild,
   ElementRef,
 } from '@angular/core';
@@ -26,6 +25,7 @@ import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { Location } from '@angular/common';
 import { DialogSettings } from '../dialog/dialog-settings';
+import { PlayerCardComponent } from '../player-card/player-card.component';
 
 interface Player {
   id: string;
@@ -53,12 +53,13 @@ interface DialogData {
     MatListModule,
     MatInputModule,
     MatTooltipModule,
+    PlayerCardComponent,
   ],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class LobbyComponent implements OnInit, OnDestroy {
   @ViewChild('nameInput') nameInputElement!: ElementRef;
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
 
@@ -102,7 +103,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     private gameStateService: GameStateService,
     private router: Router,
     private route: ActivatedRoute,
-    private clipboard: Clipboard
+    private clipboard: Clipboard,
   ) {}
 
   getBackgroundColor(index: number): { 'background-color': string } {
@@ -112,7 +113,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   isMobile(): boolean {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
+      navigator.userAgent,
     );
   }
 
@@ -169,77 +170,28 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.unsubscribeAll();
   }
 
-  ngAfterViewChecked(): void {
-    this.focusNameInput();
-  }
-  private focusNameInput() {
-    if (this.nameInputElement && this.editingName) {
-      this.nameInputElement.nativeElement.focus();
-    }
-  }
   onNameInputChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.displayNameInput = input.value;
   }
 
-  submitName() {
-    this.editingName = false;
-    if (this.editingNameInput.trim() === '') return;
-
-    const playerIndex = this.players.findIndex(
-      (p) => p.id === this.localPlayerId
-    );
-    if (playerIndex !== -1) {
-      this.players[playerIndex].displayName = this.editingNameInput.trim();
-    }
-
+  submitName(name: string) {
     if (this.gameState.gameCode) {
       this.webSocketService.updateDisplayName(
         this.gameState.gameCode,
         this.localPlayerId,
-        this.editingNameInput.trim()
+        name,
       );
-      this.webSocketService.updateCurrentPlayerDisplayName(
-        this.editingNameInput.trim()
-      );
+      this.webSocketService.updateCurrentPlayerDisplayName(name);
     }
-  }
-
-  simulateDisconnect() {
-    this.webSocketService.manualDisconnect();
   }
 
   readyUp() {
-    const playerIndex = this.players.findIndex(
-      (p) => p.id === this.localPlayerId
-    );
-    if (playerIndex !== -1) {
-      this.localPlayerReady = true;
-      this.players[playerIndex].ready = true;
-    }
     if (this.gameState.gameCode) {
       this.webSocketService.readyUp(
         this.gameState.gameCode,
-        this.localPlayerId
+        this.localPlayerId,
       );
-    }
-  }
-
-  toggleReady() {
-    const playerIndex = this.players.findIndex(
-      (p) => p.id === this.localPlayerId
-    );
-    if (playerIndex !== -1) {
-      this.localPlayerReady = !this.players[playerIndex].ready;
-      this.players[playerIndex].ready = this.localPlayerReady;
-    }
-    if (this.gameState.gameCode) {
-      if (this.localPlayerReady) {
-        this.webSocketService.readyUp(
-          this.gameState.gameCode,
-          this.localPlayerId
-        );
-      }
     }
   }
 
@@ -280,14 +232,6 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   isPlayerSelf(player: Player) {
     return player.id === this.localPlayerId;
-  }
-
-  editName() {
-    this.editingName = true;
-    const localPlayer = this.players.find((p) => p.id === this.localPlayerId);
-    if (localPlayer) {
-      this.editingNameInput = localPlayer.displayName;
-    }
   }
 
   openDialog(data: DialogData, disableClose: boolean) {
@@ -387,7 +331,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
   private updateLobbyUI() {
     // Create a map of existing players for quick lookup
     const existingPlayers = new Map(
-      this.players.map((player) => [player.id, player])
+      this.players.map((player) => [player.id, player]),
     );
 
     // Update existing players and add new ones
@@ -427,13 +371,6 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.gameShareUrl = this.getShareUrl();
     this.creatingGame = false;
     this.checkIfHost();
-
-    // Schedule a micro-task to focus the input after view updates
-    if (this.editingName) {
-      Promise.resolve().then(() => {
-        this.focusNameInput();
-      });
-    }
 
     this.cdr.detectChanges();
   }
@@ -515,7 +452,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.webSocketService.setCurrentGame(
           this.gameState.gameCode!,
           message.playerId,
-          message.displayName
+          message.displayName,
         );
         this.gameStateService.setGameState({
           localPlayerId: message.playerId,
@@ -545,7 +482,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
               showSpinner: false,
               showConfirm: true,
             },
-            false
+            false,
           );
         }
         break;
@@ -553,5 +490,9 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         console.log('Unhandled message type:', message.type);
     }
     this.cdr.detectChanges();
+  }
+
+  simulateDisconnect() {
+    this.webSocketService.manualDisconnect();
   }
 }

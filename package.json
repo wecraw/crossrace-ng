@@ -20,6 +20,7 @@
     "@angular/platform-browser": "^18.1.4",
     "@angular/platform-browser-dynamic": "^18.1.4",
     "@angular/router": "^18.1.4",
+    "@ctrl/ngx-emoji-mart": "^9.2.0",
     "bootstrap": "^5.3.3",
     "canvas-confetti": "^1.9.3",
     "eslint-plugin-prettier": "^5.2.1",
