@@ -19,6 +19,8 @@ export class WebSocketService {
   private currentGameCode: string | null = null;
   private currentPlayerId: string | null = null;
   private currentPlayerDisplayName: string | null = null;
+  private currentPlayerColor: string | null = null;
+  private currentPlayerEmoji: string | null = null;
 
   constructor() {
     window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
@@ -37,6 +39,8 @@ export class WebSocketService {
     this.currentGameCode = null;
     this.currentPlayerId = null;
     this.currentPlayerDisplayName = null;
+    this.currentPlayerColor = null;
+    this.currentPlayerEmoji = null;
     this.disconnect();
   }
 
@@ -52,14 +56,26 @@ export class WebSocketService {
     gameCode: string,
     playerId: string,
     displayName: string,
+    playerColor: string,
+    playerEmoji: string,
   ): void {
     this.currentGameCode = gameCode;
     this.currentPlayerId = playerId;
     this.currentPlayerDisplayName = displayName;
+    this.currentPlayerColor = playerColor;
+    this.currentPlayerEmoji = playerEmoji;
   }
 
   updateCurrentPlayerDisplayName(displayName: string): void {
     this.currentPlayerDisplayName = displayName;
+  }
+
+  updateCurrentPlayerColor(playerColor: string): void {
+    this.currentPlayerColor = playerColor;
+  }
+
+  updateCurrentPlayerEmoji(playerEmoji: string): void {
+    this.currentPlayerEmoji = playerEmoji;
   }
 
   private rejoinGame(): void {
@@ -70,6 +86,8 @@ export class WebSocketService {
         gameCode: this.currentGameCode,
         playerId: this.currentPlayerId,
         displayName: this.currentPlayerDisplayName,
+        playerColor: this.currentPlayerColor,
+        playerEmoji: this.currentPlayerEmoji,
       });
     }
   }

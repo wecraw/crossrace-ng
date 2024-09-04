@@ -75,6 +75,9 @@
         />
       </ng-container>
     </div>
+    <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
+      (Host)
+    </div>
     <div
       class="player-status"
       [ngClass]="{
@@ -107,6 +110,9 @@
     </div>
     <div class="player-name">
       <span>{{ player.displayName }}</span>
+    </div>
+    <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
+      (Host)
     </div>
     <div
       class="player-status"

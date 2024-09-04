@@ -92,6 +92,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   isCopied: boolean = false;
 
+  reconnectStarted: boolean = false;
+
   constructor(
     private webSocketService: WebSocketService,
     private gameStateService: GameStateService,
@@ -133,7 +135,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
               this.gameStateService.setGameState({
                 gameCode: gameCode,
               });
-              // this.gameCode = gameCode;
               this.joinGame();
             } else {
               // Route to '/' if gameCode is not exactly 4 alphabet letters
@@ -190,6 +191,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       this.localPlayerId,
       color,
     );
+    this.webSocketService.updateCurrentPlayerColor(color);
   }
 
   selectEmoji(emoji: string) {
@@ -198,6 +200,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       this.localPlayerId,
       emoji,
     );
+    this.webSocketService.updateCurrentPlayerEmoji(emoji);
   }
 
   copyToClipboard() {
@@ -400,6 +403,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
           this.gameStateService.setGameState({
             isHost: false,
           });
+          this.openDialog(DialogSettings.dialogSettingsReconnecting, true);
+          this.reconnectStarted = true;
           this.webSocketService.reconnect();
         }
         this.cdr.detectChanges();
@@ -434,10 +439,19 @@ export class LobbyComponent implements OnInit, OnDestroy {
             {
               id: message.playerId,
               displayName: message.displayName,
+              playerColor: message.playerColor,
+              playerEmoji: message.playerEmoji,
               isHost: true,
             },
           ],
         });
+        this.webSocketService.setCurrentGame(
+          this.gameState.gameCode!,
+          message.playerId,
+          message.displayName,
+          message.playerColor,
+          message.playerEmoji,
+        );
         this.localPlayerId = message.playerId;
         this.updateLobbyUI();
         break;
@@ -446,6 +460,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
           //first join
           this.closeDialog();
           this.joining = false;
+        }
+        if (this.reconnectStarted) {
+          this.closeDialog();
+          this.reconnectStarted = false;
         }
         this.gameStateService.setGameState({
           players: message.players,
@@ -458,6 +476,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
           this.gameState.gameCode!,
           message.playerId,
           message.displayName,
+          message.playerColor,
+          message.playerEmoji,
         );
         this.gameStateService.setGameState({
           localPlayerId: message.playerId,

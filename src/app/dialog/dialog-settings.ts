@@ -16,8 +16,15 @@ const dialogSettingsCreate: any = {
   showConfirm: false,
 };
 
+const dialogSettingsReconnecting: any = {
+  dialogText: 'Reconnecting',
+  showSpinner: true,
+  showConfirm: false,
+};
+
 export const DialogSettings: any = {
   dialogSettingsCreate: dialogSettingsCreate,
   dialogSettingsJoin: dialogSettingsJoin,
   dialogSettingsStart: dialogSettingsStart,
+  dialogSettingsReconnecting: dialogSettingsReconnecting,
 };

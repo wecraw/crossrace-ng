@@ -32,7 +32,7 @@
             />
           </div>
         </div>
-        <div
+        <!-- <div
           *ngIf="connectionStatus !== 'connected'"
           class="connection-status-alert"
         >
@@ -47,47 +47,49 @@
               >Failed to reconnect. Please try again later.</span
             >
           </ng-container>
-        </div>
-        <div class="self">
-          @for (player of players; track $index) {
-            @if (isPlayerSelf(player)) {
-              <player-card
-                [player]="player"
-                [allowEdit]="true"
-                [playerIndex]="$index"
-                (onNameEdit)="submitName($event)"
-                (onReadyUp)="readyUp()"
-                (onColorSelect)="selectColor($event)"
-                (onEmojiSelect)="selectEmoji($event)"
-              ></player-card>
+        </div> -->
+        @if (!reconnectStarted) {
+          <div class="self">
+            @for (player of players; track $index) {
+              @if (isPlayerSelf(player)) {
+                <player-card
+                  [player]="player"
+                  [allowEdit]="true"
+                  [playerIndex]="$index"
+                  (onNameEdit)="submitName($event)"
+                  (onReadyUp)="readyUp()"
+                  (onColorSelect)="selectColor($event)"
+                  (onEmojiSelect)="selectEmoji($event)"
+                ></player-card>
+              }
             }
-          }
-        </div>
+          </div>
 
-        <div class="player-grid">
-          @for (player of players; track $index) {
-            @if (!isPlayerSelf(player)) {
-              <player-card [player]="player" [playerIndex]="$index">
-              </player-card>
+          <div class="player-grid">
+            @for (player of players; track $index) {
+              @if (!isPlayerSelf(player)) {
+                <player-card [player]="player" [playerIndex]="$index">
+                </player-card>
+              }
             }
-          }
-        </div>
+          </div>
 
-        <button
-          class="btn btn-lg btn-primary mt-4"
-          color="primary"
-          *ngIf="gameState.isHost"
-          (click)="startGame()"
-          [disabled]="anyNotReady() || players.length < 2"
-        >
-          Start Game
-        </button>
-        <button
-          class="btn btn-lg btn-outline-secondary mt-4"
-          (click)="openTutorialDialog({ mode: 'versus' })"
-        >
-          How to play
-        </button>
+          <button
+            class="btn btn-lg btn-primary mt-4"
+            color="primary"
+            *ngIf="gameState.isHost"
+            (click)="startGame()"
+            [disabled]="anyNotReady() || players.length < 2"
+          >
+            Start Game
+          </button>
+          <button
+            class="btn btn-lg btn-outline-secondary mt-4"
+            (click)="openTutorialDialog({ mode: 'versus' })"
+          >
+            How to play
+          </button>
+        }
       }
     </div>
   </div>
