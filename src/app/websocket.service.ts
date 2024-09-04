@@ -1,7 +1,10 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { environment } from '../environments/environment';
+import { DialogSettings } from './dialog/dialog-settings';
+import { Dialog } from './dialog/dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Injectable({
   providedIn: 'root',
@@ -21,6 +24,9 @@ export class WebSocketService {
   private currentPlayerDisplayName: string | null = null;
   private currentPlayerColor: string | null = null;
   private currentPlayerEmoji: string | null = null;
+  navigating: boolean = false;
+
+  readonly dialog = inject(MatDialog);
 
   constructor() {
     window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
@@ -36,6 +42,7 @@ export class WebSocketService {
   }
 
   clearAndDisconnect() {
+    this.navigating = true;
     this.currentGameCode = null;
     this.currentPlayerId = null;
     this.currentPlayerDisplayName = null;
@@ -92,28 +99,15 @@ export class WebSocketService {
     }
   }
 
-  // private saveGameState() {
-  //   localStorage.setItem(
-  //     'gameState',
-  //     JSON.stringify({
-  //       gameCode: this.currentGameCode,
-  //       playerId: this.currentPlayerId,
-  //       playerName: this.currentPlayerDisplayName,
-  //     })
-  //   );
-  // }
-
-  // private restoreGameState() {
-  //   const savedState = localStorage.getItem('gameState');
-  //   if (savedState) {
-  //     const { gameCode, playerId, playerName } = JSON.parse(savedState);
-  //     this.currentGameCode = gameCode;
-  //     this.currentPlayerId = playerId;
-  //     this.currentPlayerDisplayName = playerName;
-  //   }
-  // }
+  openReconnectDialog() {
+    const dialogRef = this.dialog.open(Dialog, {
+      data: DialogSettings.dialogSettingsReconnecting,
+      disableClose: true,
+    });
+  }
 
   connect(): Promise<void> {
+    this.navigating = false;
     if (this.connectionPromise) {
       return this.connectionPromise;
     }
@@ -198,9 +192,13 @@ export class WebSocketService {
   }
 
   public reconnect(): void {
-    this.disconnect();
-    this.reconnectAttempts = 0;
-    this.attemptReconnect();
+    if (!this.navigating) {
+      console.log('hi');
+      this.openReconnectDialog();
+      this.disconnect();
+      this.reconnectAttempts = 0;
+      this.attemptReconnect();
+    }
   }
 
   getConnectionStatus(): Observable<string> {

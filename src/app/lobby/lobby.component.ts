@@ -403,7 +403,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
           this.gameStateService.setGameState({
             isHost: false,
           });
-          this.openDialog(DialogSettings.dialogSettingsReconnecting, true);
+          // this.openDialog(DialogSettings.dialogSettingsReconnecting, true);
           this.reconnectStarted = true;
           this.webSocketService.reconnect();
         }
@@ -430,6 +430,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     switch (message.type) {
       case 'gameCreated':
         this.closeDialog();
+        this.reconnectStarted = false;
         this.location.replaceState('/join/' + message.gameCode);
         this.gameStateService.setGameState({
           gameCode: message.gameCode,
