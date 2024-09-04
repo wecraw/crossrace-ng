@@ -11,16 +11,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
-
-interface Player {
-  id: string;
-  displayName: string;
-  ready?: boolean;
-  isHost?: boolean;
-  inGame?: boolean;
-  playerColor: string;
-  playerEmoji: string;
-}
+import { Player } from '../interfaces/player';
 
 @Component({
   selector: 'player-card',

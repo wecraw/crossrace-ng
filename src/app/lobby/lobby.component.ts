@@ -20,28 +20,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { Dialog } from '../dialog/dialog.component';
-import { Clipboard } from '@angular/cdk/clipboard';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { Location } from '@angular/common';
 import { DialogSettings } from '../dialog/dialog-settings';
 import { PlayerCardComponent } from '../player-card/player-card.component';
-
-interface Player {
-  id: string;
-  displayName: string;
-  ready?: boolean;
-  isHost?: boolean;
-  inGame?: boolean;
-  playerColor: string;
-  playerEmoji: string;
-}
-
-interface DialogData {
-  dialogText: string;
-  showSpinner: boolean;
-  showConfirm: boolean;
-}
+import { Player } from '../interfaces/player';
+import { DialogData } from '../interfaces/dialog-data';
 
 @Component({
   selector: 'app-lobby',
@@ -99,7 +84,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private gameStateService: GameStateService,
     private router: Router,
     private route: ActivatedRoute,
-    private clipboard: Clipboard,
   ) {}
 
   isMobile(): boolean {
