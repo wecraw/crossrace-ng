@@ -12,11 +12,13 @@ import {
 import { FormsModule } from '@angular/forms';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { Player } from '../interfaces/player';
+import { Emojis } from '../constants/emoji-list';
+import { EmojiComponent } from '@ctrl/ngx-emoji-mart/ngx-emoji';
 
 @Component({
   selector: 'player-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, PickerComponent],
+  imports: [CommonModule, FormsModule, PickerComponent, EmojiComponent],
   templateUrl: './player-card.component.html',
   styleUrl: './player-card.component.scss',
 })
@@ -51,18 +53,9 @@ export class PlayerCardComponent implements AfterViewChecked {
   editingNameInput: string = '';
 
   selectedTab: number = 0;
+  emojis = Emojis;
 
-  orderedCategories: any[] = [
-    'search',
-    'people',
-    'nature',
-    'foods',
-    'activity',
-    'places',
-    'objects',
-    'symbols',
-    'flags',
-  ];
+  orderedCategories: any[] = ['recent'];
   colorGrid: string[] = [
     '#e6194b',
     '#3cb44b',

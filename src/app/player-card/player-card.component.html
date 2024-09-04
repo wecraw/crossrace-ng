@@ -24,6 +24,8 @@
       #emojiMart
       [showPreview]="false"
       [include]="orderedCategories"
+      [recent]="emojis"
+      [enableSearch]="false"
       (emojiClick)="submitEmoji($event)"
       [isNative]="true"
       [darkMode]="false"
@@ -54,6 +56,11 @@
       (click)="editEmoji()"
     >
       <div class="emoji">{{ player.playerEmoji }}</div>
+      <!-- <ngx-emoji
+        emoji="full_moon_with_face"
+        set="apple"
+        [size]="64"
+      ></ngx-emoji> -->
     </div>
     <div class="player-name">
       <ng-container *ngIf="!editingName">

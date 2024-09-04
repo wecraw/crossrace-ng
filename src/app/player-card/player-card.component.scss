@@ -24,6 +24,14 @@
     background-color: #eee;
   }
 }
+
+ngx-emoji {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
 .player-avatar {
   width: 60px;
   height: 60px;
