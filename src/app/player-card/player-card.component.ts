@@ -55,7 +55,7 @@ export class PlayerCardComponent implements AfterViewChecked {
   selectedTab: number = 0;
   emojis = Emojis;
 
-  orderedCategories: any[] = ['recent'];
+  orderedCategories: any[] = ['recent', 'activity']; //need to include at least one category to prevent a bug with the emoji picker package. it's not actually rendered.
   colorGrid: string[] = [
     '#e6194b',
     '#3cb44b',

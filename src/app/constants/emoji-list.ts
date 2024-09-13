@@ -19,7 +19,7 @@ export const Emojis: string[] = [
   'face_with_spiral_eyes',
   'exploding_head',
   'face_with_monocle',
-  'face_in_clouds',
+  'upside_down_face',
   'sob',
   'smiling_imp',
   'poop',
