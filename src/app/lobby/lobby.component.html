@@ -53,13 +53,19 @@
             }
           </div>
 
-          <div class="player-grid">
-            @for (player of players; track $index) {
-              @if (!isPlayerSelf(player)) {
-                <player-card [player]="player" [playerIndex]="$index">
-                </player-card>
-              }
+          <div class="player-grid-container">
+            @if (players.length < 2) {
+              <div class="waiting-for-players">Waiting for players...</div>
             }
+            <div class="player-grid">
+              @for (player of players; track $index) {
+                @if (!isPlayerSelf(player)) {
+                  <player-card [player]="player" [playerIndex]="$index">
+                  </player-card>
+                }
+              }
+            </div>
+            <div class="fade-overlay"></div>
           </div>
 
           <button
