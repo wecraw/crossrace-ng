@@ -9,15 +9,13 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { Player } from '../interfaces/player';
 import { Emojis } from '../constants/emoji-list';
-import { EmojiComponent } from '@ctrl/ngx-emoji-mart/ngx-emoji';
 
 @Component({
   selector: 'player-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, PickerComponent, EmojiComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './player-card.component.html',
   styleUrl: './player-card.component.scss',
 })
@@ -55,7 +53,6 @@ export class PlayerCardComponent {
   selectedTab: number = 0;
   emojis = Emojis;
 
-  orderedCategories: any[] = ['recent', 'activity']; //need to include at least one category to prevent a bug with the emoji picker package. it's not actually rendered.
   colorGrid: string[] = [
     '#e6194b',
     '#3cb44b',
@@ -88,6 +85,7 @@ export class PlayerCardComponent {
 
   editEmoji() {
     this.editingNameInput = this.player.displayName;
+    this.focusNameInput();
 
     if (!this.editingEmoji) {
       this.editingEmoji = true;
@@ -101,15 +99,13 @@ export class PlayerCardComponent {
     }
   }
 
-  // ngAfterViewChecked(): void {
-  //   if (this.allowEdit) this.focusNameInput();
-  // }
-
-  // private focusNameInput() {
-  //   if (this.nameInputElement && this.editingName) {
-  //     this.nameInputElement.nativeElement.focus();
-  //   }
-  // }s
+  private focusNameInput() {
+    if (this.nameInputElement) {
+      setTimeout(() => {
+        this.nameInputElement.nativeElement.focus();
+      }, 1);
+    }
+  }
 
   submitName() {
     let trimmedName = this.editingNameInput.trim();
@@ -118,15 +114,9 @@ export class PlayerCardComponent {
     this.onNameEdit.emit(trimmedName);
   }
 
-  submitEmoji(event: any) {
-    // this.editingEmoji = false;
-    // this.clickOutsideEnabled = false;
-    this.player.playerEmoji = event.emoji.native;
-    this.onEmojiSelect.emit(event.emoji.native);
-  }
-
-  selectEmoji(event: any) {
-    this.player.playerEmoji = event.emoji.native;
+  selectEmoji(emoji: string) {
+    this.player.playerEmoji = emoji;
+    this.onEmojiSelect.emit(emoji);
   }
 
   readyUp() {

@@ -68,6 +68,9 @@
             *ngIf="gameState.isHost"
             (click)="startGame()"
             [disabled]="anyNotReady() || players.length < 2"
+            [ngClass]="{
+              'shimmering-start-button': !anyNotReady() && players.length > 1,
+            }"
           >
             Start Game
           </button>

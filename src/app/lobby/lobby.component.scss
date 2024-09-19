@@ -21,7 +21,7 @@ h4 {
 }
 .code-wrapper {
   margin-left: auto;
-  padding-left: 35px;
+  padding-left: 40px;
   padding-right: 5px;
 }
 
@@ -30,6 +30,39 @@ hr {
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 32px;
+}
+
+.shimmering-start-button {
+  background-color: #3f51b5;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    box-shadow:
+      0 0 5px #3f51b5aa,
+      0 0 10px #3f51b5aa,
+      0 0 15px #3f51b5aa;
+  }
+  50% {
+    box-shadow:
+      0 0 8px #3f51b5aa,
+      0 0 15px #3f51b5aa,
+      0 0 23px #3f51b5aa;
+  }
+  100% {
+    box-shadow:
+      0 0 5px #3f51b5aa,
+      0 0 10px #3f51b5aa,
+      0 0 15px #3f51b5aa;
+  }
 }
 
 .btn-outline-success,
@@ -82,12 +115,6 @@ hr {
   border-radius: 20px;
   padding-top: 2px;
   padding-bottom: 10px;
-}
-
-.form-control {
-  max-width: 140px;
-  text-align: center;
-  height: 35px;
 }
 
 .btn-outline-secondary {

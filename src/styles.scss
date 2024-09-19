@@ -2,10 +2,6 @@
 @import "../node_modules/bootstrap/scss/bootstrap";
 @import "@ctrl/ngx-emoji-mart/picker";
 
-.emoji-mart-bar {
-  display: none;
-}
-
 .emoji-mart {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
@@ -69,12 +65,4 @@ body {
   opacity: 1 !important;
   color: #b50000;
   background-color: #b50000;
-}
-
-.emoji-mart-category-label {
-  display: none;
-}
-.emoji-mart-scroll {
-  margin-top: 15px;
-  height: 297px;
 }

@@ -41,8 +41,6 @@ ngx-emoji {
   border-radius: 50%;
   background-color: #2196f3;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-  margin-bottom: 8px;
-  cursor: pointer;
 
   .emoji {
     font-size: 32px;
@@ -56,7 +54,7 @@ ngx-emoji {
 }
 .player-name {
   font-weight: bold;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   height: 35px;
   span {
     line-height: 2;
@@ -76,6 +74,7 @@ ngx-emoji {
 .btn-success {
   height: 30px;
   line-height: 0;
+  margin-top: 10px;
 }
 
 .shimmering-button {
@@ -144,6 +143,8 @@ ngx-emoji {
   border-radius: 5px;
   height: 354px;
   width: 338px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .visible {
@@ -178,10 +179,6 @@ ngx-emoji {
       border-right: 1px solid #d9d9d9;
     }
   }
-}
-
-emoji-mart {
-  display: none;
 }
 
 .color-picker {
@@ -227,4 +224,66 @@ emoji-mart {
 .host-label {
   font-size: 12px;
   margin-top: -10px;
+}
+
+.emoji-grid {
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 338px;
+  height: 313px;
+  justify-content: center;
+  align-content: center;
+  border: 1px solid #d9d9d9;
+  border-top: 0;
+  display: none !important;
+  padding: 5px;
+  padding-bottom: 10px;
+  &.visible {
+    display: grid !important;
+  }
+}
+
+.emoji-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+  border-radius: 50%;
+
+  // &.selected {
+  //   border: 2px solid #2196f3;
+  // }
+}
+
+.emoji {
+  font-size: 24px;
+  z-index: 1;
+}
+
+.emoji-container::before {
+  content: "";
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.emoji-container.selected::before {
+  opacity: 1;
+  content: "";
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid black;
+}
+
+.emoji-container:hover::before {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
 }

@@ -20,18 +20,19 @@
         Color
       </div>
     </div>
-    <emoji-mart
-      #emojiMart
-      [showPreview]="false"
-      [include]="orderedCategories"
-      [showSingleCategory]="true"
-      [recent]="emojis"
-      [enableSearch]="false"
-      (emojiClick)="submitEmoji($event)"
-      [isNative]="true"
-      [darkMode]="false"
-      [ngClass]="{ visible: selectedTab === 0 }"
-    ></emoji-mart>
+
+    <div class="emoji-grid" [ngClass]="{ visible: selectedTab === 0 }">
+      @for (emoji of emojis; track emoji) {
+        <div
+          class="emoji-container noselect"
+          (click)="selectEmoji(emoji)"
+          [ngClass]="{ selected: player.playerEmoji === emoji }"
+        >
+          <span class="emoji">{{ emoji }}</span>
+        </div>
+      }
+    </div>
+
     <div class="color-picker" [ngClass]="{ visible: selectedTab === 1 }">
       <div class="color-grid">
         @for (color of colorGrid; track color) {
@@ -62,20 +63,23 @@
     <div
       [ngStyle]="{ 'background-color': player.playerColor }"
       class="player-avatar"
+      style="cursor: pointer"
       (click)="editEmoji()"
     >
-      <div class="emoji">{{ player.playerEmoji }}</div>
+      <div class="emoji noselect">{{ player.playerEmoji }}</div>
     </div>
     <div class="player-name">
-      <span>{{ player.displayName }}</span>
-      <i
-        (click)="editEmoji()"
-        (blur)="submitName()"
-        class="fa-solid fa-pen pencil"
-      ></i>
-    </div>
-    <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
-      (Host)
+      <span
+        >{{ player.displayName }}
+        <i
+          (click)="editEmoji()"
+          (blur)="submitName()"
+          class="fa-solid fa-pen pencil"
+        ></i>
+        <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
+          (Host)
+        </div></span
+      >
     </div>
     <div
       class="player-status"
@@ -84,7 +88,7 @@
         'not-ready': !player.ready,
       }"
     >
-      <div *ngIf="player.ready">
+      <div style="margin-top: 10px" *ngIf="player.ready">
         <button class="btn btn-outline-success" disabled>Ready</button>
       </div>
 
@@ -109,14 +113,17 @@
       [ngStyle]="{ 'background-color': player.playerColor }"
       class="player-avatar"
     >
-      <div class="emoji">{{ player.playerEmoji }}</div>
+      <div class="emoji noselect">{{ player.playerEmoji }}</div>
     </div>
     <div class="player-name">
-      <span>{{ player.displayName }}</span>
+      <span
+        >{{ player.displayName }}
+        <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
+          (Host)
+        </div></span
+      >
     </div>
-    <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
-      (Host)
-    </div>
+
     <div
       class="player-status"
       [ngClass]="{
