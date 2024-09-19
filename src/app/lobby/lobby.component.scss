@@ -1,3 +1,5 @@
+$grid-cell-size: 35px;
+
 h1 {
   margin: 20px 0;
 }
@@ -8,6 +10,19 @@ h2 {
 h4 {
   margin: 20px 0 !important;
   margin-bottom: 32px !important;
+}
+
+.room-code-label {
+  font-weight: bold;
+}
+
+.room-code-container {
+  cursor: pointer;
+}
+.code-wrapper {
+  margin-left: auto;
+  padding-left: 35px;
+  padding-right: 5px;
 }
 
 hr {
@@ -24,9 +39,34 @@ hr {
   line-height: 0;
 }
 
-// button {
-//   margin-right: 10px;
-// }
+.letter-tile {
+  min-width: $grid-cell-size;
+  min-height: $grid-cell-size;
+  background-color: #3f51b5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  border-radius: 6px;
+}
+
+.tile-wrapper {
+  height: 40px;
+  width: 40px;
+  border-right: solid 1px #ccc;
+  border-radius: 6px;
+  color: white;
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  align-items: center;
+  font-size: 18px;
+  justify-content: space-between;
+  box-sizing: border-box;
+  background: #3f51b5;
+  font-weight: bold;
+}
 
 .player-grid {
   display: grid;
@@ -91,6 +131,10 @@ hr {
   line-height: 0;
 }
 
+.room-code-row {
+  margin-bottom: 20px;
+}
+
 .crown {
   font-size: 24px;
   color: #d4af37;
@@ -115,7 +159,6 @@ hr {
     border: 1px solid #3f51b5;
     background-color: #3f51b51f;
   }
-
   .url {
     margin-right: 15px;
   }
@@ -124,6 +167,15 @@ hr {
     line-height: 1.3;
     min-width: 16px;
   }
+}
+i {
+  width: 16px;
+}
+.copy-share-icon {
+  padding-right: 10px;
+  padding-left: 5px;
+  margin-top: 7px;
+  margin-right: auto;
 }
 
 .form-group {

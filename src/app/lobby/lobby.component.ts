@@ -187,7 +187,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.webSocketService.updateCurrentPlayerEmoji(emoji);
   }
 
-  copyToClipboard() {
+  copyOrShare() {
     const shareString = `Race me on Crossrace! \n${this.gameShareUrl}`;
 
     if (navigator.share && this.isMobile()) {
@@ -195,12 +195,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
         text: shareString,
       });
     } else {
+      console.log('hi');
       this.isCopied = true;
       this.copiedTooltip.show();
       setTimeout(() => {
         this.copiedTooltip.hide();
         this.isCopied = false;
         this.cdr.detectChanges();
+        console.log(this.gameShareUrl);
       }, 1500);
 
       navigator.clipboard.writeText(this.gameShareUrl);

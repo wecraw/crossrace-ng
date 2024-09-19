@@ -2,52 +2,39 @@
   <div class="row justify-content-center">
     <div class="col-md-6 text-center">
       @if (gameState && gameState.gameCode && !joining) {
-        <h2>Room code: {{ gameState.gameCode }}</h2>
+        <div style="margin-bottom: 5px" class="room-code-label">Room Code:</div>
 
-        <div class="mt-4">
+        <div class="d-flex room-code-row noselect">
           <div
+            class="room-code-container m-lr-auto d-flex"
             #copiedTooltip="matTooltip"
             matTooltip="Copied!"
             (mouseenter)="$event.stopImmediatePropagation()"
             (mouseleave)="$event.stopImmediatePropagation()"
-            class="d-flex link-container m-lr-auto"
-            (click)="copyToClipboard()"
           >
-            <div class="url">{{ getDisplayUrl() }}</div>
-            <i
-              class="copy-icon"
-              [ngClass]="
-                isShareSupported
-                  ? 'd-none'
-                  : isCopied
-                    ? 'fa-regular fa-circle-check'
-                    : 'fa-regular fa-copy'
-              "
-            ></i>
-            <img
-              *ngIf="isShareSupported"
-              src="assets/share.svg"
-              style="margin-top: -5px"
-              alt="Share icon"
-            />
+            <div class="d-flex code-wrapper" (click)="copyOrShare()">
+              @for (letter of gameState.gameCode.split(""); track $index) {
+                <div class="tile-wrapper">
+                  <div class="letter m-lr-auto">{{ letter }}</div>
+                </div>
+              }
+            </div>
+            <div class="copy-share-icon" (click)="copyOrShare()">
+              <i
+                *ngIf="!isShareSupported"
+                class="copy-icon"
+                [ngClass]="
+                  isCopied ? 'fa-regular fa-circle-check' : 'fa-regular fa-copy'
+                "
+              ></i>
+              <img
+                *ngIf="isShareSupported"
+                src="assets/share.svg"
+                alt="Share icon"
+              />
+            </div>
           </div>
         </div>
-        <!-- <div
-          *ngIf="connectionStatus !== 'connected'"
-          class="connection-status-alert"
-        >
-          <ng-container [ngSwitch]="connectionStatus">
-            <span *ngSwitchCase="'disconnected'"
-              >Disconnected from server. Attempting to reconnect...</span
-            >
-            <span *ngSwitchCase="'reconnecting'"
-              >Reconnecting to server...</span
-            >
-            <span *ngSwitchCase="'failed'"
-              >Failed to reconnect. Please try again later.</span
-            >
-          </ng-container>
-        </div> -->
         @if (!reconnectStarted) {
           <div class="self">
             @for (player of players; track $index) {
@@ -56,6 +43,7 @@
                   [player]="player"
                   [allowEdit]="true"
                   [playerIndex]="$index"
+                  [selectedColor]="player.playerColor"
                   (onNameEdit)="submitName($event)"
                   (onReadyUp)="readyUp()"
                   (onColorSelect)="selectColor($event)"
@@ -95,9 +83,9 @@
   </div>
 </div>
 
-<button
+<!-- <button
   (click)="simulateDisconnect()"
   [disabled]="connectionStatus !== 'connected'"
 >
   Simulate Disconnect
-</button>
+</button> -->

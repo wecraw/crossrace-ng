@@ -44,6 +44,14 @@
         }
       </div>
     </div>
+    <input
+      #nameInput
+      class="form-control"
+      [(ngModel)]="editingNameInput"
+      (keyup.enter)="submitName()"
+      (blur)="submitName()"
+      maxlength="14"
+    />
   </div>
 
   <div class="player-card fade-in">
@@ -57,31 +65,14 @@
       (click)="editEmoji()"
     >
       <div class="emoji">{{ player.playerEmoji }}</div>
-      <!-- <ngx-emoji
-        emoji="full_moon_with_face"
-        set="apple"
-        [size]="64"
-      ></ngx-emoji> -->
     </div>
     <div class="player-name">
-      <ng-container *ngIf="!editingName">
-        <span>{{ player.displayName }}</span>
-        <i
-          (click)="editName()"
-          (blur)="submitName()"
-          class="fa-solid fa-pencil pencil"
-        ></i>
-      </ng-container>
-      <ng-container *ngIf="editingName">
-        <input
-          #nameInput
-          class="form-control"
-          [(ngModel)]="editingNameInput"
-          (keyup.enter)="submitName()"
-          (blur)="submitName()"
-          maxlength="14"
-        />
-      </ng-container>
+      <span>{{ player.displayName }}</span>
+      <i
+        (click)="editEmoji()"
+        (blur)="submitName()"
+        class="fa-solid fa-pen pencil"
+      ></i>
     </div>
     <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
       (Host)
@@ -97,7 +88,11 @@
         <button class="btn btn-outline-success" disabled>Ready</button>
       </div>
 
-      <button class="btn btn-success" *ngIf="!player.ready" (click)="readyUp()">
+      <button
+        class="btn btn-success shimmering-button"
+        *ngIf="!player.ready"
+        (click)="readyUp()"
+      >
         Ready up!
       </button>
     </div>

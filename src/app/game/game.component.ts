@@ -116,7 +116,7 @@ export class GameComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private ngZone: NgZone,
     private location: Location,
-    private gameSeedService: GameSeedService
+    private gameSeedService: GameSeedService,
   ) {
     this.validWords = new Set(VALID_WORDS);
   }
@@ -252,7 +252,6 @@ export class GameComponent implements OnInit, OnDestroy {
       }
     }
     this.setLettersFromPuzzle();
-    this.shuffleLetters();
 
     this.startCountdown(() => {
       this.isGameStarted = true;
@@ -357,7 +356,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.webSocketService.announceWin(
         this.gameState.localPlayerId!,
         this.condensedGrid,
-        this.currentTimeString
+        this.currentTimeString,
       );
     } else {
       if (this.gameState.gameMode === 'daily') {
@@ -413,7 +412,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.webSocketService.announceWin(
       this.gameState.localPlayerId!,
       this.condensedGrid,
-      this.currentTimeString
+      this.currentTimeString,
     );
   }
 
@@ -547,7 +546,7 @@ export class GameComponent implements OnInit, OnDestroy {
     word: string,
     startI: number,
     startJ: number,
-    direction: 'horizontal' | 'vertical'
+    direction: 'horizontal' | 'vertical',
   ) {
     if (word.length >= 2) {
       this.formedWords.push({
@@ -593,7 +592,7 @@ export class GameComponent implements OnInit, OnDestroy {
     startI: number,
     startJ: number,
     direction: 'horizontal' | 'vertical',
-    length: number
+    length: number,
   ) {
     for (let k = 0; k < length; k++) {
       if (direction === 'horizontal') {
@@ -716,7 +715,7 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.touchMoveListener) {
       this.gridContainer.nativeElement.removeEventListener(
         'touchmove',
-        this.touchMoveListener
+        this.touchMoveListener,
       );
     }
   }
@@ -790,11 +789,11 @@ export class GameComponent implements OnInit, OnDestroy {
         event.previousContainer.data,
         event.container.data,
         event.previousIndex,
-        event.currentIndex
+        event.currentIndex,
       );
     } else {
       const [prevI, prevJ] = this.getCellCoordinates(
-        event.previousContainer.id
+        event.previousContainer.id,
       );
       const [nextI, nextJ] = this.getCellCoordinates(event.container.id);
 
@@ -804,7 +803,7 @@ export class GameComponent implements OnInit, OnDestroy {
             event.previousContainer.data,
             event.container.data,
             event.previousIndex,
-            0
+            0,
           );
           this.grid[nextI][nextJ] = event.container.data[0];
         }
@@ -813,7 +812,7 @@ export class GameComponent implements OnInit, OnDestroy {
           event.previousContainer.data,
           event.container.data,
           0,
-          event.currentIndex
+          event.currentIndex,
         );
         this.grid[prevI][prevJ] = '';
       } else {

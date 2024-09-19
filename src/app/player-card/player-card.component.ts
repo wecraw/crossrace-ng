@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewChecked,
   Component,
   ElementRef,
   EventEmitter,
@@ -22,7 +21,7 @@ import { EmojiComponent } from '@ctrl/ngx-emoji-mart/ngx-emoji';
   templateUrl: './player-card.component.html',
   styleUrl: './player-card.component.scss',
 })
-export class PlayerCardComponent implements AfterViewChecked {
+export class PlayerCardComponent {
   @ViewChild('nameInput') nameInputElement!: ElementRef;
   @ViewChild('emojiMartContainer') emojiMartContainer!: ElementRef;
   clickOutsideEnabled: boolean = false;
@@ -35,6 +34,7 @@ export class PlayerCardComponent implements AfterViewChecked {
       this.emojiMartContainer &&
       !this.emojiMartContainer.nativeElement.contains(event.target)
     ) {
+      //TODO submit selections
       this.editingEmoji = false;
       this.clickOutsideEnabled = false;
     }
@@ -43,13 +43,13 @@ export class PlayerCardComponent implements AfterViewChecked {
   @Input() player!: Player;
   @Input() playerIndex: number = 0;
   @Input() allowEdit: boolean = false;
+  @Input() selectedColor: string = '#e6194b';
 
   @Output() onNameEdit: EventEmitter<string> = new EventEmitter<string>();
   @Output() onReadyUp: EventEmitter<void> = new EventEmitter<void>();
   @Output() onColorSelect: EventEmitter<string> = new EventEmitter<string>();
   @Output() onEmojiSelect: EventEmitter<string> = new EventEmitter<string>();
 
-  editingName: boolean = false;
   editingNameInput: string = '';
 
   selectedTab: number = 0;
@@ -83,16 +83,12 @@ export class PlayerCardComponent implements AfterViewChecked {
     '#8B008B',
     '#DAA520',
   ];
-  selectedColor: string = '#e6194b';
 
   editingEmoji: boolean = false;
 
-  editName() {
-    this.editingName = true;
-    this.editingNameInput = this.player.displayName;
-  }
-
   editEmoji() {
+    this.editingNameInput = this.player.displayName;
+
     if (!this.editingEmoji) {
       this.editingEmoji = true;
       this.clickOutsideEnabled = false;
@@ -105,18 +101,17 @@ export class PlayerCardComponent implements AfterViewChecked {
     }
   }
 
-  ngAfterViewChecked(): void {
-    if (this.allowEdit) this.focusNameInput();
-  }
+  // ngAfterViewChecked(): void {
+  //   if (this.allowEdit) this.focusNameInput();
+  // }
 
-  private focusNameInput() {
-    if (this.nameInputElement && this.editingName) {
-      this.nameInputElement.nativeElement.focus();
-    }
-  }
+  // private focusNameInput() {
+  //   if (this.nameInputElement && this.editingName) {
+  //     this.nameInputElement.nativeElement.focus();
+  //   }
+  // }s
 
   submitName() {
-    this.editingName = false;
     let trimmedName = this.editingNameInput.trim();
     if (trimmedName === '') return;
     this.player.displayName = trimmedName;
@@ -124,10 +119,14 @@ export class PlayerCardComponent implements AfterViewChecked {
   }
 
   submitEmoji(event: any) {
-    this.editingEmoji = false;
-    this.clickOutsideEnabled = false;
+    // this.editingEmoji = false;
+    // this.clickOutsideEnabled = false;
     this.player.playerEmoji = event.emoji.native;
     this.onEmojiSelect.emit(event.emoji.native);
+  }
+
+  selectEmoji(event: any) {
+    this.player.playerEmoji = event.emoji.native;
   }
 
   readyUp() {

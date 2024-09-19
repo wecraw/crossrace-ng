@@ -5,13 +5,12 @@ import { LobbyComponent } from './app/lobby/lobby.component';
 import { GameComponent } from './app/game/game.component';
 import { WebSocketService } from './app/websocket.service';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { VersusMenuComponent } from './app/versus-menu/versus-menu.component';
 import { MainMenuComponent } from './app/main-menu/main-menu.component';
 
 const routes: Routes = [
   { path: '', component: MainMenuComponent },
   { path: 'lobby', component: LobbyComponent },
-  { path: 'versus-menu', component: VersusMenuComponent },
+  { path: 'versus-menu', component: MainMenuComponent },
   { path: 'game', component: MainMenuComponent }, //deprecated, now goes to main menu
   { path: 'solo', component: MainMenuComponent }, //deprecated, now goes to main menu
   { path: 'versus', component: MainMenuComponent },

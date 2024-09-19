@@ -16,7 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored usage of game state so that it is more centralized and easier to manage
 - Refactored websocket connection management so that it persists between routes and supports reconnecting
 - "Challenge a friend" copy changed to "Share"
+- "Let's play!" copy changed to "Play!"
 - Changed route names to better reflect the underlying game state (solo -> endless)
+- Letters always start in the same order for all game types
+- Tutorial dialog now shows pagination dots
+- Refactored versus menu styles
+- Redesigned room code and share UI
+
+### Fixed
+
+- Cursor state for tiles on main menu
+-
 
 ## [0.6.5] - 2024-08-29
 
