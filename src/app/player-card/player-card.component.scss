@@ -91,21 +91,21 @@ ngx-emoji {
 @keyframes shimmer {
   0% {
     box-shadow:
-      0 0 5px #2d8653aa,
-      0 0 10px #2d8653aa,
-      0 0 15px #2d8653aa;
+      0 0 3px #2d8653aa,
+      0 0 6px #2d8653aa,
+      0 0 10px #2d8653aa;
   }
   50% {
     box-shadow:
-      0 0 8px #2d8653aa,
-      0 0 15px #2d8653aa,
-      0 0 23px #2d8653aa;
-  }
-  100% {
-    box-shadow:
       0 0 5px #2d8653aa,
       0 0 10px #2d8653aa,
       0 0 15px #2d8653aa;
+  }
+  100% {
+    box-shadow:
+      0 0 3px #2d8653aa,
+      0 0 3px #2d8653aa,
+      0 0 10px #2d8653aa;
   }
 }
 
