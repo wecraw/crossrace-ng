@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Players can now choose their color and emoji in multiplayer lobbies
+- "BLING" to valid word dictionary
 
 ### Changed
 
@@ -22,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tutorial dialog now shows pagination dots
 - Refactored versus menu styles
 - Redesigned room code and share UI
+- Hamburger menu is now used for all breakpoints
 
 ### Fixed
 
