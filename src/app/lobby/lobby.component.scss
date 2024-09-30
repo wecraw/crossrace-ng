@@ -14,6 +14,9 @@ h4 {
 
 .room-code-label {
   font-weight: bold;
+  text-align: center;
+  margin-bottom: 5px;
+  margin-top: 30px;
 }
 
 .room-code-container {
@@ -72,18 +75,6 @@ hr {
   line-height: 0;
 }
 
-.letter-tile {
-  min-width: $grid-cell-size;
-  min-height: $grid-cell-size;
-  background-color: #3f51b5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  color: white;
-  border-radius: 6px;
-}
-
 .tile-wrapper {
   height: 40px;
   width: 40px;
@@ -104,30 +95,32 @@ hr {
 .player-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
-  gap: 16px;
   padding: 16px;
-  max-height: 400px;
-  overflow: scroll;
-  border-radius: 5px;
+  overflow-y: auto;
+  width: 100%;
+  margin-bottom: 50px;
+  box-sizing: border-box;
+}
+
+.player-grid-container {
+  position: relative;
+  width: 100%;
+  overflow-y: auto;
 }
 
 .waiting-for-players {
   color: #aaa;
   font-size: 24px;
-  margin-top: 190px;
+  margin-top: 120px;
+  text-align: center;
 }
 
-.player-grid-container {
-  position: relative;
-  min-height: 400px; /* Adjust this value as needed */
-  overflow-y: auto;
-}
 .fade-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 50px; /* Adjust the height of the fade effect */
+  height: 80px; /* Adjust the height of the fade effect */
   background: linear-gradient(
     to bottom,
     rgba(255, 255, 255, 0),
@@ -138,6 +131,7 @@ hr {
 
 .btn-outline-secondary {
   margin-left: 10px;
+  margin-right: 10px;
   background-color: #fff;
   color: #344452;
 
@@ -146,31 +140,6 @@ hr {
     background-color: #eee;
   }
 }
-.player-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: #2196f3;
-  margin-bottom: 8px;
-}
-.player-name {
-  font-weight: bold;
-  margin-bottom: 4px;
-  height: 35px;
-  span {
-    line-height: 2;
-    margin-right: 5px;
-  }
-}
-.player-status {
-  font-size: 0.9em;
-}
-.ready {
-  color: #2e8b57;
-}
-.not-ready {
-  color: #b50000;
-}
 
 .btn-success {
   height: 30px;
@@ -178,11 +147,7 @@ hr {
 }
 
 .room-code-row {
-  margin-bottom: 20px;
-}
-
-.transparent {
-  opacity: 0;
+  margin-bottom: 5px;
 }
 
 i {
@@ -195,32 +160,40 @@ i {
   margin-right: auto;
 }
 
-.form-group {
-  margin-top: 16px;
+.flex-column-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.d-none {
-  display: none;
+.flex-fixed {
+  flex-shrink: 0;
 }
 
-.fade-in {
-  -webkit-animation: fade-in 0.3s cubic-bezier(0.39, 0.575, 0.565, 1) both;
-  animation: fade-in 0.3s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+.flex-grow {
+  flex-grow: 1;
+  overflow: auto;
 }
 
-@-webkit-keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+.container {
+  overflow: hidden;
 }
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+
+.small {
+  height: 30px;
+  line-height: 0;
+  font-size: 16px;
+}
+
+.button-row {
+  display: flex;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.self {
+  margin-bottom: 10px;
 }
