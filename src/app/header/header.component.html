@@ -2,41 +2,9 @@
   <div class="container">
     <div class="d-flex justify-content-between align-items-center">
       <div class="logo-wrapper d-flex"></div>
-
       <nav>
-        <!-- Links for tablets and above -->
-        <div class="d-none d-md-flex">
-          <a
-            class="nav-link me-2"
-            (click)="navigateToDaily()"
-            routerLinkActive="active"
-            >Daily</a
-          >
-          <div class="me-2 divider"></div>
-
-          <a
-            class="nav-link me-2"
-            (click)="navigateToEndless()"
-            routerLinkActive="active"
-            >Endless</a
-          >
-          <div class="me-2 divider"></div>
-          <a
-            class="nav-link me-2"
-            (click)="navigateToVersus()"
-            routerLinkActive="active"
-            >Versus</a
-          >
-          <div class="me-2 divider"></div>
-          <img
-            class="nav-link"
-            src="assets/help.svg"
-            (click)="openTutorialDialog({ mode: 'solo' })"
-          />
-        </div>
-
         <!-- Dropdown menu for mobile -->
-        <div class="dropdown d-md-none">
+        <div class="dropdown">
           <div
             class="menu-button-wrapper"
             data-bs-toggle="dropdown"
