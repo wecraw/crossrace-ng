@@ -41,7 +41,6 @@ export class PlayerCardComponent {
   @Input() player!: Player;
   @Input() playerIndex: number = 0;
   @Input() allowEdit: boolean = false;
-  @Input() selectedColor: string = '#e6194b';
 
   @Output() onNameEdit: EventEmitter<string> = new EventEmitter<string>();
   @Output() onReadyUp: EventEmitter<void> = new EventEmitter<void>();

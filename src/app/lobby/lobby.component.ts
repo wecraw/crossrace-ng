@@ -195,7 +195,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         text: shareString,
       });
     } else {
-      console.log('hi');
       this.isCopied = true;
       this.copiedTooltip.show();
       setTimeout(() => {
@@ -389,11 +388,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
           this.gameStateService.setGameState({
             isHost: false,
           });
-          // this.openDialog(DialogSettings.dialogSettingsReconnecting, true);
           this.reconnectStarted = true;
           this.webSocketService.reconnect();
         }
-        this.cdr.detectChanges();
       });
 
     this.messageSubscription = this.webSocketService

@@ -193,7 +193,6 @@ export class WebSocketService {
 
   public reconnect(): void {
     if (!this.navigating) {
-      console.log('hi');
       this.openReconnectDialog();
       this.disconnect();
       this.reconnectAttempts = 0;

@@ -26,7 +26,7 @@
         <div
           class="emoji-container noselect"
           (click)="selectEmoji(emoji)"
-          [ngClass]="{ selected: player.playerEmoji === emoji }"
+          [class.selected]="emoji === player.playerEmoji"
         >
           <span class="emoji">{{ emoji }}</span>
         </div>
@@ -39,7 +39,7 @@
           <div
             class="color-circle"
             [style.background-color]="color"
-            [class.selected]="color === selectedColor"
+            [class.selected]="color === player.playerColor"
             (click)="selectColor(color)"
           ></div>
         }
