@@ -5,6 +5,7 @@ import { environment } from '../environments/environment';
 import { DialogSettings } from './dialog/dialog-settings';
 import { Dialog } from './dialog/dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { GameStateService } from './game-state.service';
 
 @Injectable({
   providedIn: 'root',
@@ -28,7 +29,7 @@ export class WebSocketService {
 
   readonly dialog = inject(MatDialog);
 
-  constructor() {
+  constructor(private gameStateService: GameStateService) {
     window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
   }
 
@@ -48,6 +49,7 @@ export class WebSocketService {
     this.currentPlayerDisplayName = null;
     this.currentPlayerColor = null;
     this.currentPlayerEmoji = null;
+    this.gameStateService.clearGameState();
     this.disconnect();
   }
 
