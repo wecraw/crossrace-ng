@@ -21,6 +21,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { MOCK_WIN } from '../mock/mock-winner';
 
 interface ValidatedWord {
   word: string;
@@ -73,6 +74,10 @@ export class MainMenuComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.dialog.open(DialogPostGame, {
+      data: MOCK_WIN,
+      minWidth: 370,
+    });
     this.joinGameForm = this.fb.group({
       gameCode: [
         '',

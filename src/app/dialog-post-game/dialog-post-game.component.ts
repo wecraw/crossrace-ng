@@ -53,6 +53,8 @@ export class DialogPostGame implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       winnerDisplayName: string;
+      winnerEmoji: string;
+      winnerColor: string;
       grid: string[][];
       time: string;
       singlePlayer?: boolean;
