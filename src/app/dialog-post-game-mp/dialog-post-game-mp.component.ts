@@ -9,60 +9,80 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition,
+} from '@angular/animations';
 import {
   MatDialogActions,
   MatDialogClose,
-  MatDialogContent,
   MatDialogRef,
-  MatDialogTitle,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { interval, Subscription } from 'rxjs';
+import { Player } from '../interfaces/player';
+import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
 
 @Component({
   selector: 'dialog',
-  templateUrl: 'dialog-post-game.component.html',
-  styleUrls: ['./dialog-post-game.component.scss'],
+  templateUrl: 'dialog-post-game-mp.component.html',
+  styleUrls: ['./dialog-post-game-mp.component.scss'],
   standalone: true,
   imports: [
-    MatButtonModule,
     MatDialogActions,
     MatDialogClose,
-    MatDialogTitle,
-    MatDialogContent,
-    MatProgressSpinnerModule,
     CommonModule,
     MatTooltipModule,
+    LeaderboardComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('slideContent', [
+      state('chessGrid', style({ transform: 'translateX(0%)' })),
+      state('leaderboard', style({ transform: 'translateX(-100%)' })),
+      transition('chessGrid <=> leaderboard', animate('300ms ease-in-out')),
+    ]),
+    trigger('fadeChevron', [
+      state('visible', style({ opacity: 1 })),
+      state('hidden', style({ opacity: 0 })),
+      transition('visible <=> hidden', animate('150ms ease-in-out')),
+    ]),
+  ],
 })
-export class DialogPostGame implements OnInit, OnDestroy {
+export class DialogPostGameMp implements OnInit, OnDestroy {
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
 
   isShareSupported: boolean = false;
   isCopied: boolean = false;
   countdownTime: string = '';
   averageTime: string = '';
+  currentView: 'chessGrid' | 'leaderboard' = 'chessGrid';
+
   private countdownSubscription?: Subscription;
+  private autoScrollSubscription?: Subscription;
+
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
       winnerDisplayName: string;
+      winnerEmoji: string;
+      winnerColor: string;
       grid: string[][];
       time: string;
       singlePlayer?: boolean;
       daily?: boolean;
       shareLink?: string;
+      players: Player[];
     },
     private cdr: ChangeDetectorRef,
   ) {}
 
-  readonly dialogRef = inject(MatDialogRef<DialogPostGame>);
+  readonly dialogRef = inject(MatDialogRef<DialogPostGameMp>);
 
   grid!: number[][];
 
@@ -80,6 +100,31 @@ export class DialogPostGame implements OnInit, OnDestroy {
       this.updateCountdown(); // Immediately calculate and display the countdown
       this.startCountdown();
     }
+    if (!this.data.singlePlayer) {
+      this.startAutoScroll();
+    }
+  }
+
+  startAutoScroll() {
+    this.autoScrollSubscription = interval(5000).subscribe(() => {
+      this.toggleView();
+    });
+  }
+
+  private resetAutoScroll() {
+    if (this.autoScrollSubscription) {
+      this.autoScrollSubscription.unsubscribe();
+    }
+    this.autoScrollSubscription = interval(5000).subscribe(() => {
+      this.toggleView();
+    });
+  }
+
+  toggleView() {
+    this.currentView =
+      this.currentView === 'chessGrid' ? 'leaderboard' : 'chessGrid';
+    this.cdr.detectChanges();
+    this.resetAutoScroll(); // Reset the timer when view is manually toggled
   }
 
   getAverageTime(): string {
@@ -151,6 +196,9 @@ export class DialogPostGame implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.countdownSubscription) {
       this.countdownSubscription.unsubscribe();
+    }
+    if (this.autoScrollSubscription) {
+      this.autoScrollSubscription.unsubscribe();
     }
   }
 

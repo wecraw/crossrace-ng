@@ -1,0 +1,17 @@
+<div class="leaderboard">
+  <div class="player-list">
+    @for (player of sortedPlayers; track player.displayName) {
+      <div class="player-item">
+        <div class="player-emoji" [style.background-color]="player.playerColor">
+          {{ player.playerEmoji }}
+        </div>
+        <span class="player-name">{{ player.displayName }}</span>
+        <div class="wins-container">
+          <span class="player-wins">
+            {{ player.winCount }} {{ player.winCount === 1 ? "win" : "wins" }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

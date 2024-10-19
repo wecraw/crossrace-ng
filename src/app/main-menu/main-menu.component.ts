@@ -14,6 +14,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
+import { DialogPostGameMp } from '../dialog-post-game-mp/dialog-post-game-mp.component';
+
 import { GameSeedService } from '../game-seed.service';
 import {
   FormBuilder,
@@ -22,16 +24,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { MOCK_WIN } from '../mock/mock-winner';
-
-interface ValidatedWord {
-  word: string;
-  isValid: boolean;
-  startI: number;
-  startJ: number;
-  direction: 'horizontal' | 'vertical';
-}
-
-const DRAG_POSITION_INIT = { x: -22, y: -25 };
 
 @Component({
   selector: 'app-game',
@@ -74,9 +66,10 @@ export class MainMenuComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.dialog.open(DialogPostGame, {
+    this.dialog.open(DialogPostGameMp, {
       data: MOCK_WIN,
       minWidth: 370,
+      disableClose: true,
     });
     this.joinGameForm = this.fb.group({
       gameCode: [
@@ -192,6 +185,7 @@ export class MainMenuComponent implements OnInit {
     const dialogRef = this.dialog.open(DialogPostGame, {
       data: data,
       minWidth: 370,
+      disableClose: true,
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {

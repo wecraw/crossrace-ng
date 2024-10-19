@@ -34,6 +34,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { GameSeedService } from '../game-seed.service';
+import { DialogPostGameMp } from '../dialog-post-game-mp/dialog-post-game-mp.component';
 
 interface ValidatedWord {
   word: string;
@@ -274,6 +275,9 @@ export class GameComponent implements OnInit, OnDestroy {
         });
         this.openDialog({
           winnerDisplayName: message.winnerDisplayName,
+          winnerColor: message.winnerColor,
+          winnerEmoji: message.winnerEmoji,
+          players: message.players,
           grid: message.condensedGrid,
           time: message.time,
         });
@@ -633,10 +637,20 @@ export class GameComponent implements OnInit, OnDestroy {
   // DOM Helpers=========================================================
 
   openDialog(data: any) {
-    const dialogRef = this.dialog.open(DialogPostGame, {
-      data: data,
-      minWidth: 370,
-    });
+    let dialogRef;
+    if (this.gameState.gameMode === 'versus') {
+      dialogRef = this.dialog.open(DialogPostGameMp, {
+        data: data,
+        minWidth: 370,
+        disableClose: true,
+      });
+    } else {
+      dialogRef = this.dialog.open(DialogPostGame, {
+        data: data,
+        minWidth: 370,
+        disableClose: true,
+      });
+    }
 
     dialogRef.afterClosed().subscribe((result) => {
       console.log('result', result);

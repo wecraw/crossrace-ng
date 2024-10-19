@@ -1,24 +1,10 @@
 <div class="wrapper">
   <div class="d-flex flex-column h-100">
-    <div class="row m-lr-auto">
-      <div class="player-card fade-in">
-        <i
-          class="fa-solid fa-crown crown"
-        ></i>
-        <div
-          [ngStyle]="{ 'background-color': data.winnerColor }"
-          class="player-avatar"
-        >
-          <div class="emoji noselect">{{ data.winnerEmoji }}</div>
-        </div>
-      </div>
-      <div class="d-flex flex-column w-auto">
-        <h1>{{ data.winnerDisplayName }} won!</h1>
-        <h4 *ngIf="!this.data.daily">
-          {{ data.time }}
-        </h4>
-      </div>
-
+    <div class="row">
+      <h1 class="m-lr-auto">{{ data.winnerDisplayName }} won!</h1>
+      <h4 *ngIf="!this.data.daily" class="m-lr-auto">
+        {{ data.time }}
+      </h4>
       <h4 *ngIf="this.data.daily" class="m-lr-auto">
         Today: {{ data.time }} | Average: {{ getAverageTime() }}
       </h4>
@@ -30,8 +16,8 @@
           class="grid-cell noselect"
           [ngClass]="{ 'letter-tile': data.grid[i] && data.grid[i][j] }"
         >
-          @if(data.grid[i] && data.grid[i][j]){
-          {{ data.grid[i][j] }}
+          @if (data.grid[i] && data.grid[i][j]) {
+            {{ data.grid[i][j] }}
           }
         </div>
       </div>
@@ -41,13 +27,7 @@
       <h5>Next puzzle in: {{ countdownTime }}</h5>
     </div>
 
-    <div *ngIf="!data.singlePlayer" class="action-buttons d-flex">
-      <button class="btn btn-outline-secondary quit" (click)="quit()">
-        Quit
-      </button>
-      <button class="btn btn-primary" (click)="confirm()">Play again</button>
-    </div>
-    <div *ngIf="data.singlePlayer" class="action-buttons d-flex">
+    <div class="action-buttons d-flex">
       <button
         tabindex="-1"
         class="btn btn-outline-secondary quit"
