@@ -41,6 +41,7 @@ export class PlayerCardComponent {
   @Input() player!: Player;
   @Input() playerIndex: number = 0;
   @Input() allowEdit: boolean = false;
+  @Input() lastWinnerId: string = '';
 
   @Output() onNameEdit: EventEmitter<string> = new EventEmitter<string>();
   @Output() onReadyUp: EventEmitter<void> = new EventEmitter<void>();

@@ -57,7 +57,7 @@
 
   <div class="player-card fade-in">
     <i
-      [ngClass]="{ transparent: !player.isHost }"
+      [ngClass]="{ transparent: player.id !== lastWinnerId }"
       class="fa-solid fa-crown crown"
     ></i>
     <div
@@ -106,7 +106,7 @@
 @if (!allowEdit) {
   <div class="player-card fade-in">
     <i
-      [ngClass]="{ transparent: !player.isHost }"
+      [ngClass]="{ transparent: player.id !== lastWinnerId }"
       class="fa-solid fa-crown crown"
     ></i>
     <div

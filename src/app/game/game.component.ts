@@ -44,7 +44,7 @@ interface ValidatedWord {
   direction: 'horizontal' | 'vertical';
 }
 
-const DRAG_POSITION_INIT = { x: -235, y: -237 };
+const DRAG_POSITION_INIT = { x: -237, y: -232 };
 
 @Component({
   selector: 'app-game',
@@ -272,6 +272,7 @@ export class GameComponent implements OnInit, OnDestroy {
         this.isWinner = message.isWinner;
         this.gameStateService.setGameState({
           players: message.players,
+          lastWinnerId: message.winner,
         });
         this.openDialog({
           winnerDisplayName: message.winnerDisplayName,
@@ -307,6 +308,21 @@ export class GameComponent implements OnInit, OnDestroy {
 
   setLettersFromPuzzle() {
     if (this.gameSeed) this.bankLetters = [...PUZZLES[this.gameSeed].letters];
+    // if (this.gameSeed)
+    //   this.bankLetters = [
+    //     'T',
+    //     'S',
+    //     'E',
+    //     'N',
+    //     'O',
+    //     'P',
+    //     'Y',
+    //     'H',
+    //     'C',
+    //     'L',
+    //     'F',
+    //     'I',
+    //   ];
   }
 
   shuffleLetters() {
@@ -750,8 +766,12 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   initializeGrid() {
-    this.dragPosition = { x: -235, y: -237 };
-
+    if (window.innerWidth < 390) {
+      //init grid for iphone SE and other small devices
+      this.dragPosition = { x: -254, y: -247 };
+    } else {
+      this.dragPosition = { x: -246, y: -246 };
+    }
     this.grid = Array(this.GRID_SIZE)
       .fill(null)
       .map(() => Array(this.GRID_SIZE).fill(null));

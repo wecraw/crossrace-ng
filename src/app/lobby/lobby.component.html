@@ -45,6 +45,7 @@
                   [player]="player"
                   [allowEdit]="true"
                   [playerIndex]="$index"
+                  [lastWinnerId]="gameState.lastWinnerId"
                   (onNameEdit)="submitName($event)"
                   (onReadyUp)="readyUp()"
                   (onColorSelect)="selectColor($event)"
@@ -62,7 +63,11 @@
         <div class="player-grid">
           @for (player of players; track $index) {
             @if (!isPlayerSelf(player)) {
-              <player-card [player]="player" [playerIndex]="$index">
+              <player-card
+                [player]="player"
+                [playerIndex]="$index"
+                [lastWinnerId]="gameState.lastWinnerId"
+              >
               </player-card>
             }
           }

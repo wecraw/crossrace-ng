@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redesigned versus post-game dialog
 - Redesigned room code and share UI
 - Hamburger menu is now used for all breakpoints
+- Crown in lobby given to last game's winner instead of host
 - Timer style
 
 ### Fixed
