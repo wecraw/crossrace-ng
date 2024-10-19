@@ -32,15 +32,10 @@
       </div>
 
       <app-leaderboard [players]="data.players"></app-leaderboard>
-    </div>
-    <div class="navigation-arrows">
-      <i
-        class="fa chevron"
-        [ngClass]="
-          currentView === 'chessGrid' ? 'fa-chevron-right' : 'fa-chevron-left'
-        "
-        (click)="toggleView()"
-      ></i>
+      <div class="navigation-arrows">
+        <i class="fa chevron fa-chevron-right" (click)="manualToggleView()"></i>
+        <i class="fa chevron fa-chevron-left" (click)="manualToggleView()"></i>
+      </div>
     </div>
 
     <div class="action-buttons d-flex">

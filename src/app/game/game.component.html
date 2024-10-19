@@ -34,6 +34,7 @@
   #gridWrapper
   *ngIf="isGridReady"
   class="slide-in-fwd-center grid-wrapper noselect"
+  [ngClass]="{ notouch: !timerRunning }"
 >
   <div class="fade-out-edges m-lr-auto">
     <div

@@ -102,6 +102,12 @@ hr {
   box-sizing: border-box;
 }
 
+@media (min-width: 992px) {
+  .player-grid {
+    max-height: 335px;
+  }
+}
+
 .player-grid-container {
   position: relative;
   width: 100%;
@@ -192,6 +198,12 @@ i {
   bottom: 0;
   justify-content: center;
   margin-bottom: 15px;
+}
+
+@media (min-width: 992px) {
+  .button-row {
+    bottom: 250px;
+  }
 }
 
 .self {

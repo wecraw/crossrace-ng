@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Players can now choose their color and emoji in multiplayer lobbies
+- Players can now choose their color and emoji in versus lobbies
+- Session leadboards in versus
 - "BLING" to valid word dictionary
 
 ### Changed
@@ -22,13 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Letters always start in the same order for all game types
 - Tutorial dialog now shows pagination dots
 - Refactored versus menu styles
+- Redesigned versus lobby
+- Redesigned versus post-game dialog
 - Redesigned room code and share UI
 - Hamburger menu is now used for all breakpoints
+- Timer style
 
 ### Fixed
 
 - Cursor state for tiles on main menu
--
+- Blocked editing of the grid after the game has ended
 
 ## [0.6.5] - 2024-08-29
 

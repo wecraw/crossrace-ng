@@ -1,6 +1,6 @@
 <div class="container d-flex flex-column">
   <div class="row flex-grow-1 overflow-hidden">
-    <div class="col-12 d-flex flex-column h-100">
+    <div class="col-12 col-lg-6 offset-lg-3 d-flex flex-column h-100">
       <div class="flex-shrink-0">
         @if (gameState && gameState.gameCode && !joining) {
           <div class="room-code-label flex-fixed">Room Code:</div>
@@ -55,7 +55,7 @@
           </div>
         }
       </div>
-      <div class="flex-grow-1 overflow-auto">
+      <div class="flex-grow-1 overflow-auto" *ngIf="!joining">
         @if (players.length < 2) {
           <div class="waiting-for-players">Waiting for players....</div>
         }
@@ -72,7 +72,7 @@
     </div>
   </div>
 </div>
-<div class="button-row">
+<div class="button-row" *ngIf="!joining">
   <button
     class="btn btn-lg btn-primary mt-4 flex-fixed small"
     color="primary"

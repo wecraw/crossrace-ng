@@ -66,11 +66,11 @@ export class MainMenuComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.dialog.open(DialogPostGameMp, {
-      data: MOCK_WIN,
-      minWidth: 370,
-      disableClose: true,
-    });
+    // this.dialog.open(DialogPostGameMp, {
+    //   data: MOCK_WIN,
+    //   minWidth: 370,
+    //   disableClose: true,
+    // });
     this.joinGameForm = this.fb.group({
       gameCode: [
         '',
