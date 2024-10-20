@@ -107,10 +107,8 @@ export class PlayerCardComponent implements AfterViewChecked {
   }
 
   private focusNameInput() {
-    if (this.nameInputElement) {
-      setTimeout(() => {
-        this.nameInputElement.nativeElement.focus();
-      }, 1);
+    if (this.nameInputElement && this.editingName) {
+      this.nameInputElement.nativeElement.focus();
     }
   }
 
@@ -142,6 +140,6 @@ export class PlayerCardComponent implements AfterViewChecked {
   }
 
   ngAfterViewChecked(): void {
-    if (this.allowEdit) this.focusNameInput();
+    this.focusNameInput();
   }
 }

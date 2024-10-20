@@ -105,7 +105,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       this.route.params.subscribe((params) => {
         if (params['gameCode']) {
           const gameCode = params['gameCode'].toUpperCase();
-          console.log(this.gameState);
           if (this.gameState.isInGame) {
             //if rejoining after a versus game, get new player list in case players joined during the game
             this.webSocketService.getPlayers(gameCode);
@@ -201,7 +200,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         this.copiedTooltip.hide();
         this.isCopied = false;
         this.cdr.detectChanges();
-        console.log(this.gameShareUrl);
       }, 1500);
 
       navigator.clipboard.writeText(this.gameShareUrl);

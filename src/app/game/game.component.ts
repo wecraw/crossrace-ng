@@ -658,13 +658,11 @@ export class GameComponent implements OnInit, OnDestroy {
       dialogRef = this.dialog.open(DialogPostGameMp, {
         data: data,
         minWidth: 370,
-        disableClose: true,
       });
     } else {
       dialogRef = this.dialog.open(DialogPostGame, {
         data: data,
         minWidth: 370,
-        disableClose: true,
       });
     }
 
