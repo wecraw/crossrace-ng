@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  AfterViewChecked,
   Component,
   ElementRef,
   EventEmitter,
@@ -19,7 +20,7 @@ import { Emojis } from '../constants/emoji-list';
   templateUrl: './player-card.component.html',
   styleUrl: './player-card.component.scss',
 })
-export class PlayerCardComponent {
+export class PlayerCardComponent implements AfterViewChecked {
   @ViewChild('nameInput') nameInputElement!: ElementRef;
   @ViewChild('emojiMartContainer') emojiMartContainer!: ElementRef;
   clickOutsideEnabled: boolean = false;
@@ -48,6 +49,9 @@ export class PlayerCardComponent {
   @Output() onColorSelect: EventEmitter<string> = new EventEmitter<string>();
   @Output() onEmojiSelect: EventEmitter<string> = new EventEmitter<string>();
 
+  editingEmoji: boolean = false;
+
+  editingName: boolean = false;
   editingNameInput: string = '';
 
   selectedTab: number = 0;
@@ -81,7 +85,10 @@ export class PlayerCardComponent {
     '#DAA520',
   ];
 
-  editingEmoji: boolean = false;
+  editName() {
+    this.editingName = true;
+    this.editingNameInput = this.player.displayName;
+  }
 
   editEmoji() {
     this.editingNameInput = this.player.displayName;
@@ -108,6 +115,7 @@ export class PlayerCardComponent {
   }
 
   submitName() {
+    this.editingName = false;
     let trimmedName = this.editingNameInput.trim();
     if (trimmedName === '') return;
     this.player.displayName = trimmedName;
@@ -131,5 +139,9 @@ export class PlayerCardComponent {
 
   selectTab(tabIndex: number) {
     this.selectedTab = tabIndex;
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.allowEdit) this.focusNameInput();
   }
 }

@@ -8,12 +8,10 @@
 }
 
 .form-control {
+  max-width: 140px;
   text-align: center;
   height: 35px;
-  position: absolute;
-  bottom: -35px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
+  margin-top: 5px;
 }
 
 .btn-outline-secondary {
@@ -27,13 +25,6 @@
   }
 }
 
-ngx-emoji {
-  display: flex;
-  height: 100%;
-  width: 100%;
-  justify-content: center;
-  align-items: center;
-}
 .player-avatar {
   width: 60px;
   height: 60px;
@@ -134,16 +125,14 @@ ngx-emoji {
   display: none;
   position: absolute;
   z-index: 999;
-  margin-top: 100px;
+  margin-top: 85px;
   left: 50%;
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
   filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.3));
   border-radius: 5px;
-  height: 354px;
+  height: 359px;
   width: 338px;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
 }
 
 .visible {
@@ -192,11 +181,12 @@ ngx-emoji {
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
   padding: 10px;
-  margin-top: -98px;
+  margin-top: -103px;
   border: 1px solid #d9d9d9;
-  border-bottom: none;
   border-top: none;
-  border-radius: 0;
+  border-radius: 4px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .color-circle {
@@ -233,10 +223,12 @@ ngx-emoji {
   justify-content: center;
   align-content: center;
   border: 1px solid #d9d9d9;
+  // border-bottom: none;
   border-top: 0;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
   display: none !important;
   padding: 5px;
-  padding-bottom: 10px;
   &.visible {
     display: grid !important;
   }

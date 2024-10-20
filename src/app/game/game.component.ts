@@ -669,7 +669,6 @@ export class GameComponent implements OnInit, OnDestroy {
     }
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log('result', result);
       if (!result) {
         if (this.gameState.gameMode === 'versus') {
           this.router.navigate(['/join/' + this.gameState.gameCode]);
@@ -683,7 +682,6 @@ export class GameComponent implements OnInit, OnDestroy {
           if (this.gameState.gameMode === 'daily')
             this.router.navigate(['/endless']);
           if (this.gameState.gameMode === 'endless') {
-            console.log('resetting game seed');
             this.gameSeed = this.getRandomPuzzleSeed();
             this.startAfterCountDown();
           }

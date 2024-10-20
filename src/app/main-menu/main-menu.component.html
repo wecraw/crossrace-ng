@@ -37,7 +37,10 @@
 <div class="main-menu m-lr-auto">
   <div class="main-menu-buttons">
     @if (!isChallenge && !isDaily && !isVersus) {
-      <button (click)="navigateToDaily()" class="btn btn-primary btn-lg m-auto">
+      <button
+        (click)="navigateToDaily()"
+        class="btn btn-fixed-width btn-primary btn-lg m-auto"
+      >
         Daily Challenge
       </button>
       <!-- <button (click)="endless()" class="btn btn-primary btn-lg m-auto">
@@ -45,7 +48,7 @@
       </button> -->
       <button
         (click)="navigateToVersusMenu()"
-        class="btn btn-success btn-lg m-auto"
+        class="btn btn-success btn-fixed-width btn-lg m-auto"
       >
         Versus
       </button>
@@ -108,7 +111,7 @@
     <button
       *ngIf="!isVersus"
       (click)="openTutorialDialog({ mode: 'solo' })"
-      class="btn btn-outline-secondary btn-lg m-auto"
+      class="btn btn-fixed-width btn-outline-secondary btn-lg m-auto"
     >
       How to play
     </button>
