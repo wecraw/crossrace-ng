@@ -57,7 +57,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   localPlayerReady: boolean | null = null;
   gameCode: string | null = null;
   gameShareUrl: string = '';
-  joining: boolean = false;
+  joining: boolean = true;
   editingNameInput: string = '';
   gameState!: GameState;
   connectionStatus: string = 'disconnected';
@@ -206,6 +206,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }
   }
 
+  showUI() {
+    return this.gameState && this.gameState.gameCode && !this.joining;
+  }
+
   getDisplayUrl() {
     // Use URL constructor to parse the input
     const parsedUrl = new URL(this.gameShareUrl);
@@ -272,7 +276,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
   async joinGame() {
     if (!this.gameState.gameCode) return;
 
-    this.joining = true;
     try {
       await this.webSocketService.connect();
       this.webSocketService.send({
@@ -410,6 +413,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     console.log('Received message in lobby:', message);
     switch (message.type) {
       case 'gameCreated':
+        this.joining = false;
         this.closeDialog();
         this.reconnectStarted = false;
         this.location.replaceState('/join/' + message.gameCode);
