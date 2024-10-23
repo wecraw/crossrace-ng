@@ -1,9 +1,23 @@
 /* You can add global styles to this file, and also import other style files */
 @import "../node_modules/bootstrap/scss/bootstrap";
-html,
-body {
-  height: 100%;
+
+// <uniquifier>: Use a unique and descriptive class name
+// <weight>: Use a value from 200 to 700
+
+.josefin-sans-400 {
+  font-family: "Josefin Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
 }
+
+
+.emoji-mart {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 0;
+}
+
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;

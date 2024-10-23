@@ -1,0 +1,154 @@
+$grid-cell-size: 30px;
+
+.player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-radius: 20px;
+  padding-top: 2px;
+  width: fit-content;
+  margin-top: -10px;
+}
+.player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #2196f3;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+
+  .emoji {
+    font-size: 32px;
+    display: flex;
+    height: 100%;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1px; //alignment
+  }
+}
+app-leaderboard {
+  margin-top: 10px;
+  position: absolute;
+  right: -480px;
+  top: 0;
+}
+.crown {
+  font-size: 18px;
+  color: #d4af37;
+}
+.wrapper {
+  height: 1px; //needed so that child height 100 works
+  padding: 20px;
+  min-height: 550px;
+  overflow-x: hidden;
+}
+
+.spinner {
+  margin-top: 18px;
+}
+
+.btn {
+  width: 100px;
+}
+
+h2 {
+  margin-top: auto;
+  margin-bottom: auto;
+  overflow-wrap: break-word;
+  max-width: 220px;
+  font-size: 32px;
+}
+.time {
+  width: fit-content;
+  background: #ffffffee;
+  padding: 2px 10px;
+  font-size: 20px;
+  font-weight: 500;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+}
+
+.chevron {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 5px;
+  cursor: pointer;
+  padding: 15px;
+}
+
+.fa-chevron-right {
+  right: -20px;
+}
+
+.fa-chevron-left {
+  right: -185px;
+}
+
+.action-buttons {
+  align-self: flex-end;
+  margin-top: auto;
+  width: 100%;
+
+  button {
+    min-width: 75px;
+  }
+}
+
+.quit {
+  margin-right: auto;
+}
+
+.fade-out-edges {
+  overflow: hidden;
+  --mask-size: 20px;
+  mask-image: linear-gradient(
+      to right,
+      transparent,
+      black var(--mask-size),
+      black calc(100% - var(--mask-size)),
+      transparent
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      black var(--mask-size),
+      black calc(100% - var(--mask-size)),
+      transparent
+    );
+  mask-size: 100% 100%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-composite: intersect;
+}
+
+.chess-grid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+.grid-row {
+  display: flex;
+}
+.grid-cell {
+  width: $grid-cell-size;
+  height: $grid-cell-size;
+  border: 1px solid #ccc;
+}
+
+.letter-tile {
+  min-width: $grid-cell-size;
+  min-height: $grid-cell-size;
+  background-color: green;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  border-radius: 6px;
+  font-size: 15px;
+}

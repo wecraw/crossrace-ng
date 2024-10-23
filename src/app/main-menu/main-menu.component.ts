@@ -11,23 +11,19 @@ import { TimerComponent } from '../timer/timer.component';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
-import { WebSocketService } from '../websocket.service';
-import { Subscription } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
+import { DialogPostGameMp } from '../dialog-post-game-mp/dialog-post-game-mp.component';
+
 import { GameSeedService } from '../game-seed.service';
-
-interface ValidatedWord {
-  word: string;
-  isValid: boolean;
-  startI: number;
-  startJ: number;
-  direction: 'horizontal' | 'vertical';
-}
-
-const DRAG_POSITION_INIT = { x: -22, y: -25 };
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { MOCK_WIN } from '../mock/mock-winner';
 
 @Component({
   selector: 'app-game',
@@ -39,6 +35,7 @@ const DRAG_POSITION_INIT = { x: -22, y: -25 };
     CommonModule,
     TimerComponent,
     MatDialogModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './main-menu.component.html',
   styleUrls: ['./main-menu.component.scss'],
@@ -53,27 +50,35 @@ export class MainMenuComponent implements OnInit {
   readonly dialog = inject(MatDialog);
 
   // Game State
-  gameState!: GameState;
   isChallenge: boolean = false;
   gameSeed?: number;
   isDaily: boolean = false;
+  isVersus: boolean = false;
   isResuming: boolean = false;
   finishedDaily: boolean = false;
+  joinGameForm!: FormGroup;
 
   constructor(
-    private gameStateService: GameStateService,
     private router: Router,
     private route: ActivatedRoute,
-    private gameSeedService: GameSeedService
+    private gameSeedService: GameSeedService,
+    private fb: FormBuilder,
   ) {}
 
   ngOnInit(): void {
-    this.initializeGrid();
-
-    this.gameStateService.getGameState().subscribe((state) => {
-      this.gameState = state;
+    this.joinGameForm = this.fb.group({
+      gameCode: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(4),
+          Validators.maxLength(4),
+          Validators.pattern('^[A-Za-z]{4}$'),
+        ],
+      ],
     });
 
+    this.initializeGrid();
     this.extractRouteInfo();
 
     if (this.isDaily) {
@@ -106,6 +111,7 @@ export class MainMenuComponent implements OnInit {
 
   private extractRouteInfo() {
     if (this.router.url.split('/')[1] === 'daily') this.isDaily = true;
+    if (this.router.url.split('/')[1] === 'versus-menu') this.isVersus = true;
     if (this.router.url.split('/')[1] === 'challenge') this.isChallenge = true;
     // Get the seed from the current route
     this.route.paramMap.subscribe((params) => {
@@ -126,12 +132,8 @@ export class MainMenuComponent implements OnInit {
 
   // DOM Helpers=========================================================
 
-  versus() {
-    this.router.navigate(['/versus-menu']);
-  }
-
   challenge() {
-    this.router.navigate(['/solo/' + this.gameSeed]);
+    this.router.navigate(['/endless/' + this.gameSeed]);
   }
 
   daily() {
@@ -148,15 +150,19 @@ export class MainMenuComponent implements OnInit {
         localStorage.setItem('dailySeed', '' + dailySeed);
       }
     }
-    this.router.navigate(['/solo/daily']);
+    this.router.navigate(['/endless/daily']);
   }
 
-  dailyLobby() {
+  navigateToDaily() {
     this.router.navigate(['/daily']);
   }
 
-  solo() {
-    this.router.navigate(['/solo']);
+  navigateToVersusMenu() {
+    this.router.navigate(['/versus-menu']);
+  }
+
+  endless() {
+    this.router.navigate(['/endless']);
   }
 
   closeDialog() {
@@ -178,13 +184,17 @@ export class MainMenuComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         if (result.event === 'confirm') {
-          this.router.navigate(['/solo']);
+          this.router.navigate(['/endless']);
         }
       } else {
         //closed modal by clicking outside
         this.router.navigate(['/']);
       }
     });
+  }
+
+  createGame() {
+    this.router.navigate(['/join']);
   }
 
   getFlipInClass(i: number) {
@@ -195,5 +205,23 @@ export class MainMenuComponent implements OnInit {
     this.grid = Array(this.GRID_SIZE)
       .fill(null)
       .map(() => Array(this.GRID_SIZE).fill(null));
+  }
+
+  onInputChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    input.value = input.value
+      .toUpperCase()
+      .replace(/[^A-Z]/g, '')
+      .slice(0, 4);
+    this.joinGameForm.patchValue({ gameCode: input.value });
+  }
+
+  joinGame() {
+    if (this.joinGameForm.valid) {
+      const gameCode = this.joinGameForm.get('gameCode')?.value;
+      this.router.navigate(['/join', gameCode]);
+    } else {
+      console.log('Form is invalid');
+    }
   }
 }

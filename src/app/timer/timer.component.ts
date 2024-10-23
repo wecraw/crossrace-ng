@@ -20,8 +20,14 @@ import {
   styles: [
     `
       .time {
-        font-size: 2em;
-        margin: 13px 0;
+        width: fit-content;
+        background: #ffffffee;
+        padding: 2px 10px;
+        font-size: 20px;
+        font-weight: 500;
+        border-radius: 20px;
+        border: 1px solid #ccc;
+        margin: 16px 0;
         color: #444;
       }
     `,

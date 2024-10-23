@@ -71863,6 +71863,7 @@ export const VALID_WORDS = [
   'sloshy',
   'broadsword',
   'blade',
+  'bling',
   'recons',
   'posing',
   'moxie',

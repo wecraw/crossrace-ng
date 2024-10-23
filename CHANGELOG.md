@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2024-09-02
+
+### Added
+
+- Players can now choose their color and emoji in versus lobbies
+- Session leadboards in versus
+- "BLING" to valid word dictionary
+
+### Changed
+
+- Refactored usage of game state so that it is more centralized and easier to manage
+- Refactored websocket connection management so that it persists between routes and supports reconnecting
+- "Challenge a friend" copy changed to "Share"
+- "Let's play!" copy changed to "Play!"
+- Changed route names to better reflect the underlying game state (solo -> endless)
+- Letters always start in the same order for all game types
+- Tutorial dialog now shows pagination dots
+- Refactored versus menu styles
+- Redesigned versus lobby
+- Redesigned versus post-game dialog
+- Redesigned room code and share UI
+- Hamburger menu is now used for all breakpoints
+- Crown in lobby given to last game's winner instead of host
+- Timer style
+
+### Fixed
+
+- Cursor state for tiles on main menu
+- Blocked editing of the grid after the game has ended
+
 ## [0.6.5] - 2024-08-29
 
 - Dismissing postgame modal in versus returns you to the lobby

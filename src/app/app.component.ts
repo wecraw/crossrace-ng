@@ -3,6 +3,8 @@ import {
   ElementRef,
   HostListener,
   Inject,
+  OnDestroy,
+  OnInit,
   Renderer2,
 } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
@@ -10,6 +12,7 @@ import { GameComponent } from './game/game.component';
 import { LobbyComponent } from './lobby/lobby.component';
 import { HeaderComponent } from './header/header.component';
 import { DOCUMENT } from '@angular/common';
+import { WebSocketService } from './websocket.service';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +21,7 @@ import { DOCUMENT } from '@angular/common';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'crossrace-ng';
 
   private lastTap = 0;
@@ -26,7 +29,8 @@ export class AppComponent {
 
   constructor(
     private renderer: Renderer2,
-    @Inject(DOCUMENT) private document: Document
+    @Inject(DOCUMENT) private document: Document,
+    private websocketService: WebSocketService
   ) {}
 
   ngOnInit() {
@@ -46,5 +50,9 @@ export class AppComponent {
     this.renderer.listen('document', 'gesturestart', (event: Event) => {
       event.preventDefault();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.websocketService.disconnect();
   }
 }

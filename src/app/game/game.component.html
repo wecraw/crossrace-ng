@@ -10,16 +10,18 @@
     (cdkDropListDropped)="drop($event)"
   >
     @for (letter of bankLetters; track $index) {
-    <div
-      *ngIf="isGameStarted || isMultiplayer || isCountingDown"
-      class="tile-wrapper"
-      [ngClass]="getFlipInClass($index)"
-      cdkDrag
-    >
-      <div class="letter m-lr-auto">
-        {{ letter }}
+      <div
+        *ngIf="
+          isGameStarted || gameState.gameMode === 'versus' || isCountingDown
+        "
+        class="tile-wrapper"
+        [ngClass]="getFlipInClass($index)"
+        cdkDrag
+      >
+        <div class="letter m-lr-auto">
+          {{ letter }}
+        </div>
       </div>
-    </div>
     }
   </div>
 </div>
@@ -28,7 +30,12 @@
   <h5>Game starting in {{ countdown }}...</h5>
 </div>
 
-<div #gridWrapper *ngIf="isGridReady" class="slide-in-fwd-center grid-wrapper">
+<div
+  #gridWrapper
+  *ngIf="isGridReady"
+  class="slide-in-fwd-center grid-wrapper noselect"
+  [ngClass]="{ notouch: !timerRunning }"
+>
   <div class="fade-out-edges m-lr-auto">
     <div
       #gridContainer
@@ -38,32 +45,32 @@
       cdkDragBoundary=".grid-boundary"
     >
       @for (row of grid; track $index; let i = $index) {
-      <div class="grid-row">
-        @for (cell of row; track $index; let j = $index) {
-        <div
-          [ngClass]="{ 'valid-letter': validLetterIndices[i][j] }"
-          class="grid-cell"
-          cdkDropList
-          [id]="'cell-' + i + '-' + j"
-          [cdkDropListData]="[cell]"
-          [cdkDropListConnectedTo]="allDropListIds"
-          [cdkDropListEnterPredicate]="canEnter"
-          (cdkDropListEntered)="entered($event)"
-          (cdkDropListExited)="exited($event)"
-          (cdkDropListDropped)="drop($event)"
-        >
-          @if (cell) {
-          <div
-            class="letter-tile"
-            cdkDrag
-            (cdkDragStarted)="dragStarted($event)"
-          >
-            {{ cell }}
-          </div>
+        <div class="grid-row noselect">
+          @for (cell of row; track $index; let j = $index) {
+            <div
+              [ngClass]="{ 'valid-letter': validLetterIndices[i][j] }"
+              class="grid-cell noselect"
+              cdkDropList
+              [id]="'cell-' + i + '-' + j"
+              [cdkDropListData]="[cell]"
+              [cdkDropListConnectedTo]="allDropListIds"
+              [cdkDropListEnterPredicate]="canEnter"
+              (cdkDropListEntered)="entered($event)"
+              (cdkDropListExited)="exited($event)"
+              (cdkDropListDropped)="drop($event)"
+            >
+              @if (cell) {
+                <div
+                  class="letter-tile"
+                  cdkDrag
+                  (cdkDragStarted)="dragStarted($event)"
+                >
+                  {{ cell }}
+                </div>
+              }
+            </div>
           }
         </div>
-        }
-      </div>
       }
     </div>
   </div>

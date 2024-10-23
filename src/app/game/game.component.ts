@@ -34,6 +34,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { GameSeedService } from '../game-seed.service';
+import { DialogPostGameMp } from '../dialog-post-game-mp/dialog-post-game-mp.component';
 
 interface ValidatedWord {
   word: string;
@@ -43,7 +44,7 @@ interface ValidatedWord {
   direction: 'horizontal' | 'vertical';
 }
 
-const DRAG_POSITION_INIT = { x: -235, y: -237 };
+const DRAG_POSITION_INIT = { x: -237, y: -232 };
 
 @Component({
   selector: 'app-game',
@@ -96,17 +97,16 @@ export class GameComponent implements OnInit, OnDestroy {
 
   //MP
   private wsSubscription!: Subscription;
-  isMultiplayer: boolean = false;
   isGameOver: boolean = false;
   isWinner: boolean = false;
   isGameStarted: boolean = false;
+  connectionStatus: string = 'disconnected';
 
   // Game State
   gameState!: GameState;
   isCountingDown: boolean = false;
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
-  isDaily: boolean = false;
   timerStartTime: number = 0;
 
   constructor(
@@ -117,12 +117,20 @@ export class GameComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private ngZone: NgZone,
     private location: Location,
-    private gameSeedService: GameSeedService
+    private gameSeedService: GameSeedService,
   ) {
     this.validWords = new Set(VALID_WORDS);
   }
 
   ngOnInit(): void {
+    this.webSocketService.getConnectionStatus().subscribe((status) => {
+      this.connectionStatus = status;
+    });
+
+    this.wsSubscription = this.webSocketService
+      .getMessages()
+      .subscribe((message) => this.handleWebSocketMessage(message));
+
     this.generateGridCellIds();
 
     this.gameStateService.getGameState().subscribe((state) => {
@@ -131,10 +139,10 @@ export class GameComponent implements OnInit, OnDestroy {
 
     this.extractRouteInfo();
 
-    if (this.isMultiplayer && !this.gameState.isInGame)
+    if (this.gameState.gameMode === 'versus' && !this.gameState.isInGame)
       this.router.navigate(['/']);
 
-    if (this.isDaily) {
+    if (this.gameState.gameMode === 'daily') {
       let time = localStorage.getItem('dailyCurrentTime');
       if (time) {
         this.timerStartTime = +time;
@@ -142,23 +150,27 @@ export class GameComponent implements OnInit, OnDestroy {
     }
 
     this.startAfterCountDown();
-
-    this.wsSubscription = this.webSocketService
-      .getMessages()
-      .subscribe((message) => this.handleWebSocketMessage(message));
   }
 
   private extractRouteInfo() {
-    if (this.router.url.split('/')[1] === 'versus') this.isMultiplayer = true;
     // Get the seed from the current route
     this.route.paramMap.subscribe((params) => {
       const seedParam = params.get('gameSeed');
 
       if (seedParam) {
         if (seedParam === 'daily') {
-          this.isDaily = true;
+          this.gameStateService.setGameState({
+            gameMode: 'daily',
+          });
           this.gameSeed = this.gameSeedService.getDailySeed();
           return;
+        } else {
+          // Seeded endless mode
+          if (this.gameState.gameMode !== 'versus') {
+            this.gameStateService.setGameState({
+              gameMode: 'endless',
+            });
+          }
         }
 
         const seedNumber = Number(seedParam);
@@ -168,6 +180,13 @@ export class GameComponent implements OnInit, OnDestroy {
         } else {
           console.error('Invalid seed value. Redirecting to home.');
           this.router.navigate(['/']);
+        }
+      } else {
+        // non-seeded endless mode
+        if (this.gameState.gameMode !== 'versus') {
+          this.gameStateService.setGameState({
+            gameMode: 'endless',
+          });
         }
       }
     });
@@ -222,16 +241,18 @@ export class GameComponent implements OnInit, OnDestroy {
     if (!this.gameSeed) {
       this.gameSeed = this.getRandomPuzzleSeed();
     }
-    if (!this.isMultiplayer) {
-      // Update the URL to reflect the game seed or daily, for easier sharing
-      if (this.isDaily) {
+    if (this.gameState.gameMode === 'daily') {
+      // Update the URL to reflect daily, for easier sharing
+      this.location.replaceState('/daily');
+    }
+    if (this.gameState.gameMode !== 'versus') {
+      if (this.gameState.gameMode === 'daily') {
         this.location.replaceState('/daily');
       } else {
         this.location.replaceState('/challenge/' + this.gameSeed);
       }
     }
     this.setLettersFromPuzzle();
-    this.shuffleLetters();
 
     this.startCountdown(() => {
       this.isGameStarted = true;
@@ -244,7 +265,6 @@ export class GameComponent implements OnInit, OnDestroy {
     console.log(message);
     switch (message.type) {
       case 'gameStarted':
-        this.isMultiplayer = true;
         this.startAfterCountDown();
         break;
       case 'gameEnded':
@@ -252,9 +272,13 @@ export class GameComponent implements OnInit, OnDestroy {
         this.isWinner = message.isWinner;
         this.gameStateService.setGameState({
           players: message.players,
+          lastWinnerId: message.winner,
         });
         this.openDialog({
           winnerDisplayName: message.winnerDisplayName,
+          winnerColor: message.winnerColor,
+          winnerEmoji: message.winnerEmoji,
+          players: message.players,
           grid: message.condensedGrid,
           time: message.time,
         });
@@ -284,6 +308,21 @@ export class GameComponent implements OnInit, OnDestroy {
 
   setLettersFromPuzzle() {
     if (this.gameSeed) this.bankLetters = [...PUZZLES[this.gameSeed].letters];
+    // if (this.gameSeed)
+    //   this.bankLetters = [
+    //     'T',
+    //     'S',
+    //     'E',
+    //     'N',
+    //     'O',
+    //     'P',
+    //     'Y',
+    //     'H',
+    //     'C',
+    //     'L',
+    //     'F',
+    //     'I',
+    //   ];
   }
 
   shuffleLetters() {
@@ -333,14 +372,14 @@ export class GameComponent implements OnInit, OnDestroy {
     // If all conditions are met, it's a win
     this.createCondensedGrid();
     this.stopTimer();
-    if (this.isMultiplayer) {
+    if (this.gameState.gameMode === 'versus') {
       this.webSocketService.announceWin(
         this.gameState.localPlayerId!,
         this.condensedGrid,
-        this.currentTimeString
+        this.currentTimeString,
       );
     } else {
-      if (this.isDaily) {
+      if (this.gameState.gameMode === 'daily') {
         this.updateDailyLocalStorage();
       }
       setTimeout(() => {
@@ -350,7 +389,7 @@ export class GameComponent implements OnInit, OnDestroy {
           time: this.currentTimeString,
           singlePlayer: true,
           shareLink: this.generateShareLink(),
-          daily: this.isDaily,
+          daily: this.gameState.gameMode === 'daily',
         });
       }, 1100);
 
@@ -379,7 +418,8 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   generateShareLink() {
-    if (this.isDaily) return window.location.origin + '/daily';
+    if (this.gameState.gameMode === 'daily')
+      return window.location.origin + '/daily';
     return window.location.origin + '/challenge/' + this.gameSeed;
   }
 
@@ -392,7 +432,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.webSocketService.announceWin(
       this.gameState.localPlayerId!,
       this.condensedGrid,
-      this.currentTimeString
+      this.currentTimeString,
     );
   }
 
@@ -526,7 +566,7 @@ export class GameComponent implements OnInit, OnDestroy {
     word: string,
     startI: number,
     startJ: number,
-    direction: 'horizontal' | 'vertical'
+    direction: 'horizontal' | 'vertical',
   ) {
     if (word.length >= 2) {
       this.formedWords.push({
@@ -572,7 +612,7 @@ export class GameComponent implements OnInit, OnDestroy {
     startI: number,
     startJ: number,
     direction: 'horizontal' | 'vertical',
-    length: number
+    length: number,
   ) {
     for (let k = 0; k < length; k++) {
       if (direction === 'horizontal') {
@@ -594,7 +634,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   onTimeChanged(time: number) {
-    if (this.isDaily) {
+    if (this.gameState.gameMode === 'daily') {
       localStorage.setItem('dailyCurrentTime', '' + time);
     }
     const minutes = Math.floor(time / 60);
@@ -613,23 +653,33 @@ export class GameComponent implements OnInit, OnDestroy {
   // DOM Helpers=========================================================
 
   openDialog(data: any) {
-    const dialogRef = this.dialog.open(DialogPostGame, {
-      data: data,
-      minWidth: 370,
-    });
+    let dialogRef;
+    if (this.gameState.gameMode === 'versus') {
+      dialogRef = this.dialog.open(DialogPostGameMp, {
+        data: data,
+        minWidth: 370,
+      });
+    } else {
+      dialogRef = this.dialog.open(DialogPostGame, {
+        data: data,
+        minWidth: 370,
+      });
+    }
 
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) {
-        if (this.isMultiplayer) {
-          this.router.navigate(['/lobby']);
+        if (this.gameState.gameMode === 'versus') {
+          this.router.navigate(['/join/' + this.gameState.gameCode]);
         } else {
           this.router.navigate(['/']);
         }
       } else {
         if (result.event === 'confirm') {
-          if (this.isMultiplayer) this.router.navigate(['/lobby']);
-          if (this.isDaily) this.router.navigate(['/solo']);
-          if (!this.isDaily && !this.isMultiplayer) {
+          if (this.gameState.gameMode === 'versus')
+            this.router.navigate(['/join/' + this.gameState.gameCode]);
+          if (this.gameState.gameMode === 'daily')
+            this.router.navigate(['/endless']);
+          if (this.gameState.gameMode === 'endless') {
             this.gameSeed = this.getRandomPuzzleSeed();
             this.startAfterCountDown();
           }
@@ -691,7 +741,7 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.touchMoveListener) {
       this.gridContainer.nativeElement.removeEventListener(
         'touchmove',
-        this.touchMoveListener
+        this.touchMoveListener,
       );
     }
   }
@@ -712,8 +762,12 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   initializeGrid() {
-    this.dragPosition = { x: -235, y: -237 };
-
+    if (window.innerWidth < 390) {
+      //init grid for iphone SE and other small devices
+      this.dragPosition = { x: -254, y: -247 };
+    } else {
+      this.dragPosition = { x: -246, y: -246 };
+    }
     this.grid = Array(this.GRID_SIZE)
       .fill(null)
       .map(() => Array(this.GRID_SIZE).fill(null));
@@ -765,11 +819,11 @@ export class GameComponent implements OnInit, OnDestroy {
         event.previousContainer.data,
         event.container.data,
         event.previousIndex,
-        event.currentIndex
+        event.currentIndex,
       );
     } else {
       const [prevI, prevJ] = this.getCellCoordinates(
-        event.previousContainer.id
+        event.previousContainer.id,
       );
       const [nextI, nextJ] = this.getCellCoordinates(event.container.id);
 
@@ -779,7 +833,7 @@ export class GameComponent implements OnInit, OnDestroy {
             event.previousContainer.data,
             event.container.data,
             event.previousIndex,
-            0
+            0,
           );
           this.grid[nextI][nextJ] = event.container.data[0];
         }
@@ -788,7 +842,7 @@ export class GameComponent implements OnInit, OnDestroy {
           event.previousContainer.data,
           event.container.data,
           0,
-          event.currentIndex
+          event.currentIndex,
         );
         this.grid[prevI][prevJ] = '';
       } else {

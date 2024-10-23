@@ -36,16 +36,25 @@
 </div>
 <div class="main-menu m-lr-auto">
   <div class="main-menu-buttons">
-    @if(!isChallenge && !isDaily){
-    <button (click)="dailyLobby()" class="btn btn-primary btn-lg m-auto">
-      Daily Challenge
-    </button>
-    <button (click)="solo()" class="btn btn-primary btn-lg m-auto">
-      Endless
-    </button>
-    <button (click)="versus()" class="btn btn-success btn-lg m-auto">
-      Versus
-    </button>
+    @if (!isChallenge && !isDaily && !isVersus) {
+      <button
+        (click)="navigateToDaily()"
+        class="btn btn-fixed-width btn-primary btn-lg m-auto"
+      >
+        Daily Challenge
+      </button>
+      <button
+        (click)="endless()"
+        class="btn btn-fixed-width btn-primary btn-lg m-auto"
+      >
+        Endless
+      </button>
+      <button
+        (click)="navigateToVersusMenu()"
+        class="btn btn-success btn-fixed-width btn-lg m-auto"
+      >
+        Versus
+      </button>
     }
 
     <button
@@ -62,9 +71,50 @@
     >
       {{ isResuming ? "Resume Daily Challenge" : "Start Daily Challenge!" }}
     </button>
+    @if (isVersus) {
+      <button
+        *ngIf="isVersus"
+        (click)="createGame()"
+        class="btn btn-primary btn-lg m-auto"
+      >
+        Create Game
+      </button>
+      <hr />
+
+      <form [formGroup]="joinGameForm">
+        <div class="form-group">
+          <input
+            class="form-control form-control-lg mx-auto mb-3"
+            style="max-width: 185px; font-size: 20px; text-align: center"
+            formControlName="gameCode"
+            placeholder="Enter room code"
+            (input)="onInputChange($event)"
+            maxlength="4"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="
+              joinGameForm.get('gameCode')!.invalid &&
+              joinGameForm.get('gameCode')!.touched
+            "
+          >
+            Please input a valid room code
+          </div>
+        </div>
+        <button
+          class="btn btn-success"
+          [disabled]="!joinGameForm.valid"
+          (click)="joinGame()"
+        >
+          Join Game
+        </button>
+      </form>
+    }
+
     <button
+      *ngIf="!isVersus"
       (click)="openTutorialDialog({ mode: 'solo' })"
-      class="btn btn-outline-secondary btn-lg m-auto"
+      class="btn btn-fixed-width btn-outline-secondary btn-lg m-auto"
     >
       How to play
     </button>
@@ -74,14 +124,14 @@
   <div class="fade-out-edges m-lr-auto">
     <div #gridContainer class="grid-container">
       @for (row of grid; track $index; let i = $index) {
-      <div class="grid-row">
-        @for (cell of row; track $index; let j = $index) {
-        <div class="grid-cell"></div>
-        }
-      </div>
+        <div class="grid-row">
+          @for (cell of row; track $index; let j = $index) {
+            <div class="grid-cell"></div>
+          }
+        </div>
       }
     </div>
   </div>
 </div>
 
-<div class="version">0.6.5</div>
+<div class="version">0.7.0</div>

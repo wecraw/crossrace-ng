@@ -1,0 +1,48 @@
+<div class="wrapper">
+  <div class="d-flex flex-column h-100">
+    <div class="row m-lr-auto" style="margin-bottom: 5px">
+      <div class="player-card">
+        <i class="fa-solid fa-crown crown"></i>
+        <div
+          [ngStyle]="{ 'background-color': data.winnerColor }"
+          class="player-avatar"
+        >
+          <div class="emoji noselect">{{ data.winnerEmoji }}</div>
+        </div>
+      </div>
+      <div class="d-flex flex-column w-auto" style="height: 80px">
+        <h2>{{ data.winnerDisplayName }} won!</h2>
+      </div>
+    </div>
+
+    <div class="content-container" [@slideContent]="currentView">
+      <div class="time m-lr-auto">
+        {{ data.time }}
+      </div>
+      <div class="chess-grid m-lr-auto fade-out-edges">
+        <div *ngFor="let row of grid; let i = index" class="grid-row">
+          <div
+            *ngFor="let cell of row; let j = index"
+            class="grid-cell noselect"
+            [ngClass]="{ 'letter-tile': data.grid[i] && data.grid[i][j] }"
+          >
+            {{ data.grid[i] && data.grid[i][j] ? data.grid[i][j] : "" }}
+          </div>
+        </div>
+      </div>
+
+      <app-leaderboard [players]="data.players"></app-leaderboard>
+      <div class="navigation-arrows">
+        <i class="fa chevron fa-chevron-right" (click)="manualToggleView()"></i>
+        <i class="fa chevron fa-chevron-left" (click)="manualToggleView()"></i>
+      </div>
+    </div>
+
+    <div class="action-buttons d-flex">
+      <button class="btn btn-outline-secondary quit" (click)="quit()">
+        Quit
+      </button>
+      <button class="btn btn-primary" (click)="confirm()">Play again</button>
+    </div>
+  </div>
+</div>

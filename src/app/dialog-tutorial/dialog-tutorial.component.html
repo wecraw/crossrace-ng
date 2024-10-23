@@ -27,13 +27,14 @@
             class="grid-cell noselect"
             [ngClass]="{
               'letter-tile': activeGrid[i] && activeGrid[i][j],
-              blue: checkBlueLetter(activeGrid[i][j])
+              blue: checkBlueLetter(activeGrid[i][j]),
             }"
           >
-            @if(activeGrid[i] && activeGrid[i][j]){
-            {{ activeGrid[i][j].charAt(0) }}
-            } @if(i === 2 && j === 3 && scene === 2 && showTouch2){
-            <div class="circle fade-in circle-2"></div>
+            @if (activeGrid[i] && activeGrid[i][j]) {
+              {{ activeGrid[i][j].charAt(0) }}
+            }
+            @if (i === 2 && j === 3 && scene === 2 && showTouch2) {
+              <div class="circle fade-in circle-2"></div>
             }
           </div>
         </div>
@@ -52,11 +53,25 @@
       >
         Back
       </button>
+      <div class="pagination">
+        <i
+          class="fa-regular fa-circle"
+          [ngClass]="{ 'fa-solid': scene === 0 }"
+        ></i>
+        <i
+          class="fa-regular fa-circle"
+          [ngClass]="{ 'fa-solid': scene === 1 }"
+        ></i>
+        <i
+          class="fa-regular fa-circle"
+          [ngClass]="{ 'fa-solid': scene === 2 }"
+        ></i>
+      </div>
       <button *ngIf="scene < 2" class="btn btn-primary" (click)="next()">
         Next
       </button>
       <button *ngIf="scene === 2" class="btn btn-primary" (click)="confirm()">
-        Let's Play!
+        Play!
       </button>
     </div>
   </div>

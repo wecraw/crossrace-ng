@@ -10,6 +10,8 @@ export interface GameState {
   players: any[]; // Replace 'any' with a proper Player interface if you have one
   localPlayerId: string | null;
   isCreating: boolean;
+  gameMode: 'endless' | 'daily' | 'versus' | null;
+  lastWinnerId: string;
 }
 
 @Injectable({
@@ -24,6 +26,8 @@ export class GameStateService {
     localPlayerId: null,
     gameSeed: null,
     isCreating: false,
+    gameMode: null,
+    lastWinnerId: '',
   };
 
   constructor(private router: Router) {
@@ -54,6 +58,8 @@ export class GameStateService {
       players: [],
       localPlayerId: null,
       isCreating: false,
+      gameMode: null,
+      lastWinnerId: '',
     };
     this.gameStateSubject.next(this.gameState);
   }

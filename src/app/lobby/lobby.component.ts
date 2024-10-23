@@ -5,7 +5,6 @@ import {
   inject,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-  AfterViewChecked,
   ViewChild,
   ElementRef,
 } from '@angular/core';
@@ -21,23 +20,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { Dialog } from '../dialog/dialog.component';
-import { Clipboard } from '@angular/cdk/clipboard';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
-
-interface Player {
-  id: string;
-  displayName: string;
-  ready?: boolean;
-  isHost?: boolean;
-  inGame?: boolean;
-}
-
-interface DialogData {
-  dialogText: string;
-  showSpinner: boolean;
-  showConfirm: boolean;
-}
+import { Location } from '@angular/common';
+import { DialogSettings } from '../dialog/dialog-settings';
+import { PlayerCardComponent } from '../player-card/player-card.component';
+import { Player } from '../interfaces/player';
+import { DialogData } from '../interfaces/dialog-data';
 
 @Component({
   selector: 'app-lobby',
@@ -51,126 +40,90 @@ interface DialogData {
     MatListModule,
     MatInputModule,
     MatTooltipModule,
+    PlayerCardComponent,
   ],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class LobbyComponent implements OnInit, OnDestroy {
   @ViewChild('nameInput') nameInputElement!: ElementRef;
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
 
-  pastelRainbowColors = [
-    '#F94144',
-    '#43AA8B',
-    '#277DA1',
-    '#F8961E',
-    '#ff006e',
-    '#264653',
-  ];
   localPlayer!: Player;
   localPlayerId: string = '';
   localPlayerReady: boolean | null = null;
   gameCode: string | null = null;
   gameShareUrl: string = '';
-  joining: boolean = false;
-  editingNameInput: string = '';
+
   gameState!: GameState;
-
-  isHost: boolean = false;
   players: Player[] = [];
-  private messageSubscription!: Subscription;
-  isShareSupported: boolean = false;
 
-  readonly dialog = inject(MatDialog);
-  private cdr = inject(ChangeDetectorRef);
+  isShareSupported: boolean = false;
+  isCopied: boolean = false;
+
+  private messageSubscription: Subscription | null = null;
+  private connectionStatusSubscription: Subscription | null = null;
 
   displayNameInput: string = '';
   creatingGame: boolean = false;
-  editingName: boolean = false;
 
-  isCopied: boolean = false;
+  reconnectStarted: boolean = false;
+  connectionStatus: string = 'disconnected';
+  joining: boolean = true;
 
   constructor(
     private webSocketService: WebSocketService,
     private gameStateService: GameStateService,
     private router: Router,
     private route: ActivatedRoute,
-    private clipboard: Clipboard
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+    private location: Location,
   ) {}
-
-  dialogSettingsJoin: any = {
-    dialogText: 'Joining game',
-    showSpinner: true,
-    showConfirm: false,
-  };
-
-  dialogSettingsStart: any = {
-    dialogText: 'Starting game',
-    showSpinner: true,
-    showConfirm: false,
-  };
-
-  dialogSettingsCreate: any = {
-    dialogText: 'Creating game',
-    showSpinner: true,
-    showConfirm: false,
-  };
-
-  getBackgroundColor(index: number): { 'background-color': string } {
-    const colorIndex = index % this.pastelRainbowColors.length;
-    return { 'background-color': this.pastelRainbowColors[colorIndex] };
-  }
 
   isMobile(): boolean {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
+      navigator.userAgent,
     );
   }
 
   async ngOnInit() {
-    this.isShareSupported = !!navigator.share && this.isMobile();
-
-    this.gameStateService.getGameState().subscribe((state) => {
-      this.gameState = state;
-      if (state.gameCode) {
-        this.gameCode = state.gameCode;
-        this.gameShareUrl = this.getShareUrl();
-      }
-      this.cdr.detectChanges();
+    this.gameStateService.setGameState({
+      gameMode: 'versus',
     });
 
+    this.isShareSupported = !!navigator.share && this.isMobile();
+
+    this.setupSubscriptions();
+
     try {
-      await this.webSocketService.connect();
-
-      this.messageSubscription = this.webSocketService
-        .getMessages()
-        .subscribe((message) => this.handleMessage(message));
-
       this.route.params.subscribe((params) => {
         if (params['gameCode']) {
           const gameCode = params['gameCode'].toUpperCase();
-          if (/^[A-Z]{4}$/.test(gameCode)) {
-            this.openDialog(this.dialogSettingsJoin, true);
-            this.gameState.gameCode = gameCode;
-            this.joinGame();
-          } else {
-            // Route to '/' if gameCode is not exactly 4 alphabet letters
-            this.router.navigate(['/']);
-          }
-        } else {
-          if (!this.gameState.isInGame || this.gameState.isCreating) {
-            this.createGame();
-            this.gameStateService.setGameState({
-              isCreating: false,
-            });
-          } else if (this.gameState.isInGame) {
+          if (this.gameState.isInGame) {
             //if rejoining after a versus game, get new player list in case players joined during the game
-            if (this.gameCode) this.webSocketService.getPlayers(this.gameCode);
+            this.webSocketService.getPlayers(gameCode);
             this.gameStateService.setGameState({
               isInGame: false,
             });
             this.updateLobbyUI();
+          } else {
+            if (/^[A-Z]{4}$/.test(gameCode)) {
+              this.openDialog(DialogSettings.dialogSettingsJoin, true);
+              this.gameStateService.setGameState({
+                gameCode: gameCode,
+              });
+              this.joinGame();
+            } else {
+              // Route to '/' if gameCode is not exactly 4 alphabet letters
+              this.router.navigate(['/']);
+            }
+          }
+        } else {
+          if (!this.gameState.isInGame) {
+            this.openDialog(DialogSettings.dialogSettingsCreate, true);
+            this.createGame();
           }
         }
       });
@@ -183,73 +136,48 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (!this.gameState.isInGame) {
       this.gameStateService.clearGameState();
     }
-    if (this.messageSubscription) {
-      this.messageSubscription.unsubscribe();
-    }
+    this.unsubscribeAll();
   }
 
-  ngAfterViewChecked(): void {
-    this.focusNameInput();
-  }
-  private focusNameInput() {
-    if (this.nameInputElement && this.editingName) {
-      this.nameInputElement.nativeElement.focus();
-    }
-  }
-  onNameInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.displayNameInput = input.value;
-  }
-
-  submitName() {
-    this.editingName = false;
-    if (this.editingNameInput.trim() === '') return;
-
-    const playerIndex = this.players.findIndex(
-      (p) => p.id === this.localPlayerId
-    );
-    if (playerIndex !== -1) {
-      this.players[playerIndex].displayName = this.editingNameInput.trim();
-    }
-
-    if (this.gameCode) {
+  submitName(name: string) {
+    if (this.gameState.gameCode) {
       this.webSocketService.updateDisplayName(
-        this.gameCode,
+        this.gameState.gameCode,
         this.localPlayerId,
-        this.editingNameInput.trim()
+        name,
       );
+      this.webSocketService.updateCurrentPlayerDisplayName(name);
     }
   }
 
   readyUp() {
-    const playerIndex = this.players.findIndex(
-      (p) => p.id === this.localPlayerId
-    );
-    if (playerIndex !== -1) {
-      this.localPlayerReady = true;
-      this.players[playerIndex].ready = true;
-    }
-    if (this.gameCode) {
-      this.webSocketService.readyUp(this.gameCode, this.localPlayerId);
+    if (this.gameState.gameCode) {
+      this.webSocketService.readyUp(
+        this.gameState.gameCode,
+        this.localPlayerId,
+      );
     }
   }
 
-  toggleReady() {
-    const playerIndex = this.players.findIndex(
-      (p) => p.id === this.localPlayerId
+  selectColor(color: string) {
+    this.webSocketService.updatePlayerColor(
+      this.gameState.gameCode!,
+      this.localPlayerId,
+      color,
     );
-    if (playerIndex !== -1) {
-      this.localPlayerReady = !this.players[playerIndex].ready;
-      this.players[playerIndex].ready = this.localPlayerReady;
-    }
-    if (this.gameCode) {
-      if (this.localPlayerReady) {
-        this.webSocketService.readyUp(this.gameCode, this.localPlayerId);
-      }
-    }
+    this.webSocketService.updateCurrentPlayerColor(color);
   }
 
-  copyToClipboard() {
+  selectEmoji(emoji: string) {
+    this.webSocketService.updatePlayerEmoji(
+      this.gameState.gameCode!,
+      this.localPlayerId,
+      emoji,
+    );
+    this.webSocketService.updateCurrentPlayerEmoji(emoji);
+  }
+
+  copyOrShare() {
     const shareString = `Race me on Crossrace! \n${this.gameShareUrl}`;
 
     if (navigator.share && this.isMobile()) {
@@ -269,6 +197,10 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
+  showUI() {
+    return this.gameState && this.gameState.gameCode && !this.joining;
+  }
+
   getDisplayUrl() {
     // Use URL constructor to parse the input
     const parsedUrl = new URL(this.gameShareUrl);
@@ -286,14 +218,6 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   isPlayerSelf(player: Player) {
     return player.id === this.localPlayerId;
-  }
-
-  editName() {
-    this.editingName = true;
-    const localPlayer = this.players.find((p) => p.id === this.localPlayerId);
-    if (localPlayer) {
-      this.editingNameInput = localPlayer.displayName;
-    }
   }
 
   openDialog(data: DialogData, disableClose: boolean) {
@@ -330,42 +254,49 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.dialog.closeAll();
   }
 
-  createGame(): void {
-    this.openDialog(this.dialogSettingsCreate, true);
-    this.webSocketService.createGame();
+  async createGame() {
+    try {
+      await this.webSocketService.connect();
+      this.webSocketService.send({ action: 'create' });
+    } catch (error) {
+      console.error('Failed to connect:', error);
+      // Handle connection error
+    }
   }
 
-  joinGame(): void {
-    this.joining = true;
-    let gameCode = this.gameState.gameCode;
-    this.gameStateService.setGameState({
-      gameCode: gameCode,
-    });
-    if (gameCode && gameCode.length === 4) {
-      this.openDialog(this.dialogSettingsJoin, true);
-      this.webSocketService.joinGame(gameCode.toUpperCase());
+  async joinGame() {
+    if (!this.gameState.gameCode) return;
+
+    try {
+      await this.webSocketService.connect();
+      this.webSocketService.send({
+        action: 'join',
+        gameCode: this.gameState.gameCode,
+      });
+    } catch (error) {
+      console.error('Failed to connect:', error);
+      this.joining = false;
+      this.closeDialog();
+      // Handle connection error
     }
   }
 
   startGame(): void {
-    this.openDialog(this.dialogSettingsStart, true);
-    if (this.gameState.isHost && this.gameCode) {
-      this.webSocketService.startGame(this.gameCode);
+    this.openDialog(DialogSettings.dialogSettingsStart, true);
+    if (this.gameState.isHost && this.gameState.gameCode) {
+      this.webSocketService.startGame(this.gameState.gameCode);
     } else {
       console.error('Cannot start game: not host or no game code');
     }
   }
 
-  leaveLobby() {}
-
   getShareUrl() {
-    return window.location.origin + '/join/' + this.gameCode;
+    return window.location.origin + '/join/' + this.gameState.gameCode;
   }
 
   checkIfHost() {
     this.gameState.players.forEach((player) => {
       if (player.isHost && player.id === this.localPlayerId) {
-        this.isHost = true;
         this.gameStateService.setGameState({
           isHost: true,
         });
@@ -382,65 +313,62 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
     return anyNotReady;
   }
 
-  private updateLobbyUI() {
-    // Create a map of existing players for quick lookup
-    const existingPlayers = new Map(
-      this.players.map((player) => [player.id, player])
-    );
-
-    // Update existing players and add new ones
-    this.gameState.players.forEach((player) => {
-      if (existingPlayers.has(player.id)) {
-        // Update existing player
-        const existingPlayer = existingPlayers.get(player.id)!;
-        if (player.id === this.localPlayerId) {
-          existingPlayer.displayName = this.editingName
-            ? this.editingNameInput
-            : player.displayName;
-          existingPlayer.ready =
-            this.localPlayerReady !== null
-              ? this.localPlayerReady
-              : player.ready;
-          existingPlayer.isHost = player.isHost;
-        } else {
-          Object.assign(existingPlayer, player);
-        }
-        existingPlayers.delete(player.id);
-      } else {
-        // Add new player
-        this.players.push(player);
-      }
-    });
-
-    // Remove players that are no longer in the game state
-    existingPlayers.forEach((player) => {
-      const index = this.players.findIndex((p) => p.id === player.id);
-      if (index !== -1) {
-        this.players.splice(index, 1);
-      }
-    });
-
-    this.gameCode = this.gameState.gameCode;
+  private updateLobbyUI(): void {
+    this.players = [...this.gameState.players];
     this.localPlayerId = this.gameState.localPlayerId!;
     this.gameShareUrl = this.getShareUrl();
-    this.creatingGame = false;
     this.checkIfHost();
-
-    // Schedule a micro-task to focus the input after view updates
-    if (this.editingName) {
-      Promise.resolve().then(() => {
-        this.focusNameInput();
-      });
-    }
-
     this.cdr.detectChanges();
+  }
+
+  private unsubscribeAll() {
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+      this.messageSubscription = null;
+    }
+    if (this.connectionStatusSubscription) {
+      this.connectionStatusSubscription.unsubscribe();
+      this.connectionStatusSubscription = null;
+    }
+  }
+
+  private setupSubscriptions() {
+    this.connectionStatusSubscription = this.webSocketService
+      .getConnectionStatus()
+      .subscribe((status) => {
+        this.connectionStatus = status;
+        if (status === 'disconnected') {
+          this.gameStateService.setGameState({
+            isHost: false,
+          });
+          this.reconnectStarted = true;
+          this.webSocketService.reconnect();
+        }
+      });
+
+    this.messageSubscription = this.webSocketService
+      .getMessages()
+      .subscribe((message) => {
+        this.handleMessage(message);
+      });
+
+    this.gameStateService.getGameState().subscribe((state) => {
+      this.gameState = state;
+      if (state.gameCode) {
+        this.gameShareUrl = this.getShareUrl();
+      }
+      this.cdr.detectChanges();
+    });
   }
 
   private handleMessage(message: any) {
     console.log('Received message in lobby:', message);
     switch (message.type) {
       case 'gameCreated':
+        this.joining = false;
         this.closeDialog();
+        this.reconnectStarted = false;
+        this.location.replaceState('/join/' + message.gameCode);
         this.gameStateService.setGameState({
           gameCode: message.gameCode,
           isHost: true,
@@ -449,10 +377,19 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
             {
               id: message.playerId,
               displayName: message.displayName,
+              playerColor: message.playerColor,
+              playerEmoji: message.playerEmoji,
               isHost: true,
             },
           ],
         });
+        this.webSocketService.setCurrentGame(
+          this.gameState.gameCode!,
+          message.playerId,
+          message.displayName,
+          message.playerColor,
+          message.playerEmoji,
+        );
         this.localPlayerId = message.playerId;
         this.updateLobbyUI();
         break;
@@ -462,12 +399,24 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
           this.closeDialog();
           this.joining = false;
         }
+        if (this.reconnectStarted) {
+          this.closeDialog();
+          this.reconnectStarted = false;
+        }
         this.gameStateService.setGameState({
           players: message.players,
         });
+
         this.updateLobbyUI();
         break;
       case 'selfJoined': //emitted only to the user who joins when they join
+        this.webSocketService.setCurrentGame(
+          this.gameState.gameCode!,
+          message.playerId,
+          message.displayName,
+          message.playerColor,
+          message.playerEmoji,
+        );
         this.gameStateService.setGameState({
           localPlayerId: message.playerId,
         });
@@ -482,7 +431,8 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.router.navigate(['/versus/' + message.gameSeed]);
         break;
       case 'gameEnded':
-        if (this.gameCode) this.webSocketService.getPlayers(this.gameCode);
+        if (this.gameState.gameCode)
+          this.webSocketService.getPlayers(this.gameState.gameCode);
         this.updateLobbyUI();
         break;
       case 'error':
@@ -495,7 +445,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
               showSpinner: false,
               showConfirm: true,
             },
-            false
+            false,
           );
         }
         break;
@@ -503,5 +453,9 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewChecked {
         console.log('Unhandled message type:', message.type);
     }
     this.cdr.detectChanges();
+  }
+
+  simulateDisconnect() {
+    this.webSocketService.manualDisconnect();
   }
 }
