@@ -50,40 +50,36 @@ export class LobbyComponent implements OnInit, OnDestroy {
   @ViewChild('nameInput') nameInputElement!: ElementRef;
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
 
-  private location = inject(Location);
-
   localPlayer!: Player;
   localPlayerId: string = '';
   localPlayerReady: boolean | null = null;
   gameCode: string | null = null;
   gameShareUrl: string = '';
-  joining: boolean = true;
-  editingNameInput: string = '';
-  gameState!: GameState;
-  connectionStatus: string = 'disconnected';
 
+  gameState!: GameState;
   players: Player[] = [];
+
   isShareSupported: boolean = false;
+  isCopied: boolean = false;
 
   private messageSubscription: Subscription | null = null;
   private connectionStatusSubscription: Subscription | null = null;
 
-  readonly dialog = inject(MatDialog);
-  private cdr = inject(ChangeDetectorRef);
-
   displayNameInput: string = '';
   creatingGame: boolean = false;
-  editingName: boolean = false;
-
-  isCopied: boolean = false;
 
   reconnectStarted: boolean = false;
+  connectionStatus: string = 'disconnected';
+  joining: boolean = true;
 
   constructor(
     private webSocketService: WebSocketService,
     private gameStateService: GameStateService,
     private router: Router,
     private route: ActivatedRoute,
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+    private location: Location,
   ) {}
 
   isMobile(): boolean {
@@ -141,11 +137,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       this.gameStateService.clearGameState();
     }
     this.unsubscribeAll();
-  }
-
-  onNameInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.displayNameInput = input.value;
   }
 
   submitName(name: string) {
@@ -322,50 +313,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
     return anyNotReady;
   }
 
-  private updateLobbyUI() {
-    // Create a map of existing players for quick lookup
-    const existingPlayers = new Map(
-      this.players.map((player) => [player.id, player]),
-    );
-
-    // Update existing players and add new ones
-    this.gameState.players.forEach((player) => {
-      if (existingPlayers.has(player.id)) {
-        // Update existing player
-        const existingPlayer = existingPlayers.get(player.id)!;
-        if (player.id === this.localPlayerId) {
-          existingPlayer.displayName = this.editingName
-            ? this.editingNameInput
-            : player.displayName;
-          existingPlayer.ready =
-            this.localPlayerReady !== null
-              ? this.localPlayerReady
-              : player.ready;
-          existingPlayer.isHost = player.isHost;
-        } else {
-          Object.assign(existingPlayer, player);
-        }
-        existingPlayers.delete(player.id);
-      } else {
-        // Add new player
-        this.players.push(player);
-      }
-    });
-
-    // Remove players that are no longer in the game state
-    existingPlayers.forEach((player) => {
-      const index = this.players.findIndex((p) => p.id === player.id);
-      if (index !== -1) {
-        this.players.splice(index, 1);
-      }
-    });
-
-    // this.gameCode = this.gameState.gameCode;
+  private updateLobbyUI(): void {
+    this.players = [...this.gameState.players];
     this.localPlayerId = this.gameState.localPlayerId!;
     this.gameShareUrl = this.getShareUrl();
-    this.creatingGame = false;
     this.checkIfHost();
-
     this.cdr.detectChanges();
   }
 
