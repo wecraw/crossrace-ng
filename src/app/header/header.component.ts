@@ -1,4 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, Renderer2, inject, OnInit } from '@angular/core';
+
+const renderer2 = inject(Renderer2);
+let isDarkMode = false;
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -57,5 +60,14 @@ export class HeaderComponent implements OnInit {
   navigateToVersus() {
     this.webSocketService.clearAndDisconnect();
     this.router.navigate(['/versus-menu']);
+  }
+
+  toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    if (isDarkMode) {
+      renderer2.addClass(document.body, 'dark-mode');
+    } else {
+      renderer2.removeClass(document.body, 'dark-mode');
+    }
   }
 }

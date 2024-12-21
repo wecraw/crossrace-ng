@@ -1,3 +1,4 @@
+@import 'src/styles';
 $grid-cell-size: 30px;
 
 .wrapper {
@@ -39,7 +40,7 @@ h1 {
   gap: 5px;
   width: 150px;
   min-height: 45px;
-  border: 1px solid #ccc;
+  border: 1px solid $border-color;
   padding: 10px;
   // padding: 10px 10px 5px 10px;
   border-radius: 16px;
@@ -106,7 +107,7 @@ h1 {
 .grid-cell {
   width: $grid-cell-size;
   height: $grid-cell-size;
-  border: 1px solid #ccc;
+  border: 1px solid $border-color;
 }
 
 .desc {
@@ -138,7 +139,7 @@ h1 {
   height: 24px;
   width: 24px;
   border-radius: 50%;
-  background-color: #444;
+  background-color: $dark-grey;
   opacity: 0.5;
   position: absolute;
   left: 15px;
@@ -152,7 +153,7 @@ h1 {
 .letter-tile {
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
-  background-color: green;
+  background-color: $correct-color;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -163,7 +164,7 @@ h1 {
 }
 
 .blue {
-  background-color: #3f51b5;
+  background-color: $primary-color;
 }
 
 .fade-in {
@@ -192,7 +193,7 @@ h1 {
   i {
     margin-left: 4px;
     margin-right: 4px;
-    color: #666;
+    color: $medium-grey;
     font-size: 10px;
     margin-top: auto;
     margin-bottom: auto;
