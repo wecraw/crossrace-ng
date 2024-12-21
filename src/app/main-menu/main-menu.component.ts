@@ -7,7 +7,6 @@ import {
 } from '@angular/core';
 import { CdkDrag, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
-import { TimerComponent } from '../timer/timer.component';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
@@ -28,15 +27,7 @@ import { MOCK_WIN } from '../mock/mock-winner';
 @Component({
   selector: 'app-game',
   standalone: true,
-  imports: [
-    CdkDropListGroup,
-    CdkDropList,
-    CdkDrag,
-    CommonModule,
-    TimerComponent,
-    MatDialogModule,
-    ReactiveFormsModule,
-  ],
+  imports: [CommonModule, MatDialogModule, ReactiveFormsModule],
   templateUrl: './main-menu.component.html',
   styleUrls: ['./main-menu.component.scss'],
 })
