@@ -1,9 +1,10 @@
+@import '../../variables';
 $grid-cell-size: 36px;
 
 .tile-wrapper {
   height: 40px;
   width: 40px;
-  border-right: solid 1px #ccc;
+  border-right: solid 1px $border-color;
   border-radius: 6px;
   color: white;
   display: flex;
@@ -14,7 +15,7 @@ $grid-cell-size: 36px;
   justify-content: space-between;
   box-sizing: border-box;
   cursor: move;
-  background: #3f51b5;
+  background: $primary-color;
   font-weight: bold;
 }
 
@@ -49,7 +50,7 @@ $grid-cell-size: 36px;
   gap: 5px;
   width: 287px;
   min-height: 107px;
-  border: 1px solid #ccc;
+  border: 1px solid $border-color;
   padding: 10px;
   // padding: 10px 10px 5px 10px;
   border-radius: 16px;
@@ -88,7 +89,7 @@ $grid-cell-size: 36px;
 
 .formed-words {
   .valid {
-    color: green;
+    color: $correct-color;
   }
 }
 
@@ -106,17 +107,17 @@ $grid-cell-size: 36px;
 }
 
 .grid-cell {
-  background-color: #fff;
+  background-color: $background-color;
   width: $grid-cell-size;
   height: $grid-cell-size;
-  border: 1px solid #ccc;
+  border: 1px solid $border-color;
   display: flex;
   justify-content: center;
   align-items: center;
 
   &.valid-letter {
     .letter-tile {
-      background-color: green !important;
+      background-color: $correct-color !important;
     }
   }
 }
@@ -124,7 +125,7 @@ $grid-cell-size: 36px;
 .letter-tile {
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
-  background-color: #3f51b5;
+  background-color: $primary-color;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -169,17 +170,17 @@ $grid-cell-size: 36px;
 }
 
 .btn-outline-secondary {
-  background-color: #fff;
+  background-color: $background-color;
 
   &:hover {
-    color: #6c757d;
-    background-color: #eee;
+    color: $greyish-blue;
+    background-color: lighten($border-color, 10%);
   }
 }
 
 //hover state for drag and drop
 .drop-list-highlight {
-  background-color: #ccc;
+  background-color: $border-color;
   transition: background-color 0.3s ease;
 }
 
@@ -239,7 +240,7 @@ $grid-cell-size: 36px;
   height: 400px;
   display: flex;
   flex-direction: column;
-  background: #ffffffcc;
+  background: rgba($background-color, 0.8);
   h5 {
     margin-bottom: auto;
   }
@@ -447,7 +448,7 @@ $grid-cell-size: 36px;
 
 .version {
   font-size: 10px;
-  color: #ddd;
+  color: $light-grey;
   bottom: 5px;
   position: absolute;
   right: 10px;

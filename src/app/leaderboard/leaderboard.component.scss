@@ -1,3 +1,4 @@
+@import '../../variables';
 .leaderboard {
   font-family: Arial, sans-serif;
   max-width: 300px;
@@ -7,7 +8,7 @@
 
 h2 {
   text-align: center;
-  color: #333;
+  color: $dark-text;
 }
 
 .player-list {
@@ -17,7 +18,7 @@ h2 {
 }
 
 .player-item {
-  background-color: #f0f0f0;
+  background-color: $light-bg;
   padding: 10px;
   border-radius: 5px;
   display: flex;

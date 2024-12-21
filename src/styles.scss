@@ -1,5 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
 @import "../node_modules/bootstrap/scss/bootstrap";
+@import 'variables';
+
+:root {
+  --background-color: #{$background-color};
+  --text-color: #{$text-color};
+  --primary-button-color: #{$primary-color};
+}
+
+body.dark-mode {
+  --background-color: #222;
+  --text-color: #eee;
+  --primary-button-color: #bb86fc;
+}
 
 // <uniquifier>: Use a unique and descriptive class name
 // <weight>: Use a value from 200 to 700
