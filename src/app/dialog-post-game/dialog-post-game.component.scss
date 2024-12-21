@@ -68,13 +68,13 @@ h4 {
 .grid-cell {
   width: $grid-cell-size;
   height: $grid-cell-size;
-  border: 1px solid #ccc;
+  border: 1px solid $border-color;
 }
 
 .letter-tile {
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
-  background-color: green;
+  background-color: $correct-color;
   display: flex;
   justify-content: center;
   align-items: center;

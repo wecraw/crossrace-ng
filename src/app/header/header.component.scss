@@ -1,7 +1,7 @@
 .letter-tile {
   width: 28px;
   height: 28px;
-  background-color: #3f51b5;
+  background-color: $primary-color;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -24,18 +24,18 @@ h2 {
   top: 0;
 }
 .nav-link {
-  color: black;
+  color: $text-color;
   text-decoration: none;
   cursor: pointer;
   padding: 5px;
   border-radius: 5px;
   &:hover {
-    background-color: #3f51b528;
+    background-color: rgba($primary-color, 0.16);
   }
 }
 .version {
   font-size: 8px;
-  color: #ccc;
+  color: $border-color;
   margin-top: 18px;
   margin-left: 4px;
   margin-right: auto;
@@ -63,7 +63,7 @@ h2 {
   height: 24px;
   margin-top: 5px;
   width: 1px;
-  background-color: #aaa;
+  background-color: $light-border-color;
 }
 
 hr {
