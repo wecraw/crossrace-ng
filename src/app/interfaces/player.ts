@@ -1,6 +1,6 @@
 export interface Player {
   id: string;
-  connectionId: string;
+  connectionId?: string;
   displayName: string;
   ready?: boolean;
   isHost?: boolean;

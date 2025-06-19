@@ -154,39 +154,42 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
     try {
       const response = await this.webSocketService.createGame();
-      // The `create` event now directly returns all the info we need.
-      this.webSocketService.setCurrentGame(
-        response.gameCode,
-        response.playerId,
-      );
+      this.webSocketService.setCurrentGame(response.gameCode);
       this.location.replaceState('/join/' + response.gameCode);
 
+      // Get the player ID from the response, as it's the source of truth
+      const localPlayerId = response.playerId;
+
       this.gameStateService.updateGameState({
+        // Use updateGameState for safety
         gameCode: response.gameCode,
         isHost: true,
-        localPlayerId: response.playerId,
+        localPlayerId: localPlayerId,
         players: [
           {
-            id: response.playerId,
-            connectionId: response.connectionId,
+            // Create the initial player object for the host.
+            // No connectionId is needed here.
+            id: localPlayerId,
             displayName: response.displayName,
             playerColor: response.playerColor,
             playerEmoji: response.playerEmoji,
             isHost: true,
-            ready: false,
-            winCount: 0,
+            ready: false, // Initial state
+            winCount: 0, // Initial state
+            inGame: false, // Initial state
           },
         ],
       });
     } catch (error) {
       console.error('Failed to create game:', error);
-      // Handle error (e.g., show a dialog)
+      // ... error handling
     } finally {
       this.isProcessing = false;
       this.dialog.closeAll();
       this.cdr.detectChanges();
     }
   }
+
   async joinGame(gameCode: string) {
     if (this.isProcessing) return; // Prevent double-calls
 
@@ -199,22 +202,13 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.gameStateService.updateGameState({ gameCode: gameCode });
 
     try {
-      // *** THE FIX IS HERE ***
-      // Check if we already have a player ID from a previous session (e.g., returning from a game).
-      const existingPlayerId = this.gameState.localPlayerId;
-
       // Pass the existing ID to the service. If it's null, the server will generate a new one.
-      const response = await this.webSocketService.joinGame(
-        gameCode,
-        existingPlayerId || undefined,
-      );
+      const response = await this.webSocketService.joinGame(gameCode);
 
-      // The response from a successful join should always be treated as the source of truth
-      // for the player's ID. This handles both new joins and rejoins.
-      const newPlayerId = response.playerId;
-
-      this.webSocketService.setCurrentGame(gameCode, newPlayerId);
-      this.gameStateService.updateGameState({ localPlayerId: newPlayerId });
+      this.webSocketService.setCurrentGame(gameCode); // Only need to set game code
+      this.gameStateService.updateGameState({
+        localPlayerId: response.playerId,
+      });
     } catch (error) {
       // The promise from `joinGame` was rejected.
       console.error('Failed to join game:', error);

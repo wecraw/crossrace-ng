@@ -8,9 +8,14 @@ import { DialogSettings } from './dialog/dialog-settings';
 import { Dialog } from './dialog/dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { GameStateService } from './game-state.service';
+import {
+  CreateGameResponse,
+  JoinGameResponse,
+} from './interfaces/api-responses';
 
 // Import the new library
 import * as SocketIOClient from 'socket.io-client';
+const PLAYER_ID_STORAGE_KEY = 'crossrace_player_id';
 
 @Injectable({
   providedIn: 'root',
@@ -25,7 +30,7 @@ export class WebSocketService implements OnDestroy {
 
   // These state properties are still useful for rejoining
   private currentGameCode: string | null = null;
-  private currentPlayerId: string | null = null;
+  // private currentPlayerId: string | null = null;
 
   readonly dialog = inject(MatDialog);
 
@@ -34,16 +39,21 @@ export class WebSocketService implements OnDestroy {
     window.addEventListener('beforeunload', () => this.disconnect());
   }
 
+  private getPlayerId(): string | null {
+    return localStorage.getItem(PLAYER_ID_STORAGE_KEY);
+  }
+
+  private setPlayerId(id: string): void {
+    localStorage.setItem(PLAYER_ID_STORAGE_KEY, id);
+  }
+
   ngOnDestroy() {
     this.disconnect();
     window.removeEventListener('beforeunload', () => this.disconnect());
   }
 
-  // This method is conceptually the same, just simplified
   clearAndDisconnect() {
     this.currentGameCode = null;
-    this.currentPlayerId = null;
-    this.gameStateService.clearGameState();
     this.disconnect();
   }
 
@@ -132,18 +142,18 @@ export class WebSocketService implements OnDestroy {
 
   // This logic is still useful for re-establishing game state on a fresh connect
   private rejoinGame(): void {
-    if (this.currentGameCode && this.currentPlayerId) {
+    const playerId = this.getPlayerId(); // Get ID from localStorage
+    if (this.currentGameCode && playerId) {
       console.log(
-        `Attempting to rejoin game: ${this.currentGameCode} as player ${this.currentPlayerId}`,
+        `Attempting to rejoin game: ${this.currentGameCode} as player ${playerId}`,
       );
-      this.joinGame(this.currentGameCode, this.currentPlayerId);
+      this.joinGame(this.currentGameCode, playerId);
     }
   }
 
   // Method to store game details for rejoining
-  setCurrentGame(gameCode: string, playerId: string): void {
+  setCurrentGame(gameCode: string): void {
     this.currentGameCode = gameCode;
-    this.currentPlayerId = playerId;
   }
 
   // --- Simplified Emitter Methods ---
@@ -201,12 +211,35 @@ export class WebSocketService implements OnDestroy {
       );
     });
   }
-  createGame(): Promise<any> {
-    return this.emitWithAck('create');
+
+  async createGame(): Promise<CreateGameResponse> {
+    // Here, we tell emitWithAck that we expect the response to match the CreateGameResponse interface.
+    const response = await this.emitWithAck<CreateGameResponse>('create');
+
+    // Now, TypeScript knows `response` has a `.playerId`, `.success`, etc. The error is gone.
+    if (response.success && response.playerId) {
+      this.setPlayerId(response.playerId);
+    }
+    return response;
   }
 
-  joinGame(gameCode: string, playerId?: string): Promise<any> {
-    return this.emitWithAck('join', { gameCode, playerId });
+  async joinGame(
+    gameCode: string,
+    playerId?: string | null,
+  ): Promise<JoinGameResponse> {
+    const finalPlayerId = playerId || this.getPlayerId();
+
+    // Tell emitWithAck we expect a JoinGameResponse.
+    const response = await this.emitWithAck<JoinGameResponse>('join', {
+      gameCode,
+      playerId: finalPlayerId,
+    });
+
+    // TypeScript now knows the shape of `response`. No more error.
+    if (response.success && response.playerId) {
+      this.setPlayerId(response.playerId);
+    }
+    return response;
   }
 
   getPlayers(gameCode: string): void {
