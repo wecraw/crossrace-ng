@@ -1,72 +1,46 @@
 import { Injectable } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
-import { BehaviorSubject, filter, Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { Player } from './interfaces/player';
 
 export interface GameState {
   gameCode: string | null;
-  gameSeed: number | null;
-  isInGame: boolean;
-  isHost: boolean;
-  players: any[]; // Replace 'any' with a proper Player interface if you have one
   localPlayerId: string | null;
-  isCreating: boolean;
-  gameMode: 'endless' | 'daily' | 'versus' | null;
-  lastWinnerId: string;
+  players: Player[];
+  isHost: boolean;
+  isInGame: boolean;
+  gameSeed: number | null;
+  gameMode: 'versus' | 'daily' | 'endless' | null;
+  lastWinnerId: string | null;
 }
+
+const initialState: GameState = {
+  gameCode: null,
+  localPlayerId: null,
+  players: [],
+  isHost: false,
+  isInGame: false,
+  gameSeed: null,
+  gameMode: null,
+  lastWinnerId: null,
+};
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameStateService {
-  private gameState: GameState = {
-    gameCode: null,
-    isInGame: false,
-    isHost: false,
-    players: [],
-    localPlayerId: null,
-    gameSeed: null,
-    isCreating: false,
-    gameMode: null,
-    lastWinnerId: '',
-  };
-
-  constructor(private router: Router) {
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.navigationCount++;
-      });
-  }
-
-  private gameStateSubject = new BehaviorSubject<GameState>(this.gameState);
-
-  setGameState(state: Partial<GameState>) {
-    this.gameState = { ...this.gameState, ...state };
-    this.gameStateSubject.next(this.gameState);
-  }
+  private readonly gameState = new BehaviorSubject<GameState>(initialState);
 
   getGameState(): Observable<GameState> {
-    return this.gameStateSubject.asObservable();
+    return this.gameState.asObservable();
   }
 
-  clearGameState() {
-    this.gameState = {
-      gameCode: null,
-      gameSeed: null,
-      isInGame: false,
-      isHost: false,
-      players: [],
-      localPlayerId: null,
-      isCreating: false,
-      gameMode: null,
-      lastWinnerId: '',
-    };
-    this.gameStateSubject.next(this.gameState);
+  updateGameState(updates: Partial<GameState>): void {
+    const currentState = this.gameState.getValue();
+    const newState = { ...currentState, ...updates };
+    this.gameState.next(newState);
   }
 
-  private navigationCount = 0;
-
-  isFirstNavigation(): boolean {
-    return this.navigationCount === 1;
+  clearGameState(): void {
+    this.gameState.next(initialState);
   }
 }

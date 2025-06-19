@@ -12,7 +12,7 @@ import {
   CdkDragDrop,
   CdkDrag,
   CdkDropList,
-  CdkDropListGroup,
+  // CdkDropListGroup,
   transferArrayItem,
   CdkDragStart,
   CdkDragEnter,
@@ -50,7 +50,7 @@ const DRAG_POSITION_INIT = { x: -237, y: -232 };
   selector: 'app-game',
   standalone: true,
   imports: [
-    CdkDropListGroup,
+    // CdkDropListGroup,
     CdkDropList,
     CdkDrag,
     CommonModule,
@@ -119,10 +119,27 @@ export class GameComponent implements OnInit, OnDestroy {
     private location: Location,
     private gameSeedService: GameSeedService,
   ) {
+    const navigation = this.router.getCurrentNavigation();
+    const navState = navigation?.extras.state as {
+      gameSeed: number;
+      isInGame: boolean;
+      gameMode: 'versus' | 'daily' | 'endless';
+    };
+
+    const updates: Partial<GameState> = {};
+    if (navState?.gameSeed !== undefined) updates.gameSeed = navState.gameSeed;
+    if (navState?.isInGame !== undefined) updates.isInGame = navState.isInGame;
+    if (navState?.gameMode !== undefined) updates.gameMode = navState.gameMode;
+
+    if (Object.keys(updates).length > 0) {
+      this.gameStateService.updateGameState(updates);
+    }
+
     this.validWords = new Set(VALID_WORDS);
   }
 
   ngOnInit(): void {
+    // Subscribe to services first
     this.webSocketService.getConnectionStatus().subscribe((status) => {
       this.connectionStatus = status;
     });
@@ -131,69 +148,94 @@ export class GameComponent implements OnInit, OnDestroy {
       .getMessages()
       .subscribe((message) => this.handleWebSocketMessage(message));
 
-    this.generateGridCellIds();
-
+    // The GameStateService is our single source of truth.
     this.gameStateService.getGameState().subscribe((state) => {
       this.gameState = state;
     });
 
-    this.extractRouteInfo();
+    // Generate grid IDs (doesn't depend on state)
+    this.generateGridCellIds();
 
-    if (this.gameState.gameMode === 'versus' && !this.gameState.isInGame)
-      this.router.navigate(['/']);
+    // *** THE MAIN FIX IS HERE ***
+    // We now initialize the game based on the state we've received.
+    this.initializeGame();
+  }
 
-    if (this.gameState.gameMode === 'daily') {
-      let time = localStorage.getItem('dailyCurrentTime');
-      if (time) {
-        this.timerStartTime = +time;
-      }
+  private initializeGame(): void {
+    // At this point, the constructor has already updated the GameStateService
+    // with data from the router state if it existed.
+
+    // The logic is now simple: what mode are we in?
+    switch (this.gameState.gameMode) {
+      case 'versus':
+        // We are in a multiplayer game. Trust the state and start.
+        if (this.gameState.gameSeed === null || !this.gameState.isInGame) {
+          console.error('Versus mode state is invalid. Navigating home.');
+          this.router.navigate(['/']);
+          return;
+        }
+        this.startAfterCountDown();
+        break;
+
+      case 'daily':
+      case 'endless':
+        // This handles cases where the user navigates directly to a URL.
+        // Let's create a separate helper for this to keep it clean.
+        this.initializeFromUrl();
+        break;
+
+      default:
+        // If we don't have a game mode, something is wrong.
+        console.error('No game mode specified. Checking URL as a fallback.');
+        // Fallback to the URL-based initialization
+        this.initializeFromUrl();
+    }
+  }
+
+  private initializeFromUrl(): void {
+    const seedParam = this.route.snapshot.paramMap.get('gameSeed');
+
+    if (this.route.snapshot.url[0]?.path === 'daily' || seedParam === 'daily') {
+      this.gameStateService.updateGameState({ gameMode: 'daily' });
+      const today = new Date();
+      const dailySeed =
+        (today.getFullYear() * 1000 + today.getMonth() * 50 + today.getDate()) %
+        PUZZLES.length;
+      this.gameStateService.updateGameState({ gameSeed: dailySeed });
+      this.startAfterCountDown();
+      return;
     }
 
-    this.startAfterCountDown();
-  }
-
-  private extractRouteInfo() {
-    // Get the seed from the current route
-    this.route.paramMap.subscribe((params) => {
-      const seedParam = params.get('gameSeed');
-
-      if (seedParam) {
-        if (seedParam === 'daily') {
-          this.gameStateService.setGameState({
-            gameMode: 'daily',
-          });
-          this.gameSeed = this.gameSeedService.getDailySeed();
-          return;
-        } else {
-          // Seeded endless mode
-          if (this.gameState.gameMode !== 'versus') {
-            this.gameStateService.setGameState({
-              gameMode: 'endless',
-            });
-          }
-        }
-
-        const seedNumber = Number(seedParam);
-
-        if (!isNaN(seedNumber) && seedNumber >= 0 && seedNumber <= 3650) {
-          this.gameSeed = seedNumber;
-        } else {
-          console.error('Invalid seed value. Redirecting to home.');
-          this.router.navigate(['/']);
-        }
+    if (seedParam) {
+      const seedNumber = Number(seedParam);
+      if (
+        !isNaN(seedNumber) &&
+        seedNumber >= 0 &&
+        seedNumber < PUZZLES.length
+      ) {
+        this.gameStateService.updateGameState({
+          gameMode: 'endless',
+          gameSeed: seedNumber,
+        });
+        this.startAfterCountDown();
       } else {
-        // non-seeded endless mode
-        if (this.gameState.gameMode !== 'versus') {
-          this.gameStateService.setGameState({
-            gameMode: 'endless',
-          });
-        }
+        console.error('Invalid challenge seed in URL. Navigating home.'); // This error is now only for this specific case
+        this.router.navigate(['/']);
       }
-    });
+    } else {
+      // Default to a non-seeded endless game if no params are present
+      this.gameStateService.updateGameState({
+        gameMode: 'endless',
+        gameSeed: this.getRandomPuzzleSeed(),
+      });
+      this.startAfterCountDown();
+    }
   }
+
   ngAfterViewInit() {
     requestAnimationFrame(() => this.prepareGrid());
   }
+
   prepareGrid() {
     // Simulate some preparation time
     setTimeout(() => {
@@ -203,9 +245,12 @@ export class GameComponent implements OnInit, OnDestroy {
       // Perform any necessary grid setup here
     }, 0);
   }
+
   ngOnDestroy(): void {
-    this.gameStateService.setGameState({
-      gameSeed: null,
+    // It's good practice to only clear the 'in-game' part of the state here,
+    // not the whole gameSeed, as the lobby might need it.
+    this.gameStateService.updateGameState({
+      isInGame: false,
     });
     this.removeTouchEventHandling();
     if (this.wsSubscription) {
@@ -236,22 +281,22 @@ export class GameComponent implements OnInit, OnDestroy {
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
-    this.initializeGrid();
+    this.initializeGrid(); // Sets up empty grid array
     this.initializeValidLetterIndices();
-    if (!this.gameSeed) {
-      this.gameSeed = this.getRandomPuzzleSeed();
+
+    // *** Always get the seed from the GameState ***
+    if (this.gameState.gameSeed === null) {
+      console.error('Cannot start puzzle, game seed is null!');
+      return;
     }
+
     if (this.gameState.gameMode === 'daily') {
-      // Update the URL to reflect daily, for easier sharing
       this.location.replaceState('/daily');
+    } else if (this.gameState.gameMode === 'endless') {
+      this.location.replaceState('/challenge/' + this.gameState.gameSeed);
     }
-    if (this.gameState.gameMode !== 'versus') {
-      if (this.gameState.gameMode === 'daily') {
-        this.location.replaceState('/daily');
-      } else {
-        this.location.replaceState('/challenge/' + this.gameSeed);
-      }
-    }
+    // For 'versus', the URL is already correct from the lobby.
+
     this.setLettersFromPuzzle();
 
     this.startCountdown(() => {
@@ -262,15 +307,11 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   handleWebSocketMessage(message: any): void {
-    console.log(message);
     switch (message.type) {
-      case 'gameStarted':
-        this.startAfterCountDown();
-        break;
       case 'gameEnded':
         this.isGameOver = true;
-        this.isWinner = message.isWinner;
-        this.gameStateService.setGameState({
+        this.isWinner = message.winner === this.gameState.localPlayerId; // More reliable check
+        this.gameStateService.updateGameState({
           players: message.players,
           lastWinnerId: message.winner,
         });
@@ -306,23 +347,32 @@ export class GameComponent implements OnInit, OnDestroy {
     this.shuffleLetters();
   }
 
+  // setLettersFromPuzzle() {
+  //   if (this.gameSeed) this.bankLetters = [...PUZZLES[this.gameSeed].letters];
+  //   // if (this.gameSeed)
+  //   //   this.bankLetters = [
+  //   //     'T',
+  //   //     'S',
+  //   //     'E',
+  //   //     'N',
+  //   //     'O',
+  //   //     'P',
+  //   //     'Y',
+  //   //     'H',
+  //   //     'C',
+  //   //     'L',
+  //   //     'F',
+  //   //     'I',
+  //   //   ];
+  // }
+
   setLettersFromPuzzle() {
-    if (this.gameSeed) this.bankLetters = [...PUZZLES[this.gameSeed].letters];
-    // if (this.gameSeed)
-    //   this.bankLetters = [
-    //     'T',
-    //     'S',
-    //     'E',
-    //     'N',
-    //     'O',
-    //     'P',
-    //     'Y',
-    //     'H',
-    //     'C',
-    //     'L',
-    //     'F',
-    //     'I',
-    //   ];
+    // *** CHANGE: Always get the seed from the GameState ***
+    if (this.gameState.gameSeed !== null) {
+      this.bankLetters = [...PUZZLES[this.gameState.gameSeed].letters];
+    } else {
+      console.error('Cannot set letters, game seed is missing from state!');
+    }
   }
 
   shuffleLetters() {
@@ -420,7 +470,7 @@ export class GameComponent implements OnInit, OnDestroy {
   generateShareLink() {
     if (this.gameState.gameMode === 'daily')
       return window.location.origin + '/daily';
-    return window.location.origin + '/challenge/' + this.gameSeed;
+    return window.location.origin + '/challenge/' + this.gameState.gameSeed;
   }
 
   private allWordsAreValid(): boolean {

@@ -41,7 +41,7 @@ export class HeaderComponent implements OnInit {
       this.location.replaceState('/endless'); //route is replaced in game component, but this.router.url still registers as endless, so need to replace again then reload
       window.location.reload();
     } else {
-      this.gameStateService.setGameState({ gameMode: 'endless' });
+      this.gameStateService.updateGameState({ gameMode: 'endless' });
       this.router.navigate(['/endless']);
     }
   }
@@ -49,7 +49,7 @@ export class HeaderComponent implements OnInit {
   navigateToDaily() {
     this.webSocketService.clearAndDisconnect();
     if (this.location.path() !== '/daily') {
-      this.gameStateService.setGameState({ gameMode: 'daily' });
+      this.gameStateService.updateGameState({ gameMode: 'daily' });
       this.router.navigate(['/daily']);
     }
   }

@@ -1,19 +1,18 @@
 <div class="container d-flex flex-column">
   <div class="row flex-grow-1 overflow-hidden">
     <div class="col-12 col-lg-6 offset-lg-3 d-flex flex-column h-100">
-      <div class="flex-shrink-0">
-        @if (gameState.gameCode && showUI()) {
+      <!-- CHANGE: Replaced showUI() with a direct check on gameState.gameCode -->
+      @if (gameState.gameCode) {
+        <div class="flex-shrink-0">
           <div class="room-code-label flex-fixed">Room Code:</div>
-
           <div class="d-flex room-code-row noselect flex-fixed">
             <div
               class="room-code-container m-lr-auto d-flex"
               #copiedTooltip="matTooltip"
               matTooltip="Copied!"
-              (mouseenter)="$event.stopImmediatePropagation()"
-              (mouseleave)="$event.stopImmediatePropagation()"
             >
               <div class="d-flex code-wrapper" (click)="copyOrShare()">
+                <!-- No change needed here, this is good -->
                 @for (letter of gameState.gameCode.split(""); track $index) {
                   <div class="tile-wrapper">
                     <div class="letter m-lr-auto">{{ letter }}</div>
@@ -21,6 +20,7 @@
                 }
               </div>
               <div class="copy-share-icon" (click)="copyOrShare()">
+                <!-- No change needed here, this is good -->
                 <i
                   *ngIf="!isShareSupported"
                   class="copy-icon"
@@ -39,61 +39,67 @@
             </div>
           </div>
           <div class="self flex-fixed">
-            @for (player of players; track $index) {
+            <!-- This is the standard and correct way to find and display the local player -->
+            @for (player of gameState.players; track player.id) {
               @if (isPlayerSelf(player)) {
                 <player-card
                   [player]="player"
                   [allowEdit]="true"
-                  [playerIndex]="$index"
-                  [lastWinnerId]="gameState.lastWinnerId"
-                  (onNameEdit)="submitName($event)"
+                  [lastWinnerId]="gameState.lastWinnerId || ''"
+                  (onNameEdit)="updatePlayer({ displayName: $event })"
+                  (onColorSelect)="updatePlayer({ playerColor: $event })"
+                  (onEmojiSelect)="updatePlayer({ playerEmoji: $event })"
                   (onReadyUp)="readyUp()"
-                  (onColorSelect)="selectColor($event)"
-                  (onEmojiSelect)="selectEmoji($event)"
                 ></player-card>
               }
             }
           </div>
-        }
-      </div>
-      <div class="flex-grow-1 overflow-auto" *ngIf="showUI()">
-        @if (players.length < 2) {
-          <div class="waiting-for-players">Waiting for players....</div>
-        }
-        <div class="player-grid">
-          @for (player of players; track $index) {
-            @if (!isPlayerSelf(player)) {
-              <player-card
-                [player]="player"
-                [playerIndex]="$index"
-                [lastWinnerId]="gameState.lastWinnerId"
-              >
-              </player-card>
-            }
-          }
-          <div class="fade-overlay"></div>
         </div>
-      </div>
+        <div class="flex-grow-1 overflow-auto">
+          <!-- CHANGE: Accessing gameState.players directly -->
+          @if (gameState.players.length < 2) {
+            <div class="waiting-for-players">Waiting for players....</div>
+          }
+          <div class="player-grid">
+            <!-- CHANGE: Accessing gameState.players directly -->
+            @for (player of gameState.players; track player.id) {
+              @if (!isPlayerSelf(player)) {
+                <player-card
+                  [player]="player"
+                  [lastWinnerId]="gameState.lastWinnerId || ''"
+                >
+                </player-card>
+              }
+            }
+            <div class="fade-overlay"></div>
+          </div>
+        </div>
+      }
     </div>
   </div>
 </div>
-<div class="button-row" *ngIf="showUI()">
-  <button
-    class="btn btn-lg btn-primary mt-4 flex-fixed small"
-    color="primary"
-    *ngIf="gameState.isHost"
-    (click)="startGame()"
-    [disabled]="anyNotReady() || players.length < 2"
-    [ngClass]="{
-      'shimmering-start-button': !anyNotReady() && players.length > 1,
-    }"
-  >
-    Start Game
-  </button>
-  <button
-    class="btn btn-lg btn-outline-secondary mt-4 flex-fixed small"
-    (click)="openTutorialDialog({ mode: 'versus' })"
-  >
-    How to Play
-  </button>
-</div>
+
+<!-- CHANGE: Replaced showUI() with a direct check on gameState.gameCode -->
+@if (gameState.gameCode) {
+  <div class="button-row">
+    <button
+      class="btn btn-lg btn-primary mt-4 flex-fixed small"
+      color="primary"
+      *ngIf="gameState.isHost"
+      (click)="startGame()"
+      [disabled]="anyNotReady() || gameState.players.length < 2"
+      [ngClass]="{
+        'shimmering-start-button':
+          !anyNotReady() && gameState.players.length > 1,
+      }"
+    >
+      Start Game
+    </button>
+    <button
+      class="btn btn-lg btn-outline-secondary mt-4 flex-fixed small"
+      (click)="openTutorialDialog({ mode: 'versus' })"
+    >
+      How to Play
+    </button>
+  </div>
+}

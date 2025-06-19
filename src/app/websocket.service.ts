@@ -1,4 +1,6 @@
-import { inject, Injectable } from '@angular/core';
+// src/app/websocket.service.ts
+
+import { inject, Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { environment } from '../environments/environment';
@@ -7,200 +9,238 @@ import { Dialog } from './dialog/dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { GameStateService } from './game-state.service';
 
+// Import the new library
+import * as SocketIOClient from 'socket.io-client';
+
 @Injectable({
   providedIn: 'root',
 })
-export class WebSocketService {
-  private socket: WebSocket | null = null;
-  private messageSubject = new Subject<any>();
-  private connectionStatus = new BehaviorSubject<string>('initializing');
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectInterval = 1000;
-  private connectionPromise: Promise<void> | null = null;
-  private connectionTimeout: number | undefined;
+export class WebSocketService implements OnDestroy {
+  // Use the Socket.IO Socket type
+  private socket: SocketIOClient.Socket | null = null;
 
+  // We can keep these as they are, they're for internal app logic
+  private messageSubject = new Subject<any>();
+  private connectionStatus = new BehaviorSubject<string>('disconnected');
+
+  // These state properties are still useful for rejoining
   private currentGameCode: string | null = null;
   private currentPlayerId: string | null = null;
-  private currentPlayerDisplayName: string | null = null;
-  private currentPlayerColor: string | null = null;
-  private currentPlayerEmoji: string | null = null;
-  navigating: boolean = false;
 
   readonly dialog = inject(MatDialog);
 
   constructor(private gameStateService: GameStateService) {
-    window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
+    this.connect(); // Connect immediately on service instantiation
+    window.addEventListener('beforeunload', () => this.disconnect());
   }
 
   ngOnDestroy() {
     this.disconnect();
-    window.removeEventListener('beforeunload', this.handleBeforeUnload);
+    window.removeEventListener('beforeunload', () => this.disconnect());
   }
 
-  private handleBeforeUnload(event: BeforeUnloadEvent) {
-    this.disconnect();
-  }
-
+  // This method is conceptually the same, just simplified
   clearAndDisconnect() {
-    this.navigating = true;
     this.currentGameCode = null;
     this.currentPlayerId = null;
-    this.currentPlayerDisplayName = null;
-    this.currentPlayerColor = null;
-    this.currentPlayerEmoji = null;
     this.gameStateService.clearGameState();
     this.disconnect();
   }
 
-  private clearConnectionTimeout(): void {
-    if (this.connectionTimeout !== undefined) {
-      clearTimeout(this.connectionTimeout);
-      this.connectionTimeout = undefined;
+  // --- New Connection Logic with Socket.IO ---
+  private connect(): void {
+    if (this.socket) {
+      // If a socket exists, don't create a new one. Let Socket.IO handle it.
+      return;
     }
+
+    // Connect to the server. Socket.IO will automatically handle reconnection.
+    this.socket = SocketIOClient.default(environment.serverUrl, {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    });
+
+    // --- Socket.IO Event Listeners ---
+
+    this.socket.on('connect', () => {
+      console.log('Connected to server with socket ID:', this.socket!.id);
+      this.connectionStatus.next('connected');
+
+      // If we were in a game, attempt to rejoin
+      this.rejoinGame();
+    });
+
+    this.socket.on('disconnect', (reason: string) => {
+      console.log('Disconnected from server. Reason:', reason);
+      this.connectionStatus.next('disconnected');
+      if (reason === 'io server disconnect') {
+        // The server intentionally disconnected the socket.
+        // We won't try to reconnect.
+        this.socket?.connect();
+      }
+      // Otherwise, the client will automatically try to reconnect.
+    });
+
+    this.socket.on('connect_error', (error: any) => {
+      console.error('Connection Error:', error);
+      this.connectionStatus.next('error');
+    });
+
+    this.socket.on('reconnect_attempt', (attempt: any) => {
+      console.log(`Reconnect attempt #${attempt}`);
+      this.connectionStatus.next('reconnecting');
+      // You can still show a dialog if you want
+      this.openReconnectDialog();
+    });
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('Failed to reconnect to the server.');
+      this.connectionStatus.next('failed');
+    });
+
+    // --- Unified Game Event Listener ---
+    // All game-related messages will come through this single event.
+    // The data object itself will contain the 'type' to distinguish them.
+    this.socket.on('message', (data: { type: string; [key: string]: any }) => {
+      this.messageSubject.next(data);
+    });
+
+    // A listener for errors from the server
+    this.socket.on('error', (data: any) =>
+      this.messageSubject.next({ type: 'error', ...data }),
+    );
   }
 
-  // New method to set current game information
-  setCurrentGame(
-    gameCode: string,
-    playerId: string,
-    displayName: string,
-    playerColor: string,
-    playerEmoji: string,
-  ): void {
-    this.currentGameCode = gameCode;
-    this.currentPlayerId = playerId;
-    this.currentPlayerDisplayName = displayName;
-    this.currentPlayerColor = playerColor;
-    this.currentPlayerEmoji = playerEmoji;
-  }
-
-  updateCurrentPlayerDisplayName(displayName: string): void {
-    this.currentPlayerDisplayName = displayName;
-  }
-
-  updateCurrentPlayerColor(playerColor: string): void {
-    this.currentPlayerColor = playerColor;
-  }
-
-  updateCurrentPlayerEmoji(playerEmoji: string): void {
-    this.currentPlayerEmoji = playerEmoji;
-  }
-
-  private rejoinGame(): void {
-    if (this.currentGameCode && this.currentPlayerId) {
-      console.log(`Attempting to rejoin game: ${this.currentGameCode}`);
-      this.send({
-        action: 'join',
-        gameCode: this.currentGameCode,
-        playerId: this.currentPlayerId,
-        displayName: this.currentPlayerDisplayName,
-        playerColor: this.currentPlayerColor,
-        playerEmoji: this.currentPlayerEmoji,
-      });
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.connectionStatus.next('disconnected');
     }
   }
 
   openReconnectDialog() {
+    // This logic can remain the same
     const dialogRef = this.dialog.open(Dialog, {
       data: DialogSettings.dialogSettingsReconnecting,
       disableClose: true,
     });
   }
 
-  connect(): Promise<void> {
-    this.navigating = false;
-    if (this.connectionPromise) {
-      return this.connectionPromise;
+  // This logic is still useful for re-establishing game state on a fresh connect
+  private rejoinGame(): void {
+    if (this.currentGameCode && this.currentPlayerId) {
+      console.log(
+        `Attempting to rejoin game: ${this.currentGameCode} as player ${this.currentPlayerId}`,
+      );
+      this.joinGame(this.currentGameCode, this.currentPlayerId);
+    }
+  }
+
+  // Method to store game details for rejoining
+  setCurrentGame(gameCode: string, playerId: string): void {
+    this.currentGameCode = gameCode;
+    this.currentPlayerId = playerId;
+  }
+
+  // --- Simplified Emitter Methods ---
+  // We now use `socket.emit` and get responses via callbacks, which is cleaner than send/receive.
+
+  private async emitWithAck<T>(event: string, ...args: any[]): Promise<T> {
+    if (!this.socket) {
+      return Promise.reject('Socket service has not been initialized.');
     }
 
-    this.connectionPromise = new Promise((resolve, reject) => {
-      if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-        resolve();
-        return;
-      }
+    if (!this.socket.connected) {
+      console.log(
+        `Socket not connected. Waiting for connection before emitting '${event}'...`,
+      );
 
-      this.socket = new WebSocket(`${environment.apiGatewayUrl}`);
+      // The socket will automatically try to connect when it's created or when a listener
+      // is added. We just need to wait for the 'connect' event.
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          // Clean up the listener on timeout
+          this.socket!.off('connect', resolve);
+          reject('Connection timeout while waiting to emit event.');
+        }, 15000);
 
-      this.connectionTimeout = window.setTimeout(() => {
-        console.log('Connection attempt timed out');
-        this.socket?.close();
-        reject(new Error('Connection timeout'));
-      }, 10000); // 10 seconds timeout
+        // We use .once() so it's a one-time listener.
+        this.socket!.once('connect', () => {
+          clearTimeout(timeout);
+          console.log(`Socket connected! Proceeding with emit for '${event}'.`);
+          resolve();
+        });
+      });
+    }
 
-      this.socket.onopen = () => {
-        this.clearConnectionTimeout();
-        this.connectionStatus.next('connected');
-        this.reconnectAttempts = 0;
-        this.connectionPromise = null;
-        resolve();
-        this.rejoinGame(); // Attempt to rejoin the game after successful connection
-      };
+    // At this point, we are connected.
+    return new Promise<T>((resolve, reject) => {
+      // We add a timeout for the server's acknowledgement as well.
+      const ackTimeout = setTimeout(() => {
+        reject(`Server acknowledgement timeout for event '${event}'.`);
+      }, 10000); // 10-second timeout for the server to reply
 
-      this.socket.onclose = (event) => {
-        this.clearConnectionTimeout();
-        console.log('WebSocket connection closed', event);
-        this.connectionStatus.next('disconnected');
-        this.connectionPromise = null;
-        if (!event.wasClean) {
-          this.attemptReconnect();
-        }
-      };
-
-      this.socket.onerror = (error) => {
-        clearTimeout(this.connectionTimeout);
-        console.error('WebSocket error:', error);
-        this.connectionStatus.next('error');
-        this.connectionPromise = null;
-        reject(error);
-        this.attemptReconnect();
-      };
-
-      this.socket.onmessage = (event) => {
-        this.messageSubject.next(JSON.parse(event.data));
-      };
+      this.socket!.emit(
+        event,
+        ...args,
+        (response: { success: boolean; message?: string } & T) => {
+          clearTimeout(ackTimeout); // Server replied, clear the timeout.
+          if (response && response.success) {
+            resolve(response);
+          } else {
+            reject(
+              response?.message ||
+                `Event '${event}' failed with an unknown error.`,
+            );
+          }
+        },
+      );
     });
-
-    return this.connectionPromise;
+  }
+  createGame(): Promise<any> {
+    return this.emitWithAck('create');
   }
 
-  disconnect(): void {
-    if (this.socket) {
-      this.send({ action: 'disconnect' });
-      this.socket.close(1000, 'User disconnected');
-      this.socket = null;
-      this.connectionStatus.next('disconnected');
-      this.connectionPromise = null;
-    }
+  joinGame(gameCode: string, playerId?: string): Promise<any> {
+    return this.emitWithAck('join', { gameCode, playerId });
   }
 
-  private attemptReconnect(): void {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      this.connectionStatus.next('reconnecting');
-      setTimeout(() => {
-        this.connect().catch(console.error);
-      }, this.getReconnectDelay());
+  getPlayers(gameCode: string): void {
+    // This event doesn't need an acknowledgement, it just triggers a `playerList` event
+    this.socket?.emit('getPlayers', { gameCode });
+  }
+
+  updatePlayer(gameCode: string, playerId: string, updates: any): Promise<any> {
+    return this.emitWithAck('updatePlayer', { gameCode, playerId, updates });
+  }
+
+  readyUp(gameCode: string, playerId: string): void {
+    this.socket?.emit('playerReady', { gameCode, playerId });
+  }
+
+  startGame(gameCode: string): void {
+    this.socket?.emit('startGame', { gameCode });
+  }
+
+  announceWin(playerId: string, condensedGrid: string[][], time: string): void {
+    // Assuming gameCode is available in the component calling this
+    if (this.currentGameCode) {
+      this.socket?.emit('win', {
+        gameCode: this.currentGameCode,
+        playerId,
+        condensedGrid,
+        time,
+      });
     } else {
-      this.connectionStatus.next('failed');
+      console.error('Cannot announce win: no game code available.');
     }
   }
 
-  private getReconnectDelay(): number {
-    const baseDelay =
-      this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1);
-    const jitter = Math.random() * 1000; // Add up to 1 second of jitter
-    return Math.min(baseDelay + jitter, 30000); // Cap at 30 seconds
-  }
-
-  public reconnect(): void {
-    if (!this.navigating) {
-      this.openReconnectDialog();
-      this.disconnect();
-      this.reconnectAttempts = 0;
-      this.attemptReconnect();
-    }
-  }
+  // --- Observable Getters (these can largely stay the same) ---
 
   getConnectionStatus(): Observable<string> {
     return this.connectionStatus.asObservable();
@@ -212,84 +252,7 @@ export class WebSocketService {
       .pipe(map((status) => status === 'connected'));
   }
 
-  waitForConnection(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      this.connectionStatus
-        .pipe(
-          filter((status) => status === 'connected'),
-          take(1),
-        )
-        .subscribe(() => resolve());
-    });
-  }
-
-  send(message: any): void {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      try {
-        this.socket.send(JSON.stringify(message));
-      } catch (error) {
-        console.error('Error sending message:', error);
-      }
-    } else {
-      console.error('WebSocket is not open. Message not sent:', message);
-    }
-  }
-
   getMessages(): Observable<any> {
     return this.messageSubject.asObservable();
-  }
-
-  startGame(gameCode: string): void {
-    this.send({ action: 'startGame', gameCode });
-  }
-
-  updateDisplayName(
-    gameCode: string,
-    playerId: string,
-    displayName: string,
-  ): void {
-    this.send({ action: 'updateDisplayName', gameCode, displayName, playerId });
-  }
-
-  updatePlayerColor(
-    gameCode: string,
-    playerId: string,
-    playerColor: string,
-  ): void {
-    this.send({ action: 'updatePlayerColor', gameCode, playerColor, playerId });
-  }
-
-  updatePlayerEmoji(
-    gameCode: string,
-    playerId: string,
-    playerEmoji: string,
-  ): void {
-    this.send({ action: 'updatePlayerEmoji', gameCode, playerEmoji, playerId });
-  }
-
-  createGame(): void {
-    this.send({ action: 'create' });
-  }
-
-  joinGame(gameCode: string): void {
-    this.send({ action: 'join', gameCode });
-  }
-
-  getPlayers(gameCode: string): void {
-    this.send({ action: 'getPlayers', gameCode });
-  }
-
-  readyUp(gameCode: string, playerId: string): void {
-    this.send({ action: 'playerReady', gameCode, playerId });
-  }
-
-  announceWin(playerId: string, condensedGrid: string[][], time: string): void {
-    this.send({ action: 'win', playerId, condensedGrid, time });
-  }
-
-  manualDisconnect(): void {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.close();
-    }
   }
 }
