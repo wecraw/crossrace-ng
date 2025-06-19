@@ -1,5 +1,4 @@
 export const environment = {
   production: true,
-  apiGatewayUrl:
-    'wss://win87ulcs7.execute-api.us-west-2.amazonaws.com/production/',
+  serverUrl: 'https://crossrace-server-953048050004.us-west1.run.app',
 };
