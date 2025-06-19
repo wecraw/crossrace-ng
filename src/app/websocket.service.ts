@@ -127,8 +127,6 @@ export class WebSocketService implements OnDestroy {
   disconnect(): void {
     if (this.socket) {
       this.socket.disconnect();
-      this.socket = null;
-      this.connectionStatus.next('disconnected');
     }
   }
 
@@ -160,25 +158,28 @@ export class WebSocketService implements OnDestroy {
   // We now use `socket.emit` and get responses via callbacks, which is cleaner than send/receive.
 
   private async emitWithAck<T>(event: string, ...args: any[]): Promise<T> {
+    // This check remains valid.
     if (!this.socket) {
       return Promise.reject('Socket service has not been initialized.');
     }
 
+    // If we're not connected, we need to connect and wait.
     if (!this.socket.connected) {
       console.log(
         `Socket not connected. Waiting for connection before emitting '${event}'...`,
       );
 
-      // The socket will automatically try to connect when it's created or when a listener
-      // is added. We just need to wait for the 'connect' event.
+      // THE FIX: Simply call .connect(). The library will handle the state.
+      // If it's already trying to connect, this call is safely ignored.
+      // If it's disconnected, this will start the connection process.
+      this.socket.connect();
+
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          // Clean up the listener on timeout
           this.socket!.off('connect', resolve);
           reject('Connection timeout while waiting to emit event.');
         }, 15000);
 
-        // We use .once() so it's a one-time listener.
         this.socket!.once('connect', () => {
           clearTimeout(timeout);
           console.log(`Socket connected! Proceeding with emit for '${event}'.`);
@@ -187,18 +188,17 @@ export class WebSocketService implements OnDestroy {
       });
     }
 
-    // At this point, we are connected.
+    // At this point, we are guaranteed to be connected.
     return new Promise<T>((resolve, reject) => {
-      // We add a timeout for the server's acknowledgement as well.
       const ackTimeout = setTimeout(() => {
         reject(`Server acknowledgement timeout for event '${event}'.`);
-      }, 10000); // 10-second timeout for the server to reply
+      }, 10000);
 
       this.socket!.emit(
         event,
         ...args,
         (response: { success: boolean; message?: string } & T) => {
-          clearTimeout(ackTimeout); // Server replied, clear the timeout.
+          clearTimeout(ackTimeout);
           if (response && response.success) {
             resolve(response);
           } else {
