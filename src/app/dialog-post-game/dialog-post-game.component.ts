@@ -10,14 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import {
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogRef,
-  MatDialogTitle,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -31,10 +24,6 @@ import { interval, Subscription } from 'rxjs';
   standalone: true,
   imports: [
     MatButtonModule,
-    MatDialogActions,
-    MatDialogClose,
-    MatDialogTitle,
-    MatDialogContent,
     MatProgressSpinnerModule,
     CommonModule,
     MatTooltipModule,

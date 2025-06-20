@@ -75,15 +75,7 @@ const descriptionsVersus = [
   templateUrl: 'dialog-tutorial.component.html',
   styleUrls: ['./dialog-tutorial.component.scss'],
   standalone: true,
-  imports: [
-    MatButtonModule,
-    MatDialogActions,
-    MatDialogClose,
-    MatDialogTitle,
-    MatDialogContent,
-    MatProgressSpinnerModule,
-    CommonModule,
-  ],
+  imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DialogTutorial implements OnInit, AfterViewInit {
@@ -105,7 +97,7 @@ export class DialogTutorial implements OnInit, AfterViewInit {
       grid: string[][];
     },
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
   ) {}
 
   readonly dialogRef = inject(MatDialogRef<DialogTutorial>);

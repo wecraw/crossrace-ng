@@ -16,12 +16,7 @@ import {
   animate,
   transition,
 } from '@angular/animations';
-import {
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 
 import { interval, Subscription } from 'rxjs';
@@ -33,13 +28,7 @@ import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
   templateUrl: 'dialog-post-game-mp.component.html',
   styleUrls: ['./dialog-post-game-mp.component.scss'],
   standalone: true,
-  imports: [
-    MatDialogActions,
-    MatDialogClose,
-    CommonModule,
-    MatTooltipModule,
-    LeaderboardComponent,
-  ],
+  imports: [CommonModule, MatTooltipModule, LeaderboardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('slideContent', [

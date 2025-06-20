@@ -12,7 +12,6 @@ import {
   CdkDragDrop,
   CdkDrag,
   CdkDropList,
-  // CdkDropListGroup,
   transferArrayItem,
   CdkDragStart,
   CdkDragEnter,
@@ -50,7 +49,6 @@ const DRAG_POSITION_INIT = { x: -237, y: -232 };
   selector: 'app-game',
   standalone: true,
   imports: [
-    // CdkDropListGroup,
     CdkDropList,
     CdkDrag,
     CommonModule,
