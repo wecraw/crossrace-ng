@@ -1,3 +1,4 @@
+// lobby.component.ts
 import {
   Component,
   OnInit,
@@ -69,6 +70,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private location: Location,
   ) {}
+
+  get connectedPlayers(): Player[] {
+    if (!this.gameState?.players) {
+      return [];
+    }
+    // This filters out disconnected players for the UI.
+    return this.gameState.players.filter((p) => !p.disconnected);
+  }
 
   isMobile(): boolean {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -245,7 +254,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   anyNotReady(): boolean {
-    return this.gameState.players.some((player) => !player.ready);
+    return this.connectedPlayers.some((player) => !player.ready);
   }
 
   private handleRouteParameters(): void {
