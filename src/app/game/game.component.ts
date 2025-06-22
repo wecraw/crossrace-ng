@@ -191,43 +191,54 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private initializeFromUrl(): void {
-    const seedParam = this.route.snapshot.paramMap.get('gameSeed');
-
-    if (this.route.snapshot.url[0]?.path === 'daily' || seedParam === 'daily') {
+    if (this.route.snapshot.url[0]?.path === 'daily') {
       this.gameStateService.updateGameState({ gameMode: 'daily' });
-      const today = new Date();
-      const dailySeed =
-        (today.getFullYear() * 1000 + today.getMonth() * 50 + today.getDate()) %
-        PUZZLES.length;
+
+      const dailySeed = this.gameSeedService.getDailySeed();
+      const storageSeed = localStorage.getItem('dailySeed');
+
+      // Check if it's the same daily challenge
+      if (storageSeed && +storageSeed === dailySeed) {
+        const finishedDaily = localStorage.getItem('finishedDaily');
+
+        if (finishedDaily === 'true') {
+          // Daily already completed, show post-game dialog
+          const finalTime = localStorage.getItem('finalTime');
+          const finalGrid = localStorage.getItem('finalGrid');
+
+          if (finalTime && finalGrid) {
+            this.isGridReady = true; // Prevent getting stuck on a loading state
+            this.openDialog({
+              time: finalTime,
+              grid: JSON.parse(finalGrid),
+              winnerDisplayName: 'You',
+              daily: true,
+              singlePlayer: true,
+              shareLink: this.generateShareLink(),
+            });
+          }
+          // Do not start the game
+          return;
+        } else {
+          // This is a daily game in progress, resume it.
+          const currentTime = localStorage.getItem('dailyCurrentTime');
+          if (currentTime) {
+            this.timerStartTime = +currentTime;
+          }
+        }
+      }
+
       this.gameStateService.updateGameState({ gameSeed: dailySeed });
       this.startAfterCountDown();
       return;
     }
 
-    if (seedParam) {
-      const seedNumber = Number(seedParam);
-      if (
-        !isNaN(seedNumber) &&
-        seedNumber >= 0 &&
-        seedNumber < PUZZLES.length
-      ) {
-        this.gameStateService.updateGameState({
-          gameMode: 'practice',
-          gameSeed: seedNumber,
-        });
-        this.startAfterCountDown();
-      } else {
-        console.error('Invalid challenge seed in URL. Navigating home.'); // This error is now only for this specific case
-        this.router.navigate(['/']);
-      }
-    } else {
-      // Default to a non-seeded practice game if no params are present
-      this.gameStateService.updateGameState({
-        gameMode: 'practice',
-        gameSeed: this.getRandomPuzzleSeed(),
-      });
-      this.startAfterCountDown();
-    }
+    // Default to a non-seeded practice game
+    this.gameStateService.updateGameState({
+      gameMode: 'practice',
+      gameSeed: this.getRandomPuzzleSeed(),
+    });
+    this.startAfterCountDown();
   }
 
   ngAfterViewInit() {
@@ -290,8 +301,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
     if (this.gameState.gameMode === 'daily') {
       this.location.replaceState('/daily');
-    } else if (this.gameState.gameMode === 'practice') {
-      this.location.replaceState('/challenge/' + this.gameState.gameSeed);
     }
     // For 'versus', the URL is already correct from the lobby.
 
@@ -344,25 +353,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.setLettersFromPuzzle();
     this.shuffleLetters();
   }
-
-  // setLettersFromPuzzle() {
-  //   if (this.gameSeed) this.bankLetters = [...PUZZLES[this.gameSeed].letters];
-  //   // if (this.gameSeed)
-  //   //   this.bankLetters = [
-  //   //     'T',
-  //   //     'S',
-  //   //     'E',
-  //   //     'N',
-  //   //     'O',
-  //   //     'P',
-  //   //     'Y',
-  //   //     'H',
-  //   //     'C',
-  //   //     'L',
-  //   //     'F',
-  //   //     'I',
-  //   //   ];
-  // }
 
   setLettersFromPuzzle() {
     // *** CHANGE: Always get the seed from the GameState ***
@@ -466,9 +456,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   generateShareLink() {
-    if (this.gameState.gameMode === 'daily')
-      return window.location.origin + '/daily';
-    return window.location.origin + '/challenge/' + this.gameState.gameSeed;
+    return window.location.origin;
   }
 
   private allWordsAreValid(): boolean {

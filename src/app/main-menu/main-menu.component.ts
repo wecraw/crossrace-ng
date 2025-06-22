@@ -41,12 +41,7 @@ export class MainMenuComponent implements OnInit {
   readonly dialog = inject(MatDialog);
 
   // Game State
-  isChallenge: boolean = false;
-  gameSeed?: number;
-  isDaily: boolean = false;
   isVersus: boolean = false;
-  isResuming: boolean = false;
-  finishedDaily: boolean = false;
   joinGameForm!: FormGroup;
 
   constructor(
@@ -71,61 +66,13 @@ export class MainMenuComponent implements OnInit {
 
     this.initializeGrid();
     this.extractRouteInfo();
-
-    if (this.isDaily) {
-      let storageSeed = localStorage.getItem('dailySeed');
-      let dailySeed = this.gameSeedService.getDailySeed();
-      if (storageSeed && +storageSeed === dailySeed) {
-        let finishedDaily = localStorage.getItem('finishedDaily');
-        if (finishedDaily === 'true') {
-          this.isDaily = false;
-          let finalTime = localStorage.getItem('finalTime');
-          let finalGrid = localStorage.getItem('finalGrid');
-          if (finalTime && finalGrid) {
-            this.openPostGameDialog({
-              time: localStorage.getItem('finalTime'),
-              grid: JSON.parse(finalGrid),
-              winnerDisplayName: 'You',
-              daily: true,
-              singlePlayer: true,
-              shareLink: window.location.origin + '/daily',
-            });
-          }
-
-          //TODO SHOW POST GAME DIALOG HERE
-        } else {
-          this.isResuming = true;
-        }
-      }
-    }
   }
 
   private extractRouteInfo() {
-    if (this.router.url.split('/')[1] === 'daily') this.isDaily = true;
     if (this.router.url.split('/')[1] === 'versus-menu') this.isVersus = true;
-    if (this.router.url.split('/')[1] === 'challenge') this.isChallenge = true;
-    // Get the seed from the current route
-    this.route.paramMap.subscribe((params) => {
-      const seedParam = params.get('gameSeed');
-
-      if (seedParam) {
-        const seedNumber = Number(seedParam);
-
-        if (!isNaN(seedNumber) && seedNumber >= 0 && seedNumber <= 3650) {
-          this.gameSeed = seedNumber;
-        } else {
-          console.error('Invalid seed value. Redirecting to home.');
-          this.router.navigate(['/']);
-        }
-      }
-    });
   }
 
   // DOM Helpers=========================================================
-
-  challenge() {
-    this.router.navigate(['/practice/' + this.gameSeed]);
-  }
 
   daily() {
     let storageSeed = localStorage.getItem('dailySeed');
@@ -141,10 +88,6 @@ export class MainMenuComponent implements OnInit {
         localStorage.setItem('dailySeed', '' + dailySeed);
       }
     }
-    this.router.navigate(['/practice/daily']);
-  }
-
-  navigateToDaily() {
     this.router.navigate(['/daily']);
   }
 

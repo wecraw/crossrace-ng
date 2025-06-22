@@ -15,11 +15,8 @@ const routes: Routes = [
   { path: 'join', component: LobbyComponent },
   { path: 'join/:gameCode', component: LobbyComponent },
   { path: 'practice', component: GameComponent },
-  { path: 'play', component: GameComponent },
-  { path: 'practice/:gameSeed', component: GameComponent },
-  { path: 'challenge/:gameSeed', component: MainMenuComponent },
   { path: 'versus/:gameSeed', component: GameComponent },
-  { path: 'daily', component: MainMenuComponent },
+  { path: 'daily', component: GameComponent },
   { path: '**', redirectTo: '' },
 ];
 
