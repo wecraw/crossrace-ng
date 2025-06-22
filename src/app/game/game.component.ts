@@ -121,7 +121,7 @@ export class GameComponent implements OnInit, OnDestroy {
     const navState = navigation?.extras.state as {
       gameSeed: number;
       isInGame: boolean;
-      gameMode: 'versus' | 'daily' | 'endless';
+      gameMode: 'versus' | 'daily' | 'practice';
     };
 
     const updates: Partial<GameState> = {};
@@ -176,7 +176,7 @@ export class GameComponent implements OnInit, OnDestroy {
         break;
 
       case 'daily':
-      case 'endless':
+      case 'practice':
         // This handles cases where the user navigates directly to a URL.
         // Let's create a separate helper for this to keep it clean.
         this.initializeFromUrl();
@@ -212,7 +212,7 @@ export class GameComponent implements OnInit, OnDestroy {
         seedNumber < PUZZLES.length
       ) {
         this.gameStateService.updateGameState({
-          gameMode: 'endless',
+          gameMode: 'practice',
           gameSeed: seedNumber,
         });
         this.startAfterCountDown();
@@ -221,9 +221,9 @@ export class GameComponent implements OnInit, OnDestroy {
         this.router.navigate(['/']);
       }
     } else {
-      // Default to a non-seeded endless game if no params are present
+      // Default to a non-seeded practice game if no params are present
       this.gameStateService.updateGameState({
-        gameMode: 'endless',
+        gameMode: 'practice',
         gameSeed: this.getRandomPuzzleSeed(),
       });
       this.startAfterCountDown();
@@ -290,7 +290,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
     if (this.gameState.gameMode === 'daily') {
       this.location.replaceState('/daily');
-    } else if (this.gameState.gameMode === 'endless') {
+    } else if (this.gameState.gameMode === 'practice') {
       this.location.replaceState('/challenge/' + this.gameState.gameSeed);
     }
     // For 'versus', the URL is already correct from the lobby.
@@ -726,8 +726,8 @@ export class GameComponent implements OnInit, OnDestroy {
           if (this.gameState.gameMode === 'versus')
             this.router.navigate(['/join/' + this.gameState.gameCode]);
           if (this.gameState.gameMode === 'daily')
-            this.router.navigate(['/endless']);
-          if (this.gameState.gameMode === 'endless') {
+            this.router.navigate(['/practice']);
+          if (this.gameState.gameMode === 'practice') {
             this.gameSeed = this.getRandomPuzzleSeed();
             this.startAfterCountDown();
           }

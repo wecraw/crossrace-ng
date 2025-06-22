@@ -1,7 +1,14 @@
 <header class="header">
   <div class="container">
     <div class="d-flex justify-content-between align-items-center">
-      <div class="logo-wrapper d-flex"></div>
+      <div class="logo-wrapper d-flex">
+        <div
+          class="menu-button-wrapper"
+          (click)="openTutorialDialog({ mode: 'solo' })"
+        >
+          <i class="fa-regular fa-circle-question"></i>
+        </div>
+      </div>
       <nav>
         <!-- Dropdown menu for mobile -->
         <div class="dropdown">
@@ -21,23 +28,14 @@
             </li>
             <hr />
             <li>
-              <button class="dropdown-item" (click)="navigateToEndless()">
-                Endless
+              <button class="dropdown-item" (click)="navigateToPractice()">
+                Practice
               </button>
             </li>
             <hr />
             <li>
               <button class="dropdown-item" (click)="navigateToVersus()">
                 Versus
-              </button>
-            </li>
-            <hr />
-            <li>
-              <button
-                class="dropdown-item"
-                (click)="openTutorialDialog({ mode: 'solo' })"
-              >
-                How to Play
               </button>
             </li>
           </ul>

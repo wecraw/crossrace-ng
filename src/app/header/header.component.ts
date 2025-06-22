@@ -35,14 +35,14 @@ export class HeaderComponent implements OnInit {
     });
   }
 
-  navigateToEndless() {
+  navigateToPractice() {
     this.webSocketService.clearAndDisconnect();
-    if (this.gameState.gameMode === 'endless') {
-      this.location.replaceState('/endless'); //route is replaced in game component, but this.router.url still registers as endless, so need to replace again then reload
+    if (this.gameState.gameMode === 'practice') {
+      this.location.replaceState('/practice'); //route is replaced in game component, but this.router.url still registers as practice, so need to replace again then reload
       window.location.reload();
     } else {
-      this.gameStateService.updateGameState({ gameMode: 'endless' });
-      this.router.navigate(['/endless']);
+      this.gameStateService.updateGameState({ gameMode: 'practice' });
+      this.router.navigate(['/practice']);
     }
   }
 

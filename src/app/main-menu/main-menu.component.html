@@ -37,24 +37,28 @@
 <div class="main-menu m-lr-auto">
   <div class="main-menu-buttons">
     @if (!isChallenge && !isDaily && !isVersus) {
-      <button
-        (click)="navigateToDaily()"
-        class="btn btn-fixed-width btn-primary btn-lg m-auto"
-      >
-        Daily Challenge
-      </button>
-      <button
-        (click)="endless()"
-        class="btn btn-fixed-width btn-primary btn-lg m-auto"
-      >
-        Endless
-      </button>
-      <button
+      <div class="tile-button-wrapper m-auto" (click)="navigateToDaily()">
+        <div class="tile-button-row">
+          <div class="tile-letter">P</div>
+          <div class="tile-letter">L</div>
+          <div class="tile-letter">A</div>
+          <div class="tile-letter">Y</div>
+        </div>
+      </div>
+
+      <div
+        class="tile-button-wrapper green m-auto"
         (click)="navigateToVersusMenu()"
-        class="btn btn-success btn-fixed-width btn-lg m-auto"
       >
-        Versus
-      </button>
+        <div class="tile-button-row">
+          <div class="tile-letter">V</div>
+          <div class="tile-letter">E</div>
+          <div class="tile-letter">R</div>
+          <div class="tile-letter">S</div>
+          <div class="tile-letter">U</div>
+          <div class="tile-letter">S</div>
+        </div>
+      </div>
     }
 
     <button
@@ -110,14 +114,6 @@
         </button>
       </form>
     }
-
-    <button
-      *ngIf="!isVersus"
-      (click)="openTutorialDialog({ mode: 'solo' })"
-      class="btn btn-fixed-width btn-outline-secondary btn-lg m-auto"
-    >
-      How to Play
-    </button>
   </div>
 </div>
 <div #gridWrapper class="grid-wrapper">

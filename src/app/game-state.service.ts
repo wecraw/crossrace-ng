@@ -9,7 +9,7 @@ export interface GameState {
   isHost: boolean;
   isInGame: boolean;
   gameSeed: number | null;
-  gameMode: 'versus' | 'daily' | 'endless' | null;
+  gameMode: 'versus' | 'daily' | 'practice' | null;
   lastWinnerId: string | null;
 }
 

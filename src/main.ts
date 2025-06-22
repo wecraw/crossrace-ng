@@ -11,13 +11,12 @@ const routes: Routes = [
   { path: '', component: MainMenuComponent },
   { path: 'lobby', component: LobbyComponent },
   { path: 'versus-menu', component: MainMenuComponent },
-  { path: 'game', component: MainMenuComponent }, //deprecated, now goes to main menu
-  { path: 'solo', component: MainMenuComponent }, //deprecated, now goes to main menu
   { path: 'versus', component: MainMenuComponent },
   { path: 'join', component: LobbyComponent },
   { path: 'join/:gameCode', component: LobbyComponent },
-  { path: 'endless', component: GameComponent },
-  { path: 'endless/:gameSeed', component: GameComponent },
+  { path: 'practice', component: GameComponent },
+  { path: 'play', component: GameComponent },
+  { path: 'practice/:gameSeed', component: GameComponent },
   { path: 'challenge/:gameSeed', component: MainMenuComponent },
   { path: 'versus/:gameSeed', component: GameComponent },
   { path: 'daily', component: MainMenuComponent },
