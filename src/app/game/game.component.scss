@@ -1,11 +1,14 @@
+@import "variables";
+@import "mixins";
+
 $grid-cell-size: 36px;
 
 .tile-wrapper {
   height: 40px;
   width: 40px;
-  border-right: solid 1px #ccc;
+  border-right: solid 1px $light-gray;
   border-radius: 6px;
-  color: white;
+  color: $white;
   display: flex;
   flex-direction: row;
   text-align: center;
@@ -14,7 +17,7 @@ $grid-cell-size: 36px;
   justify-content: space-between;
   box-sizing: border-box;
   cursor: move;
-  background: #3f51b5;
+  background: $primary-color;
   font-weight: bold;
 }
 
@@ -33,13 +36,10 @@ $grid-cell-size: 36px;
   left: 50%;
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
-}
-
-.ab-center {
-  position: absolute;
-  left: 50%;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
+  min-height: 107px;
+  border: 1px solid $light-gray;
+  padding: 10px;
+  // padding: 10px 10px 5px 10px;
 }
 
 .letter-bank {
@@ -88,7 +88,7 @@ $grid-cell-size: 36px;
 
 .formed-words {
   .valid {
-    color: green;
+    color: $success-color;
   }
 }
 
@@ -99,39 +99,38 @@ $grid-cell-size: 36px;
   width: fit-content;
   padding: 10px;
   // padding-top: 0;
-}
 
-.grid-row {
-  display: flex;
+  &.valid-letter {
+    .letter-tile {
+      background-color: $success-color !important;
+    }
+  }
 }
 
 .grid-cell {
-  background-color: #fff;
+  background-color: $white;
   width: $grid-cell-size;
   height: $grid-cell-size;
-  border: 1px solid #ccc;
+  border: 1px solid $grid-cell-border-color;
   display: flex;
   justify-content: center;
   align-items: center;
 
   &.valid-letter {
     .letter-tile {
-      background-color: green !important;
+      background-color: $success-color !important;
     }
   }
 }
 
 .letter-tile {
-  min-width: $grid-cell-size;
-  min-height: $grid-cell-size;
-  background-color: #3f51b5;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: bold;
+  min-width: $grid-cell-size;
+  min-height: $grid-cell-size;
+  background-color: $primary-color;
   cursor: move;
-  color: white;
-  border-radius: 6px;
 }
 
 .grid-boundary {
@@ -146,40 +145,21 @@ $grid-cell-size: 36px;
   left: 0;
   right: 0;
   bottom: 0;
-  overflow: hidden;
-  --mask-size: 20px;
-  mask-image: linear-gradient(
-      to right,
-      transparent,
-      black var(--mask-size),
-      black calc(100% - var(--mask-size)),
-      transparent
-    ),
-    linear-gradient(
-      to bottom,
-      transparent,
-      black var(--mask-size),
-      black calc(100% - var(--mask-size)),
-      transparent
-    );
-  mask-size: 100% 100%;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-composite: intersect;
+  @include fade-out-edges;
 }
 
 .btn-outline-secondary {
-  background-color: #fff;
+  background-color: $white;
 
   &:hover {
-    color: #6c757d;
-    background-color: #eee;
+    color: $gray-text;
+    background-color: $light-gray-hover;
   }
 }
 
 //hover state for drag and drop
 .drop-list-highlight {
-  background-color: #ccc;
+  background-color: $light-gray;
   transition: background-color 0.3s ease;
 }
 
@@ -239,7 +219,7 @@ $grid-cell-size: 36px;
   height: 400px;
   display: flex;
   flex-direction: column;
-  background: #ffffffcc;
+  background: $white-transparent-cc;
   h5 {
     margin-bottom: auto;
   }
@@ -447,7 +427,7 @@ $grid-cell-size: 36px;
 
 .version {
   font-size: 10px;
-  color: #ddd;
+  color: $light-gray;
   bottom: 5px;
   position: absolute;
   right: 10px;

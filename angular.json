@@ -28,10 +28,16 @@
               "@angular/material/prebuilt-themes/indigo-pink.css",
               "src/styles.scss"
             ],
+            "stylePreprocessorOptions": {
+              "includePaths": ["src/styles"]
+            },
             "scripts": []
           },
           "configurations": {
             "production": {
+              "stylePreprocessorOptions": {
+                "includePaths": ["src/styles"]
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -55,7 +61,10 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "stylePreprocessorOptions": {
+                "includePaths": ["src/styles"]
+              }
             }
           },
           "defaultConfiguration": "production"
@@ -89,6 +98,9 @@
               "@angular/material/prebuilt-themes/indigo-pink.css",
               "src/styles.scss"
             ],
+            "stylePreprocessorOptions": {
+              "includePaths": ["src/styles"]
+            },
             "scripts": []
           }
         }

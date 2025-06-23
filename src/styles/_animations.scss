@@ -1,0 +1,44 @@
+@keyframes flip-in-hor-bottom {
+  0% {
+    -webkit-transform: rotateX(80deg);
+    transform: rotateX(80deg);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: rotateX(0);
+    transform: rotateX(0);
+    opacity: 1;
+  }
+}
+
+@for $i from 0 through 11 {
+  .flip-in-hor-bottom-#{$i} {
+    animation: flip-in-hor-bottom
+      0.5s
+      cubic-bezier(0.25, 0.46, 0.45, 0.94)
+      #{$i *
+      0.1}s
+      both;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    box-shadow:
+      0 0 5px var(--shimmer-color),
+      0 0 10px var(--shimmer-color),
+      0 0 15px var(--shimmer-color);
+  }
+  50% {
+    box-shadow:
+      0 0 8px var(--shimmer-color),
+      0 0 15px var(--shimmer-color),
+      0 0 23px var(--shimmer-color);
+  }
+  100% {
+    box-shadow:
+      0 0 5px var(--shimmer-color),
+      0 0 10px var(--shimmer-color),
+      0 0 15px var(--shimmer-color);
+  }
+}

@@ -7,16 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import {
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogModule,
-  MatDialogRef,
-  MatDialogTitle,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -25,15 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   templateUrl: 'dialog.component.html',
   styleUrls: ['./dialog.component.scss'],
   standalone: true,
-  imports: [
-    MatButtonModule,
-    MatDialogActions,
-    MatDialogClose,
-    MatDialogTitle,
-    MatDialogContent,
-    MatProgressSpinnerModule,
-    CommonModule,
-  ],
+  imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Dialog {
@@ -45,7 +28,7 @@ export class Dialog {
       showConfirm: boolean;
       confirmText?: string;
     },
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   readonly dialogRef = inject(MatDialogRef<Dialog>);

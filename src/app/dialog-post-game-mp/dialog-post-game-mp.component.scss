@@ -1,3 +1,6 @@
+@import "variables";
+@import "mixins";
+
 $grid-cell-size: 30px;
 
 .player-card {
@@ -5,7 +8,7 @@ $grid-cell-size: 30px;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border-radius: 20px;
+  border-radius: $border-radius-xl;
   padding-top: 2px;
   width: fit-content;
   margin-top: -10px;
@@ -13,12 +16,12 @@ $grid-cell-size: 30px;
 .player-avatar {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
-  background-color: #2196f3;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border-radius: $border-radius-round;
+  background-color: $avatar-blue;
+  box-shadow: inset 0 0 0 1px $black-transparent-10;
 
   .emoji {
-    font-size: 32px;
+    font-size: $font-size-mega;
     display: flex;
     height: 100%;
     width: 100%;
@@ -28,24 +31,24 @@ $grid-cell-size: 30px;
   }
 }
 app-leaderboard {
-  margin-top: 10px;
+  margin-top: $spacing-s;
   position: absolute;
   right: -480px;
   top: 0;
 }
 .crown {
-  font-size: 18px;
-  color: #d4af37;
+  font-size: $font-size-xxl;
+  color: $crown-gold;
 }
 .wrapper {
   height: 1px; //needed so that child height 100 works
-  padding: 20px;
+  padding: $spacing-l;
   min-height: 550px;
   overflow-x: hidden;
 }
 
 .spinner {
-  margin-top: 18px;
+  margin-top: $spacing-xxl;
 }
 
 .btn {
@@ -57,25 +60,26 @@ h2 {
   margin-bottom: auto;
   overflow-wrap: break-word;
   max-width: 220px;
-  font-size: 32px;
+  font-size: $font-size-mega;
 }
 .time {
   width: fit-content;
-  background: #ffffffee;
-  padding: 2px 10px;
-  font-size: 20px;
+  background: $white-transparent-ee;
+  padding: 2px $spacing-s;
+  font-size: $font-size-huge;
   font-weight: 500;
-  border-radius: 20px;
-  border: 1px solid #ccc;
+  border-radius: $border-radius-xl;
+  border: 1px solid $light-gray;
 }
 
 .chevron {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  margin-top: 5px;
+  margin-top: $spacing-xs;
   cursor: pointer;
-  padding: 15px;
+  padding: $spacing-m;
+  margin-right: auto;
 }
 
 .fa-chevron-right {
@@ -101,26 +105,7 @@ h2 {
 }
 
 .fade-out-edges {
-  overflow: hidden;
-  --mask-size: 20px;
-  mask-image: linear-gradient(
-      to right,
-      transparent,
-      black var(--mask-size),
-      black calc(100% - var(--mask-size)),
-      transparent
-    ),
-    linear-gradient(
-      to bottom,
-      transparent,
-      black var(--mask-size),
-      black calc(100% - var(--mask-size)),
-      transparent
-    );
-  mask-size: 100% 100%;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-composite: intersect;
+  @include fade-out-edges;
 }
 
 .chess-grid {
@@ -128,27 +113,24 @@ h2 {
   display: flex;
   flex-direction: column;
   width: fit-content;
-  margin-top: 20px;
-  margin-bottom: 15px;
-}
-.grid-row {
-  display: flex;
+  margin-top: $spacing-l;
+  margin-bottom: $spacing-m;
 }
 .grid-cell {
   width: $grid-cell-size;
   height: $grid-cell-size;
-  border: 1px solid #ccc;
+  border: 1px solid $grid-cell-border-color;
 }
 
 .letter-tile {
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
-  background-color: green;
+  background-color: $success-color;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  color: white;
-  border-radius: 6px;
-  font-size: 15px;
+  color: $white;
+  border-radius: $border-radius-tile;
+  font-size: $font-size-l;
 }

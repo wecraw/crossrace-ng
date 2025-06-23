@@ -1,7 +1,9 @@
+@import "variables";
+
 .letter-tile {
   width: 28px;
   height: 28px;
-  background-color: #3f51b5;
+  background-color: $primary-color;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -24,7 +26,7 @@ h2 {
   top: 0;
 }
 .nav-link {
-  color: black;
+  color: $black;
   text-decoration: none;
   cursor: pointer;
   padding: 5px;
@@ -35,7 +37,7 @@ h2 {
 }
 .version {
   font-size: 8px;
-  color: #ccc;
+  color: $light-gray;
   margin-top: 18px;
   margin-left: 4px;
   margin-right: auto;

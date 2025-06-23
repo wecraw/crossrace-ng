@@ -1,3 +1,7 @@
+@import "variables";
+@import "common";
+@import "animations";
+
 /* You can add global styles to this file, and also import other style files */
 @import "../node_modules/bootstrap/scss/bootstrap";
 
@@ -10,7 +14,6 @@
   font-weight: 400;
   font-style: normal;
 }
-
 
 .emoji-mart {
   border-top-left-radius: 0;
@@ -34,27 +37,27 @@ body {
 }
 
 .btn-primary {
-  background-color: #3f51b5;
+  background-color: $primary-color;
 
   &:hover {
-    background-color: #374392;
+    background-color: $primary-color-hover;
   }
 }
 
 .btn-outline-success {
   opacity: 1 !important;
-  color: #2d8653;
-  background-color: #2d8653;
+  color: $success-green;
+  background-color: $success-green;
 }
 
 .btn-outline-secondary {
-  color: #000;
+  color: $black;
   &:hover {
-    color: #000;
-    background-color: #ddd;
+    color: $black;
+    background-color: $light-gray-hover;
   }
   &:active {
-    background-color: #ccc;
+    background-color: $light-gray;
   }
 }
 
@@ -69,6 +72,6 @@ body {
 
 .btn-outline-danger {
   opacity: 1 !important;
-  color: #b50000;
-  background-color: #b50000;
+  color: $danger-color;
+  background-color: $danger-color;
 }

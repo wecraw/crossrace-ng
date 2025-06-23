@@ -1,9 +1,13 @@
+@import "variables";
+@import "mixins";
+
 $grid-cell-size: 30px;
 
 .wrapper {
   height: fit-content;
   padding: 20px;
   max-width: 370px;
+  margin-right: auto;
 }
 
 .spinner {
@@ -33,26 +37,7 @@ h4 {
 }
 
 .fade-out-edges {
-  overflow: hidden;
-  --mask-size: 20px;
-  mask-image: linear-gradient(
-      to right,
-      transparent,
-      black var(--mask-size),
-      black calc(100% - var(--mask-size)),
-      transparent
-    ),
-    linear-gradient(
-      to bottom,
-      transparent,
-      black var(--mask-size),
-      black calc(100% - var(--mask-size)),
-      transparent
-    );
-  mask-size: 100% 100%;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-composite: intersect;
+  @include fade-out-edges;
 }
 
 .chess-grid {
@@ -62,24 +47,21 @@ h4 {
   margin-top: 20px;
   margin-bottom: 15px;
 }
-.grid-row {
-  display: flex;
-}
 .grid-cell {
   width: $grid-cell-size;
   height: $grid-cell-size;
-  border: 1px solid #ccc;
+  border: 1px solid $grid-cell-border-color;
 }
 
 .letter-tile {
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
-  background-color: green;
+  background-color: $success-color;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  color: white;
+  color: $white;
   border-radius: 6px;
   font-size: 15px;
 }

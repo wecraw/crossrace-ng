@@ -1,0 +1,65 @@
+$primary-color: #3f51b5;
+$primary-color-hover: #374392;
+$success-color: #28a745;
+$success-color-hover: #34c759;
+$light-gray: #ccc;
+$white: #fff;
+$black: #000;
+$dark-gray: #444;
+$disabled-gray: #ccc;
+
+$grid-cell-border-color: #ccc;
+
+// Grays
+$light-gray-hover: #eee;
+$medium-gray: #666;
+$dark-gray-text: #333;
+$very-light-gray-bg: #f0f0f0;
+$gray-text: #6c757d;
+$gray-icon: #aaa;
+$gray-border: #d9d9d9;
+$dark-blue-gray: #344452;
+
+// Colors
+$primary-color-light: #5c6bc0;
+$danger-color: #b50000;
+$ready-green: #2e8b57;
+$success-green: #2d8653;
+$avatar-blue: #2196f3;
+$crown-gold: #d4af37;
+
+// Special
+$white-transparent-66: #ffffff66;
+$white-transparent-cc: #ffffffcc;
+$white-transparent-ee: #ffffffee;
+$black-transparent-10: rgba(0, 0, 0, 0.1);
+$black-transparent-30: rgba(0, 0, 0, 0.3);
+$white-transparent-0: rgba(255, 255, 255, 0);
+$white-opaque: rgba(255, 255, 255, 1);
+
+// Sizing
+$border-radius-small: 5px;
+$border-radius-tile: 6px;
+$border-radius-medium: 8px;
+$border-radius-large: 16px;
+$border-radius-xl: 20px;
+$border-radius-round: 50%;
+
+// Spacing
+$spacing-xs: 5px;
+$spacing-s: 10px;
+$spacing-m: 15px;
+$spacing-l: 20px;
+$spacing-xl: 35px;
+$spacing-xxl: 18px;
+
+// Font Sizes
+$font-size-xs: 8px;
+$font-size-s: 10px;
+$font-size-m: 12px;
+$font-size-l: 15px;
+$font-size-xl: 17px;
+$font-size-xxl: 18px;
+$font-size-huge: 20px;
+$font-size-giga: 24px;
+$font-size-mega: 32px;

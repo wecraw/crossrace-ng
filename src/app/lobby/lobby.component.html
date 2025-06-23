@@ -9,6 +9,8 @@
               class="room-code-container m-lr-auto d-flex"
               #copiedTooltip="matTooltip"
               matTooltip="Copied!"
+              (mouseenter)="$event.stopImmediatePropagation()"
+              (mouseleave)="$event.stopImmediatePropagation()"
             >
               <div class="d-flex code-wrapper" (click)="copyOrShare()">
                 @for (letter of gameState.gameCode.split(""); track $index) {

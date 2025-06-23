@@ -1,0 +1,22 @@
+@mixin fade-out-edges($mask-size: 20px) {
+  overflow: hidden;
+  --mask-size: #{$mask-size};
+  mask-image: linear-gradient(
+      to right,
+      transparent,
+      black var(--mask-size),
+      black calc(100% - var(--mask-size)),
+      transparent
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      black var(--mask-size),
+      black calc(100% - var(--mask-size)),
+      transparent
+    );
+  mask-size: 100% 100%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-composite: intersect;
+}
