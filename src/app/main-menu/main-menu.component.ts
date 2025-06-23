@@ -13,7 +13,6 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
-import { DialogPostGameMp } from '../dialog-post-game-mp/dialog-post-game-mp.component';
 
 import { GameSeedService } from '../game-seed.service';
 import {
@@ -22,7 +21,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MOCK_WIN } from '../mock/mock-winner';
 
 @Component({
   selector: 'app-game',

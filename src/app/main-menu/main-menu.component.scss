@@ -1,4 +1,4 @@
-$grid-cell-size: 35px;
+$grid-cell-size: 36px;
 
 .tile-wrapper {
   height: 40px;
@@ -67,8 +67,8 @@ $grid-cell-size: 35px;
 }
 
 .grid-container {
-  margin-left: -25px;
-  margin-top: -22px;
+  margin-left: -31px;
+  margin-top: -11px;
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -170,7 +170,7 @@ $grid-cell-size: 35px;
   height: 400px;
   display: flex;
   flex-direction: column;
-  background: #ffffffcc;
+  background: #ffffff66; //controls opacity of grid background
   h5 {
     margin-bottom: auto;
   }
@@ -184,7 +184,7 @@ $grid-cell-size: 35px;
   flex-direction: column;
   margin-top: auto;
   margin-bottom: auto;
-  gap: 35px;
+  gap: 20px;
   padding-bottom: 5px;
 }
 
@@ -201,7 +201,6 @@ $grid-cell-size: 35px;
   .tile-button-row {
     display: flex;
     justify-content: center;
-    gap: 1px;
   }
 
   .tile-letter {
