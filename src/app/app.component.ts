@@ -8,8 +8,6 @@ import {
   Renderer2,
 } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { GameComponent } from './game/game.component';
-import { LobbyComponent } from './lobby/lobby.component';
 import { HeaderComponent } from './header/header.component';
 import { DOCUMENT } from '@angular/common';
 import { WebSocketService } from './websocket.service';
@@ -17,7 +15,7 @@ import { WebSocketService } from './websocket.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, GameComponent, LobbyComponent, HeaderComponent],
+  imports: [RouterOutlet, HeaderComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
@@ -30,7 +28,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private renderer: Renderer2,
     @Inject(DOCUMENT) private document: Document,
-    private websocketService: WebSocketService
+    private websocketService: WebSocketService,
   ) {}
 
   ngOnInit() {

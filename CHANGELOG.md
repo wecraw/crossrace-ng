@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Menu flow and styles
+- Animations in game (pulse on new correct word, drag and drop animations + general refactor)
 - Migrate servers to GCP, refactor websockets connection on frontend
 
 ## [0.7.1] - 2024-10-23
