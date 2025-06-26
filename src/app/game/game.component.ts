@@ -13,6 +13,7 @@ import {
   CdkDrag,
   CdkDropList,
   transferArrayItem,
+  moveItemInArray,
   CdkDragStart,
   CdkDragEnter,
   CdkDragExit,
@@ -67,7 +68,7 @@ export class GameComponent implements OnInit, OnDestroy {
   private webSocketService = inject(WebSocketService);
 
   bankLetters: string[] = [];
-  grid: string[][] = [];
+  grid: string[][][] = [];
   validLetterIndices: boolean[][] = [];
   condensedGrid: string[][] = [];
   condensedGridDisplaySize: number = 10;
@@ -570,7 +571,7 @@ export class GameComponent implements OnInit, OnDestroy {
       let startJ = 0;
       for (let j = 0; j < this.GRID_SIZE; j++) {
         if (!this.isEmpty(this.grid[i][j])) {
-          word += this.grid[i][j];
+          word += this.grid[i][j][0];
         } else {
           this.addWordToList(word, i, startJ, 'horizontal');
           word = '';
@@ -587,7 +588,7 @@ export class GameComponent implements OnInit, OnDestroy {
       let startI = 0;
       for (let i = 0; i < this.GRID_SIZE; i++) {
         if (!this.isEmpty(this.grid[i][j])) {
-          word += this.grid[i][j];
+          word += this.grid[i][j][0];
         } else {
           this.addWordToList(word, startI, j, 'vertical');
           word = '';
@@ -782,18 +783,19 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  isEmpty(cell: string) {
-    return cell === null || cell === '';
+  isEmpty(cell: string[]) {
+    return cell.length === 0;
   }
 
   dragStarted(event: CdkDragStart) {
     const [i, j] = this.getCellCoordinates(event.source.dropContainer.id);
     if (i !== -1 && j !== -1) {
       // Only handle drag start from grid cells, not the letter bank
-      const originalLetter = this.grid[i][j];
-      this.grid[i][j] = ''; // Temporarily remove the letter from the grid
+      const letter = this.grid[i][j].pop();
       this.updateFormedWords(); // Revalidate words
-      this.grid[i][j] = originalLetter; // Restore the letter
+      if (letter) {
+        this.grid[i][j].push(letter); // Restore the letter
+      }
     }
   }
 
@@ -806,7 +808,11 @@ export class GameComponent implements OnInit, OnDestroy {
     }
     this.grid = Array(this.GRID_SIZE)
       .fill(null)
-      .map(() => Array(this.GRID_SIZE).fill(null));
+      .map(() =>
+        Array(this.GRID_SIZE)
+          .fill(null)
+          .map(() => []),
+      );
   }
 
   initializeValidLetterIndices() {
@@ -851,46 +857,18 @@ export class GameComponent implements OnInit, OnDestroy {
     dropList.classList.remove('drop-list-highlight');
 
     if (event.previousContainer === event.container) {
+      moveItemInArray(
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex,
+      );
+    } else {
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
         event.previousIndex,
         event.currentIndex,
       );
-    } else {
-      const [prevI, prevJ] = this.getCellCoordinates(
-        event.previousContainer.id,
-      );
-      const [nextI, nextJ] = this.getCellCoordinates(event.container.id);
-
-      if (event.previousContainer.id === 'letter-bank') {
-        if (this.isEmpty(this.grid[nextI][nextJ])) {
-          transferArrayItem(
-            event.previousContainer.data,
-            event.container.data,
-            event.previousIndex,
-            0,
-          );
-          this.grid[nextI][nextJ] = event.container.data[0];
-        }
-      } else if (event.container.id === 'letter-bank') {
-        transferArrayItem(
-          event.previousContainer.data,
-          event.container.data,
-          0,
-          event.currentIndex,
-        );
-        this.grid[prevI][prevJ] = '';
-      } else {
-        if (this.isEmpty(this.grid[nextI][nextJ])) {
-          this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
-          this.grid[prevI][prevJ] = '';
-        } else {
-          const temp = this.grid[nextI][nextJ];
-          this.grid[nextI][nextJ] = this.grid[prevI][prevJ];
-          this.grid[prevI][prevJ] = temp;
-        }
-      }
     }
 
     this.updateFormedWords();
@@ -975,7 +953,9 @@ export class GameComponent implements OnInit, OnDestroy {
           //subtracting one here so that it slightly aligns top left rather than bottom right
           const newRow = paddingTop + (i - minRow) - 1;
           const newCol = paddingLeft + (j - minCol) - 1;
-          this.condensedGrid[newRow][newCol] = this.grid[i][j];
+          if (this.grid[i][j] && this.grid[i][j].length > 0) {
+            this.condensedGrid[newRow][newCol] = this.grid[i][j][0];
+          }
         }
       }
     }
