@@ -1,11 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  inject,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { CdkDrag, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';

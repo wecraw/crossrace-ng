@@ -161,6 +161,18 @@ $grid-cell-size: 36px;
   padding-bottom: 5px;
 }
 
+.join-form-container {
+  border: 1px solid #aaa;
+  border-radius: 16px;
+  background-color: #eee;
+  padding: 20px;
+  width: fit-content;
+}
+
+.versus-menu {
+  margin-top: 63px;
+}
+
 .tile-button-wrapper {
   display: flex;
   flex-direction: column;
@@ -211,6 +223,16 @@ $grid-cell-size: 36px;
   &.white:hover .tile-letter {
     background-color: $light-gray-hover;
   }
+
+  &.disabled .tile-letter,
+  &.disabled:hover .tile-letter,
+  &.disabled.green:hover .tile-letter {
+    opacity: 0.5;
+  }
+
+  &.disabled {
+    pointer-events: none;
+  }
 }
 
 input:focus::placeholder {
@@ -219,6 +241,13 @@ input:focus::placeholder {
 
 .notouch {
   pointer-events: none;
+}
+
+.join-input {
+  max-width: 185px;
+  font-size: 20px;
+  text-align: center;
+  border: 1px solid $success-color;
 }
 
 .flip-in-hor-bottom-0 {
