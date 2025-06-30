@@ -321,7 +321,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
     setTimeout(() => {
       this.startCountdown(() => {
-        this.isGameStarted = true;
+        // this.isGameStarted = true;
         this.startPuzzle();
         this.isCountingDown = false;
       });

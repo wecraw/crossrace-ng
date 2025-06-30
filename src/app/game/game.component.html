@@ -94,7 +94,7 @@
     </div>
   </div>
 </div>
-<div class="lower-menu m-lr-auto" [ngClass]="{ hidden: !isGameStarted }">
+<div class="lower-menu fade-in m-lr-auto" *ngIf="isGridReady">
   <app-timer
     [startTime]="timerStartTime"
     [isRunning]="timerRunning"
