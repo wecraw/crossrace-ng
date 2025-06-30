@@ -87,6 +87,8 @@ export class GameComponent implements OnInit, OnDestroy {
   // Timer
   timerRunning = false;
   currentTimeString: string = '0:00';
+  isPulsating: boolean = true;
+  countdownEnded: boolean = false;
 
   // Debug
   debug: boolean = false;
@@ -278,12 +280,22 @@ export class GameComponent implements OnInit, OnDestroy {
       const countInterval = setInterval(() => {
         this.ngZone.run(() => {
           this.countdown--;
+
+          // Animate the countdown number
+          this.isPulsating = false;
+          setTimeout(() => {
+            this.isPulsating = true;
+          }, 15);
+
           if (this.countdown <= 0) {
-            clearInterval(countInterval);
-            onComplete();
+            this.countdownEnded = true;
+            setTimeout(() => {
+              clearInterval(countInterval);
+              onComplete();
+            }, 500); //wait for the final fade out animation to finish
           }
         });
-      }, 1000);
+      }, 1000); //countdown interval
     });
   }
 
@@ -307,11 +319,13 @@ export class GameComponent implements OnInit, OnDestroy {
 
     this.setLettersFromPuzzle();
 
-    this.startCountdown(() => {
-      this.isGameStarted = true;
-      this.startPuzzle();
-      this.isCountingDown = false;
-    });
+    setTimeout(() => {
+      this.startCountdown(() => {
+        this.isGameStarted = true;
+        this.startPuzzle();
+        this.isCountingDown = false;
+      });
+    }, 1600);
   }
 
   handleWebSocketMessage(message: any): void {

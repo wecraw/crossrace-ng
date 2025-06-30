@@ -25,10 +25,25 @@
     }
   </div>
 </div>
-<div class="countdown m-lr-auto" *ngIf="isCountingDown">
-  <div class="spinner-container">
+<div
+  class="countdown m-lr-auto"
+  *ngIf="isCountingDown"
+  [ngClass]="{ 'puff-out-center': countdownEnded }"
+>
+  <div class="spinner-container flip-in-hor-bottom-12">
     <span class="loader"></span>
-    <span class="countdown-number">{{ countdown }}</span>
+    <span
+      class="countdown-number"
+      [ngClass]="{
+        'pulsate-fwd-intense': isPulsating,
+      }"
+    >
+      @if (countdown > 0) {
+        {{ countdown }}
+      } @else {
+        GO!
+      }
+    </span>
   </div>
 </div>
 
@@ -79,18 +94,14 @@
     </div>
   </div>
 </div>
-<div class="lower-menu m-lr-auto">
+<div class="lower-menu m-lr-auto" [ngClass]="{ hidden: !isGameStarted }">
   <app-timer
-    [ngClass]="{ hidden: !isGameStarted && !waitingForRestart }"
     [startTime]="timerStartTime"
     [isRunning]="timerRunning"
     (timeChanged)="onTimeChanged($event)"
   >
   </app-timer>
-  <i
-    class="material-icons refresh noselect"
-    (click)="refreshPuzzle()"
-    [ngClass]="{ hidden: !isGameStarted }"
+  <i class="material-icons refresh noselect" (click)="refreshPuzzle()"
     >refresh</i
   >
 </div>
