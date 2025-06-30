@@ -11,11 +11,13 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
 import { DOCUMENT } from '@angular/common';
 import { WebSocketService } from './websocket.service';
+import { LoadingService } from './loading.service';
+import { LoadingComponent } from './loading/loading.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent],
+  imports: [RouterOutlet, HeaderComponent, LoadingComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
@@ -29,6 +31,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private renderer: Renderer2,
     @Inject(DOCUMENT) private document: Document,
     private websocketService: WebSocketService,
+    public loadingService: LoadingService,
   ) {}
 
   ngOnInit() {

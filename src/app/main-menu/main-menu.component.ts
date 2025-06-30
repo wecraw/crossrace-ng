@@ -14,6 +14,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { LoadingService } from '../loading.service';
 
 @Component({
   selector: 'app-game',
@@ -40,9 +41,12 @@ export class MainMenuComponent implements OnInit {
     private route: ActivatedRoute,
     private gameSeedService: GameSeedService,
     private fb: FormBuilder,
+    private loadingService: LoadingService,
   ) {}
 
   ngOnInit(): void {
+    // this.simulateApiCall();
+
     this.joinGameForm = this.fb.group({
       gameCode: [
         '',
@@ -128,6 +132,17 @@ export class MainMenuComponent implements OnInit {
 
   navigateHome() {
     this.router.navigate(['/']);
+  }
+
+  simulateApiCall(): void {
+    console.log('Showing loader...');
+    this.loadingService.show();
+
+    // Simulate a network request that takes 3 seconds
+    setTimeout(() => {
+      console.log('Hiding loader...');
+      this.loadingService.hide();
+    }, 3000);
   }
 
   initializeGrid() {

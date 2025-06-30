@@ -1,0 +1,51 @@
+@import "../../styles/variables";
+
+.overlay {
+  // Positioning
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999999; // Ensure it's on top of everything
+
+  // Appearance
+  background-color: rgba(0, 0, 0, 0.7); // 70% opacity black
+
+  // Center the spinner
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Provided Spinner Styles */
+.loader {
+  background: $success-color;
+  width: 48px;
+  height: 48px;
+  position: relative;
+  text-align: center;
+  border-radius: 5px;
+  animation: 3s rotate linear infinite;
+}
+
+.loader:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 5px;
+  background: $primary-color;
+  animation: 1.5s rotate reverse linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
