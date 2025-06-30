@@ -159,7 +159,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   async createGame() {
     this.isProcessing = true;
-    this.openDialog(DialogSettings.dialogSettingsCreate, true);
+    this.openDialog(DialogSettings.dialogSettingsConnecting, true);
 
     try {
       const response = await this.webSocketService.createGame();

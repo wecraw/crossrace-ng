@@ -126,6 +126,10 @@ export class MainMenuComponent implements OnInit {
     return 'notouch flip-in-hor-bottom-' + i;
   }
 
+  navigateHome() {
+    this.router.navigate(['/']);
+  }
+
   initializeGrid() {
     this.grid = Array(this.GRID_SIZE)
       .fill(null)

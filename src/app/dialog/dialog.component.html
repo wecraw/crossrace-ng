@@ -1,22 +1,26 @@
 <div class="wrapper">
   <div class="d-flex m-lr-auto">
-    <h4 [ngClass]="{ 'm-lr-auto': data.showConfirm }">
+    <!-- <h4 [ngClass]="{ 'm-lr-auto': data.showConfirm }">
       {{ data.dialogText }}
-    </h4>
-    @if(data.showSpinner) {
-    <mat-spinner [diameter]="25" class="spinner"></mat-spinner>
+    </h4> -->
+    @for (letter of dialogLetters; track letter) {
+      <div class="tile-wrapper">
+        <div class="letter m-lr-auto">{{ letter }}</div>
+      </div>
+    }
+    @if (data.showSpinner) {
+      <mat-spinner [diameter]="25" class="spinner"></mat-spinner>
     }
   </div>
-  @if(data.showConfirm){
-  <div class="d-flex w-100">
-    <button
-      style="min-width: 75px; margin-top: 15px"
-      class="m-lr-auto btn btn-primary"
-      (click)="confirm()"
-    >
-      {{ data.confirmText ? data.confirmText : "Ok" }}
-    </button>
-  </div>
-
+  @if (data.showConfirm) {
+    <div class="d-flex w-100">
+      <button
+        style="min-width: 75px; margin-top: 15px"
+        class="m-lr-auto btn btn-primary"
+        (click)="confirm()"
+      >
+        {{ data.confirmText ? data.confirmText : "Ok" }}
+      </button>
+    </div>
   }
 </div>

@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Inject,
   ChangeDetectorRef,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -19,7 +20,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Dialog {
+export class Dialog implements OnInit {
+  public dialogLetters: string[] = [];
+
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -30,6 +33,12 @@ export class Dialog {
     },
     private cdr: ChangeDetectorRef,
   ) {}
+
+  ngOnInit() {
+    if (this.data.dialogText) {
+      this.dialogLetters = [...this.data.dialogText.toUpperCase()];
+    }
+  }
 
   readonly dialogRef = inject(MatDialogRef<Dialog>);
 

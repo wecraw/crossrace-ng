@@ -1,4 +1,5 @@
 @import "variables";
+$grid-cell-size: 36px;
 
 .wrapper {
   min-width: 275px;
@@ -18,4 +19,33 @@ h4 {
   margin-bottom: 15px;
   text-align: center;
   color: $black;
+}
+
+.letter-tile {
+  min-width: $grid-cell-size;
+  min-height: $grid-cell-size;
+  background-color: $primary-color;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  border-radius: 6px;
+}
+
+.tile-wrapper {
+  height: 40px;
+  width: 40px;
+  border-right: solid 1px #ccc;
+  border-radius: 6px;
+  color: white;
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  align-items: center;
+  font-size: 18px;
+  justify-content: space-between;
+  box-sizing: border-box;
+  background: #3f51b5;
+  font-weight: bold;
 }
