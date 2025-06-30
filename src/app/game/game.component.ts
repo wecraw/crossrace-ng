@@ -202,12 +202,16 @@ export class GameComponent implements OnInit, OnDestroy {
 
       // Check if it's the same daily challenge
       if (storageSeed && +storageSeed === dailySeed) {
-        const finishedDaily = localStorage.getItem('finishedDaily');
-
-        if (finishedDaily === 'true') {
+        if (this.finishedDaily()) {
           // Daily already completed, show post-game dialog
           const finalTime = localStorage.getItem('finalTime');
           const finalGrid = localStorage.getItem('finalGrid');
+
+          // Set the timer to the final time for some eye candy
+          const currentTime = localStorage.getItem('dailyCurrentTime');
+          if (currentTime) {
+            this.timerStartTime = +currentTime;
+          }
 
           if (finalTime && finalGrid) {
             this.isGridReady = true; // Prevent getting stuck on a loading state
@@ -702,6 +706,10 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   // DOM Helpers=========================================================
+
+  finishedDaily() {
+    return localStorage.getItem('finishedDaily') === 'true';
+  }
 
   openDialog(data: any) {
     let dialogRef;
