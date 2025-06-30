@@ -110,11 +110,25 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
 
-    // Only clear the game state if we are not navigating into a game.
-    if (!this.gameState.isInGame) {
+    // Only clear the game state if we have no active multiplayer game context
+    // (i.e., no gameCode and no localPlayerId, meaning we're not in a multiplayer session)
+    if (!this.gameState.gameCode && !this.gameState.localPlayerId) {
+      console.log('LobbyComponent: Clearing game state on destroy', {
+        isInGame: this.gameState.isInGame,
+        gameMode: this.gameState.gameMode,
+        gameCode: this.gameState.gameCode,
+        localPlayerId: this.gameState.localPlayerId,
+      });
       this.gameStateService.clearGameState();
       // Optionally tell the service to disconnect if leaving the app entirely
       // this.webSocketService.disconnect();
+    } else {
+      console.log('LobbyComponent: Preserving game state on destroy', {
+        isInGame: this.gameState.isInGame,
+        gameMode: this.gameState.gameMode,
+        gameCode: this.gameState.gameCode,
+        localPlayerId: this.gameState.localPlayerId,
+      });
     }
   }
 
@@ -339,19 +353,25 @@ export class LobbyComponent implements OnInit, OnDestroy {
             gameMode: 'versus',
           },
         });
+        console.log(this.gameState);
         break;
 
       case 'gameEnded':
-        // When a game ends, the server resets the game state.
-        // The 'playerList' event within the gameEnded message provides the updated truth.
-        this.gameStateService.updateGameState({
-          isInGame: false,
-          players: message.players,
-          isHost:
-            message.players.find(
-              (p: Player) => p.isHost && p.id === this.gameState.localPlayerId,
-            ) != null,
-        });
+        // Only handle gameEnded if we're not currently in a game
+        // This prevents race conditions when both lobby and game components
+        // receive the message simultaneously
+        if (!this.gameState.isInGame) {
+          // When a game ends, the server resets the game state.
+          // The 'playerList' event within the gameEnded message provides the updated truth.
+          this.gameStateService.updateGameState({
+            players: message.players,
+            isHost:
+              message.players.find(
+                (p: Player) =>
+                  p.isHost && p.id === this.gameState.localPlayerId,
+              ) != null,
+          });
+        }
         break;
 
       case 'error':

@@ -41,6 +41,10 @@ export class GameStateService {
   }
 
   clearGameState(): void {
+    console.log(
+      'GameStateService: Clearing game state',
+      this.gameState.getValue(),
+    );
     this.gameState.next(initialState);
   }
 }
