@@ -11,7 +11,7 @@
   }
 }
 
-@for $i from 0 through 11 {
+@for $i from 0 through 12 {
   .flip-in-hor-bottom-#{$i} {
     animation: flip-in-hor-bottom
       0.5s

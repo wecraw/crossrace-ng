@@ -4,29 +4,10 @@
 $grid-cell-size: 36px;
 
 .tile-wrapper {
-  height: 40px;
-  width: 40px;
-  border-right: solid 1px $light-gray;
-  border-radius: 6px;
-  color: $white;
-  display: flex;
-  flex-direction: row;
-  text-align: center;
-  align-items: center;
-  font-size: 18px;
-  justify-content: space-between;
-  box-sizing: border-box;
   cursor: move;
-  background: $primary-color;
-  font-weight: bold;
 }
 
 .grid-wrapper {
-  position: relative;
-  width: 390px;
-  height: 390px;
-  max-width: 100vw; //iPhone SE, etc
-  overflow: hidden;
   margin: 200px auto 0;
 }
 
@@ -43,17 +24,6 @@ $grid-cell-size: 36px;
 }
 
 .letter-bank {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 5px;
-  width: 287px;
-  min-height: 107px;
-  border: 1px solid #ccc;
-  padding: 10px;
-  // padding: 10px 10px 5px 10px;
-  border-radius: 16px;
-  margin-bottom: 35px;
   top: 60px;
 }
 
@@ -93,11 +63,6 @@ $grid-cell-size: 36px;
 }
 
 .grid-container {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  width: fit-content;
-  padding: 10px;
   // padding-top: 0;
 
   &.valid-letter {
@@ -109,12 +74,6 @@ $grid-cell-size: 36px;
 
 .grid-cell {
   background-color: $white;
-  width: $grid-cell-size;
-  height: $grid-cell-size;
-  border: 1px solid $grid-cell-border-color;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 
   &.valid-letter {
     .letter-tile {
@@ -209,8 +168,7 @@ $grid-cell-size: 36px;
   }
 }
 
-.countdown,
-.main-menu {
+.countdown {
   text-align: center;
   position: absolute;
   z-index: 1;
@@ -232,16 +190,6 @@ $grid-cell-size: 36px;
   h3 {
     margin-top: auto;
   }
-}
-
-.main-menu-buttons {
-  display: flex;
-  flex-direction: column;
-  margin-top: auto;
-  margin-bottom: auto;
-  gap: 35px;
-  animation: fade-in 0.6s cubic-bezier(0.39, 0.575, 0.565, 1) 0.8s both;
-  z-index: 1;
 }
 
 .notouch {
@@ -276,122 +224,6 @@ $grid-cell-size: 36px;
   100% {
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
-    opacity: 1;
-  }
-}
-
-.flip-in-hor-bottom-0 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s
-    both;
-}
-
-.flip-in-hor-bottom-1 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s
-    both;
-}
-
-.flip-in-hor-bottom-2 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s
-    both;
-}
-
-.flip-in-hor-bottom-3 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s
-    both;
-}
-
-.flip-in-hor-bottom-4 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s
-    both;
-}
-
-.flip-in-hor-bottom-5 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s
-    both;
-}
-
-.flip-in-hor-bottom-6 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.7s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.7s
-    both;
-}
-
-.flip-in-hor-bottom-7 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s
-    both;
-}
-
-.flip-in-hor-bottom-8 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s
-    both;
-}
-
-.flip-in-hor-bottom-9 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s
-    both;
-}
-
-.flip-in-hor-bottom-10 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.1s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.1s
-    both;
-}
-
-.flip-in-hor-bottom-11 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s
-    both;
-}
-
-.flip-in-hor-bottom-12 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s
-    both;
-}
-
-@-webkit-keyframes flip-in-hor-bottom {
-  0% {
-    -webkit-transform: rotateX(80deg);
-    transform: rotateX(80deg);
-    opacity: 0;
-  }
-  100% {
-    -webkit-transform: rotateX(0);
-    transform: rotateX(0);
-    opacity: 1;
-  }
-}
-@keyframes flip-in-hor-bottom {
-  0% {
-    -webkit-transform: rotateX(80deg);
-    transform: rotateX(80deg);
-    opacity: 0;
-  }
-  100% {
-    -webkit-transform: rotateX(0);
-    transform: rotateX(0);
     opacity: 1;
   }
 }
@@ -480,21 +312,6 @@ $grid-cell-size: 36px;
 }
 
 @keyframes pulsate-fwd-intense {
-  0% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
-  }
-  50% {
-    -webkit-transform: scale(1.25);
-    transform: scale(1.25);
-  }
-  100% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
-  }
-}
-
-@-webkit-keyframes pulsate-fwd-intense {
   0% {
     -webkit-transform: scale(1);
     transform: scale(1);

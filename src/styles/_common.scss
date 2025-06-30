@@ -1,3 +1,5 @@
+$grid-cell-size: 36px;
+
 .ab-center {
   position: absolute;
   left: 50%;
@@ -32,21 +34,61 @@
 
 .tile-wrapper {
   height: 40px;
-  width: 40px;
-  border-right: solid 1px #ccc;
-  border-radius: 6px;
-  color: white;
+  width: 40px !important;
+  border-right: solid 1px $light-gray;
+  border-radius: $border-radius-tile;
+  color: $white;
   display: flex;
   flex-direction: row;
   text-align: center;
   align-items: center;
-  font-size: 18px;
+  font-size: $font-size-xxl;
   justify-content: space-between;
   box-sizing: border-box;
-  background: #3f51b5;
+  background: $primary-color;
   font-weight: bold;
 
   &:last-child {
     border: none;
   }
+}
+
+.grid-wrapper {
+  position: relative;
+  width: 390px;
+  height: 390px;
+  max-width: 100vw;
+  overflow: hidden;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.letter-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: $spacing-xs;
+  width: 287px;
+  min-height: 107px;
+  border: 1px solid $light-gray;
+  padding: $spacing-s;
+  border-radius: $border-radius-large;
+  margin-bottom: $spacing-xl;
+}
+
+.grid-container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  padding: $spacing-s;
+}
+
+.grid-cell {
+  width: $grid-cell-size;
+  height: $grid-cell-size;
+  border: 1px solid $grid-cell-border-color;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

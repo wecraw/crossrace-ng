@@ -3,28 +3,7 @@
 
 $grid-cell-size: 36px;
 
-.tile-wrapper {
-  height: 40px;
-  width: 40px;
-  border-right: solid 1px #ccc;
-  border-radius: 6px;
-  color: white;
-  display: flex;
-  flex-direction: row;
-  text-align: center;
-  align-items: center;
-  font-size: 18px;
-  justify-content: space-between;
-  box-sizing: border-box;
-  background: #3f51b5;
-  font-weight: bold;
-}
-
 .grid-wrapper {
-  position: relative;
-  width: 390px;
-  height: 390px;
-  overflow: hidden;
   margin: 175px auto 0;
 }
 
@@ -37,16 +16,6 @@ $grid-cell-size: 36px;
 }
 
 .letter-bank {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 5px;
-  width: 287px;
-  min-height: 107px;
-  border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 16px;
-  margin-bottom: 35px;
   top: 50px;
 }
 
@@ -65,20 +34,6 @@ $grid-cell-size: 36px;
 .grid-container {
   margin-left: -31px;
   margin-top: -11px;
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  width: fit-content;
-  padding: 10px;
-}
-
-.grid-cell {
-  width: $grid-cell-size;
-  height: $grid-cell-size;
-  border: 1px solid $grid-cell-border-color;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .letter-tile {
@@ -248,115 +203,6 @@ input:focus::placeholder {
   font-size: 20px;
   text-align: center;
   border: 1px solid $success-color;
-}
-
-.flip-in-hor-bottom-0 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s
-    both;
-}
-
-.flip-in-hor-bottom-1 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s
-    both;
-}
-
-.flip-in-hor-bottom-2 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s
-    both;
-}
-
-.flip-in-hor-bottom-3 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s
-    both;
-}
-
-.flip-in-hor-bottom-4 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s
-    both;
-}
-
-.flip-in-hor-bottom-5 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s
-    both;
-}
-
-.flip-in-hor-bottom-6 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.7s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.7s
-    both;
-}
-
-.flip-in-hor-bottom-7 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s
-    both;
-}
-
-.flip-in-hor-bottom-8 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s
-    both;
-}
-
-.flip-in-hor-bottom-9 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s
-    both;
-}
-
-.flip-in-hor-bottom-10 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.1s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.1s
-    both;
-}
-
-.flip-in-hor-bottom-11 {
-  -webkit-animation: flip-in-hor-bottom 0.5s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s both;
-  animation: flip-in-hor-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s
-    both;
-}
-
-@-webkit-keyframes flip-in-hor-bottom {
-  0% {
-    -webkit-transform: rotateX(80deg);
-    transform: rotateX(80deg);
-    opacity: 0;
-  }
-  100% {
-    -webkit-transform: rotateX(0);
-    transform: rotateX(0);
-    opacity: 1;
-  }
-}
-@keyframes flip-in-hor-bottom {
-  0% {
-    -webkit-transform: rotateX(80deg);
-    transform: rotateX(80deg);
-    opacity: 0;
-  }
-  100% {
-    -webkit-transform: rotateX(0);
-    transform: rotateX(0);
-    opacity: 1;
-  }
 }
 
 .version {
