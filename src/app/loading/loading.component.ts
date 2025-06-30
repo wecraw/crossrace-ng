@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {
   trigger,
   state,
@@ -6,6 +6,7 @@ import {
   animate,
   transition,
 } from '@angular/animations';
+import { LoadingService } from '../loading.service';
 
 @Component({
   selector: 'app-loading',
@@ -22,11 +23,16 @@ import {
       state('*', style({ opacity: 1 })),
 
       // Transition for both entering and leaving
-      transition('void <=> *', [animate('200ms ease-in-out')]),
+      transition('void <=> *', [animate('250ms ease-in-out')]),
     ]),
   ],
+  host: {
+    '[@fade]': '',
+  },
 })
 export class LoadingComponent {
+  private readonly loadingService = inject(LoadingService);
+  public readonly message = this.loadingService.loadingMessage;
   // This component is purely presentational.
   // Its existence in the DOM is controlled by the parent (AppComponent).
 }

@@ -10,12 +10,20 @@
   z-index: 9999999; // Ensure it's on top of everything
 
   // Appearance
-  background-color: rgba(0, 0, 0, 0.7); // 70% opacity black
+  background-color: rgba(0, 0, 0, 0.72); // 70% opacity black
 
   // Center the spinner
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.message {
+  position: absolute;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+  z-index: 1; // Should be on top of .loader
 }
 
 /* Provided Spinner Styles */

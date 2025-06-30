@@ -26,8 +26,10 @@
   </div>
 </div>
 <div class="countdown m-lr-auto" *ngIf="isCountingDown">
-  <h3>Get ready!</h3>
-  <h5>Game starting in {{ countdown }}...</h5>
+  <div class="spinner-container">
+    <span class="loader"></span>
+    <span class="countdown-number">{{ countdown }}</span>
+  </div>
 </div>
 
 <div

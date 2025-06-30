@@ -28,6 +28,7 @@ import { DialogSettings } from '../dialog/dialog-settings';
 import { PlayerCardComponent } from '../player-card/player-card.component';
 import { Player } from '../interfaces/player';
 import { DialogData } from '../interfaces/dialog-data';
+import { LoadingService } from '../loading.service';
 
 @Component({
   selector: 'app-lobby',
@@ -69,6 +70,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private location: Location,
+    private loadingService: LoadingService,
   ) {}
 
   get connectedPlayers(): Player[] {
@@ -159,7 +161,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   async createGame() {
     this.isProcessing = true;
-    this.openDialog(DialogSettings.dialogSettingsConnecting, true);
+    this.loadingService.show();
 
     try {
       const response = await this.webSocketService.createGame();
@@ -194,7 +196,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       // ... error handling
     } finally {
       this.isProcessing = false;
-      this.dialog.closeAll();
+      this.loadingService.hide();
       this.cdr.detectChanges();
     }
   }
@@ -203,7 +205,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     if (this.isProcessing) return; // Prevent double-calls
 
     this.isProcessing = true;
-    this.openDialog(DialogSettings.dialogSettingsJoin, true);
+    this.loadingService.show();
 
     // We first set the gameCode in our state service. This is important
     // because if the connection drops and reconnects, the service knows which
@@ -222,7 +224,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       // The promise from `joinGame` was rejected.
       console.error('Failed to join game:', error);
       this.isProcessing = false;
-      this.dialog.closeAll(); // Close the "Joining..." dialog
+      this.loadingService.hide(); // Close the "Joining..." dialog
       this.openDialog(
         {
           dialogText:
@@ -246,7 +248,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   startGame(): void {
     if (this.gameState.isHost && this.gameState.gameCode) {
-      this.openDialog(DialogSettings.dialogSettingsStart, true);
       this.webSocketService.startGame(this.gameState.gameCode);
     } else {
       console.error('Cannot start game: not host or no game code');
@@ -301,19 +302,19 @@ export class LobbyComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((status) => {
         if (status === 'reconnecting') {
-          this.openDialog(DialogSettings.dialogSettingsReconnecting, true);
+          this.loadingService.show();
         } else if (status === 'connected') {
-          this.dialog.closeAll();
+          this.loadingService.hide();
         }
       });
   }
 
-  private handleMessage(message: any) {
+  private async handleMessage(message: any) {
     console.log('Lobby received message:', message.type, message);
     switch (message.type) {
       case 'playerList':
         this.isProcessing = false; // We have received state, stop processing
-        this.dialog.closeAll();
+        this.loadingService.hide();
         // The playerList is the single source of truth for players
         this.gameStateService.updateGameState({
           players: message.players,
@@ -326,11 +327,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
         break;
 
       case 'gameStarted':
-        this.dialog.closeAll();
-        this.gameStateService.updateGameState({
-          isInGame: true,
-          gameSeed: message.gameSeed,
-          gameMode: 'versus', // Explicitly set the mode
+        await this.loadingService.showForDuration({
+          message: 'Game starting!',
+          duration: 3000,
         });
 
         this.router.navigate(['/versus', this.gameState.gameCode], {
@@ -357,7 +356,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
       case 'error':
         this.isProcessing = false;
-        this.dialog.closeAll();
+        this.loadingService.hide();
         console.error('Received server error:', message.message);
         this.openDialog(
           {
