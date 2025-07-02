@@ -13,6 +13,7 @@ import { DOCUMENT } from '@angular/common';
 import { WebSocketService } from './websocket.service';
 import { LoadingService } from './loading.service';
 import { LoadingComponent } from './loading/loading.component';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +27,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private lastTap = 0;
   private doubleTapThreshold = 300; // milliseconds
+
+  // Debug properties
+  isProduction = environment.production;
 
   constructor(
     private renderer: Renderer2,
@@ -55,5 +59,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.websocketService.disconnect();
+  }
+
+  // Debug method for testing disconnections
+  simulateDisconnect(): void {
+    this.websocketService.simulateDisconnect();
   }
 }

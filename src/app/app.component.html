@@ -1,4 +1,17 @@
-<app-header></app-header> <router-outlet></router-outlet>
+<app-header></app-header>
+<router-outlet></router-outlet>
+
 @if (loadingService.isLoading()) {
   <app-loading></app-loading>
+}
+
+<!-- Debug FAB for testing disconnections -->
+@if (!isProduction) {
+  <button
+    class="debug-fab"
+    (click)="simulateDisconnect()"
+    title="Simulate Disconnect (Debug)"
+  >
+    <i class="material-icons">wifi_off</i>
+  </button>
 }

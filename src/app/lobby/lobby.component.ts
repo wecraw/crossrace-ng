@@ -3,7 +3,6 @@ import {
   Component,
   OnInit,
   OnDestroy,
-  inject,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   ViewChild,
@@ -24,7 +23,6 @@ import { Dialog } from '../dialog/dialog.component';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { Location } from '@angular/common';
-import { DialogSettings } from '../dialog/dialog-settings';
 import { PlayerCardComponent } from '../player-card/player-card.component';
 import { Player } from '../interfaces/player';
 import { DialogData } from '../interfaces/dialog-data';
@@ -113,22 +111,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
     // Only clear the game state if we have no active multiplayer game context
     // (i.e., no gameCode and no localPlayerId, meaning we're not in a multiplayer session)
     if (!this.gameState.gameCode && !this.gameState.localPlayerId) {
-      console.log('LobbyComponent: Clearing game state on destroy', {
-        isInGame: this.gameState.isInGame,
-        gameMode: this.gameState.gameMode,
-        gameCode: this.gameState.gameCode,
-        localPlayerId: this.gameState.localPlayerId,
-      });
       this.gameStateService.clearGameState();
       // Optionally tell the service to disconnect if leaving the app entirely
       // this.webSocketService.disconnect();
-    } else {
-      console.log('LobbyComponent: Preserving game state on destroy', {
-        isInGame: this.gameState.isInGame,
-        gameMode: this.gameState.gameMode,
-        gameCode: this.gameState.gameCode,
-        localPlayerId: this.gameState.localPlayerId,
-      });
     }
   }
 
@@ -374,6 +359,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
         }
         break;
 
+      case 'gameStatusCheck':
+        // Handle response to game status check after reconnection in lobby
+        this.handleGameStatusCheckResponse(message);
+        break;
+
       case 'error':
         this.isProcessing = false;
         this.loadingService.hide();
@@ -388,6 +378,33 @@ export class LobbyComponent implements OnInit, OnDestroy {
         );
         break;
     }
+  }
+
+  private handleGameStatusCheckResponse(message: any): void {
+    console.log('Lobby received game status check response:', message);
+
+    if (message.gameEnded) {
+      // A game ended while we were disconnected from the lobby
+      console.log('Game ended while disconnected from lobby');
+
+      // Update the player list with final game results
+      if (message.players) {
+        this.gameStateService.updateGameState({
+          players: message.players,
+          isHost:
+            message.players.find(
+              (p: Player) => p.isHost && p.id === this.gameState.localPlayerId,
+            ) != null,
+        });
+      }
+
+      // Could show a brief notification that a game ended while away
+      // For now, just update the state - the UI will reflect the new win counts
+    } else if (message.gameActive === false && message.gameNotFound) {
+      // Game doesn't exist anymore, but we're in lobby so this is normal
+      console.log('Game session has expired, staying in lobby');
+    }
+    // If game is still active, no action needed in lobby
   }
 
   // Debugging

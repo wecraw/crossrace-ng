@@ -86,12 +86,10 @@ export class WebSocketService implements OnDestroy {
     this.socket.on('disconnect', (reason: string) => {
       console.log('Disconnected from server. Reason:', reason);
       this.connectionStatus.next('disconnected');
-      if (reason === 'io server disconnect') {
-        // The server intentionally disconnected the socket.
-        // We won't try to reconnect.
-        this.socket?.connect();
-      }
-      // Otherwise, the client will automatically try to reconnect.
+
+      // Socket.IO will automatically attempt to reconnect for most disconnect reasons
+      // except 'io client disconnect' (manual disconnect by client)
+      // No need to manually call connect() here - let Socket.IO handle it
     });
 
     this.socket.on('connect_error', (error: any) => {
@@ -104,6 +102,12 @@ export class WebSocketService implements OnDestroy {
       this.connectionStatus.next('reconnecting');
       // You can still show a dialog if you want
       this.openReconnectDialog();
+    });
+
+    this.socket.on('reconnect', (attempt: any) => {
+      console.log(`Successfully reconnected after ${attempt} attempts`);
+      this.connectionStatus.next('connected');
+      // Note: rejoinGame() is already called in the 'connect' event handler
     });
 
     this.socket.on('reconnect_failed', () => {
@@ -145,7 +149,23 @@ export class WebSocketService implements OnDestroy {
       console.log(
         `Attempting to rejoin game: ${this.currentGameCode} as player ${playerId}`,
       );
-      this.joinGame(this.currentGameCode, playerId);
+
+      // First, try to rejoin the game
+      this.joinGame(this.currentGameCode, playerId).catch((error) => {
+        console.log('Failed to rejoin game, it may have ended:', error);
+        // If rejoin fails, the game might have ended while disconnected
+        if (this.currentGameCode) {
+          this.checkGameStatus(this.currentGameCode);
+        }
+      });
+
+      // Additionally, always check if the game ended while we were disconnected
+      // This covers cases where rejoin succeeds but the game actually ended
+      setTimeout(() => {
+        if (this.currentGameCode) {
+          this.checkGameStatus(this.currentGameCode);
+        }
+      }, 1000);
     }
   }
 
@@ -270,6 +290,44 @@ export class WebSocketService implements OnDestroy {
       });
     } else {
       console.error('Cannot announce win: no game code available.');
+    }
+  }
+
+  // Request current game state after reconnection
+  requestGameState(gameCode: string): void {
+    this.socket?.emit('requestGameState', { gameCode });
+  }
+
+  // Check if game has ended while disconnected (for reconnection edge cases)
+  checkGameStatus(gameCode: string): void {
+    console.log(`Checking if game ${gameCode} ended while disconnected...`);
+    this.socket?.emit('checkGameStatus', { gameCode });
+  }
+
+  // Notify server that player is active in game (for reconnection tracking)
+  confirmGameParticipation(gameCode: string, playerId: string): void {
+    this.socket?.emit('confirmGameParticipation', { gameCode, playerId });
+  }
+
+  // DEBUG: Simulate disconnect for testing reconnection
+  simulateDisconnect(): void {
+    console.log('Simulating disconnect for testing...');
+    if (this.socket) {
+      // Force disconnect the socket
+      this.socket.disconnect();
+
+      // Since manual disconnect doesn't trigger auto-reconnect,
+      // we need to manually simulate the reconnection process
+      setTimeout(() => {
+        console.log('Simulating reconnection attempt...');
+        this.connectionStatus.next('reconnecting');
+
+        // Then attempt to reconnect after showing reconnecting status
+        setTimeout(() => {
+          console.log('Attempting to reconnect after simulated disconnect...');
+          this.socket?.connect();
+        }, 500);
+      }, 1000); // 1 second delay before showing "reconnecting"
     }
   }
 
