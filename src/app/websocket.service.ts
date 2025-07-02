@@ -150,22 +150,13 @@ export class WebSocketService implements OnDestroy {
         `Attempting to rejoin game: ${this.currentGameCode} as player ${playerId}`,
       );
 
-      // First, try to rejoin the game
+      // Try to rejoin the game
+      // The joinGame response will now include game end information if the game ended while disconnected
       this.joinGame(this.currentGameCode, playerId).catch((error) => {
-        console.log('Failed to rejoin game, it may have ended:', error);
-        // If rejoin fails, the game might have ended while disconnected
-        if (this.currentGameCode) {
-          this.checkGameStatus(this.currentGameCode);
-        }
+        console.log('Failed to rejoin game:', error);
+        // If rejoin fails completely, the game might not exist anymore
+        // The error handling in the calling component will handle navigation
       });
-
-      // Additionally, always check if the game ended while we were disconnected
-      // This covers cases where rejoin succeeds but the game actually ended
-      setTimeout(() => {
-        if (this.currentGameCode) {
-          this.checkGameStatus(this.currentGameCode);
-        }
-      }, 1000);
     }
   }
 
@@ -258,6 +249,16 @@ export class WebSocketService implements OnDestroy {
     // TypeScript now knows the shape of `response`. No more error.
     if (response.success && response.playerId) {
       this.setPlayerId(response.playerId);
+
+      // Check if the game ended while we were disconnected
+      if (response.gameEnded && response.gameEndData) {
+        console.log('Game ended while disconnected, notifying components');
+        // Send a gameEnded message to components
+        this.messageSubject.next({
+          type: 'gameEndedWhileDisconnected',
+          ...response.gameEndData,
+        });
+      }
     }
     return response;
   }

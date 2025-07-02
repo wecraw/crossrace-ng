@@ -22,4 +22,15 @@ export interface JoinGameResponse extends AckResponse {
   displayName: string;
   playerColor: string;
   playerEmoji: string;
+  // Properties for handling games that ended while disconnected
+  gameEnded?: boolean;
+  gameEndData?: {
+    winner: string;
+    winnerDisplayName: string;
+    winnerColor: string;
+    winnerEmoji: string;
+    players: any[];
+    condensedGrid: string[][];
+    time: string;
+  };
 }

@@ -443,6 +443,14 @@ export class GameComponent implements OnInit, OnDestroy {
         }
         break;
 
+      case 'gameEndedWhileDisconnected':
+        // Handle game end that occurred while disconnected (from joinGame response)
+        if (this.gameState.gameMode === 'versus') {
+          console.log('Game ended while disconnected (detected on rejoin)');
+          this.handleGameEndWhileDisconnected(message);
+        }
+        break;
+
       case 'error':
         console.error(
           'Received server error during gameplay:',
@@ -538,6 +546,34 @@ export class GameComponent implements OnInit, OnDestroy {
       this.router.navigate(['/']);
     }
     // If gameActive is true or gameEnded is false, the game is still ongoing - no action needed
+  }
+
+  private handleGameEndWhileDisconnected(message: any): void {
+    console.log('Handling game that ended while disconnected:', message);
+
+    // Set local state to reflect that the game is over
+    this.isGameOver = true;
+    this.isWinner = message.winner === this.gameState.localPlayerId;
+    this.stopTimer();
+
+    // Update game state with final player list
+    if (message.players) {
+      this.gameStateService.updateGameState({
+        players: message.players,
+        lastWinnerId: message.winner,
+      });
+    }
+
+    // Show the post-game dialog with the final results
+    this.openDialog({
+      winnerDisplayName: message.winnerDisplayName,
+      winnerColor: message.winnerColor,
+      winnerEmoji: message.winnerEmoji,
+      players: message.players,
+      grid: message.condensedGrid,
+      time: message.time,
+      reconnectedAfterEnd: true, // Flag to indicate this was shown after reconnection
+    });
   }
 
   startPuzzle() {
