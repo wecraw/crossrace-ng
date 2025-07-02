@@ -192,8 +192,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
       });
     } catch (error) {
       console.error('Failed to create game:', error);
-      // ... error handling
+      // Additional error handling here (dialog, toast, etc.)
     } finally {
+      // Always clear the processing flag & hide loading overlay for CREATE flow.
+      // JOIN flow relies on the playerList message instead.
       this.isProcessing = false;
       this.loadingService.hide();
       this.cdr.detectChanges();
@@ -303,7 +305,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
         if (status === 'reconnecting') {
           this.loadingService.show();
         } else if (status === 'connected') {
-          this.loadingService.hide();
+          // Avoid hiding the overlay if we are still in the middle of a create/join flow
+          if (!this.isProcessing) {
+            this.loadingService.hide();
+          }
         }
       });
   }
