@@ -1,13 +1,8 @@
 <div class="wrapper">
   <div class="d-flex m-lr-auto">
-    <!-- <h4 [ngClass]="{ 'm-lr-auto': data.showConfirm }">
+    <h4 [ngClass]="{ 'm-lr-auto': data.showConfirm }">
       {{ data.dialogText }}
-    </h4> -->
-    @for (letter of dialogLetters; track letter) {
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">{{ letter }}</div>
-      </div>
-    }
+    </h4>
     @if (data.showSpinner) {
       <mat-spinner [diameter]="25" class="spinner"></mat-spinner>
     }

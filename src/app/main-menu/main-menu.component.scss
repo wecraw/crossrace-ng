@@ -5,6 +5,7 @@ $grid-cell-size: 36px;
 
 .grid-wrapper {
   margin: 175px auto 0;
+  opacity: 0.4; //controls opacity of grid background
 }
 
 .grid-fade-wrapper {
@@ -98,7 +99,6 @@ $grid-cell-size: 36px;
   height: 400px;
   display: flex;
   flex-direction: column;
-  background: $white-transparent-66; //controls opacity of grid background
   h5 {
     margin-bottom: auto;
   }

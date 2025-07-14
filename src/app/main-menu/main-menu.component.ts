@@ -6,6 +6,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
+import { Dialog } from '../dialog/dialog.component';
 
 import { GameSeedService } from '../game-seed.service';
 import {
@@ -15,6 +16,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { LoadingService } from '../loading.service';
+import { WebSocketService } from '../websocket.service';
 
 @Component({
   selector: 'app-game',
@@ -42,6 +44,7 @@ export class MainMenuComponent implements OnInit {
     private gameSeedService: GameSeedService,
     private fb: FormBuilder,
     private loadingService: LoadingService,
+    private webSocketService: WebSocketService,
   ) {}
 
   ngOnInit(): void {
@@ -160,10 +163,38 @@ export class MainMenuComponent implements OnInit {
     this.joinGameForm.patchValue({ gameCode: input.value });
   }
 
-  joinGame() {
+  async joinGame() {
     if (this.joinGameForm.valid) {
       const gameCode = this.joinGameForm.get('gameCode')?.value;
-      this.router.navigate(['/join', gameCode]);
+
+      // Show loading while verifying game exists
+      this.loadingService.show();
+
+      try {
+        // Verify the game exists by attempting to join it
+        await this.webSocketService.joinGame(gameCode);
+
+        // If successful, navigate to the join route
+        this.router.navigate(['/join', gameCode]);
+      } catch (error) {
+        // Game doesn't exist or other error occurred
+        console.error('Failed to verify game:', error);
+
+        // Show error dialog
+        const dialogRef = this.dialog.open(Dialog, {
+          data: {
+            dialogText:
+              typeof error === 'string'
+                ? error
+                : 'Game not found. Please check the game code and try again.',
+            showSpinner: false,
+            showConfirm: true,
+          },
+        });
+      } finally {
+        // Always hide loading
+        this.loadingService.hide();
+      }
     } else {
       console.log('Form is invalid');
     }

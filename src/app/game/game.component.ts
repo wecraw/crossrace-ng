@@ -146,6 +146,9 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Get route info
+    this.initializeFromUrl();
+
     // Generate grid IDs (doesn't depend on state)
     this.generateGridCellIds();
 
@@ -219,10 +222,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private initializeGame(): void {
-    // At this point, the constructor has already updated the GameStateService
-    // with data from the router state if it existed.
-
-    // The logic is now simple: what mode are we in?
     switch (this.gameState.gameMode) {
       case 'versus':
         // We are in a multiplayer game. Trust the state and start.
@@ -235,10 +234,11 @@ export class GameComponent implements OnInit, OnDestroy {
         break;
 
       case 'daily':
+        this.initializeDaily();
+        break;
+
       case 'practice':
-        // This handles cases where the user navigates directly to a URL.
-        // Let's create a separate helper for this to keep it clean.
-        this.initializeFromUrl();
+        this.initializePractice();
         break;
 
       default:
@@ -249,59 +249,65 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  private initializeFromUrl(): void {
-    if (this.route.snapshot.url[0]?.path === 'daily') {
-      this.gameStateService.updateGameState({ gameMode: 'daily' });
+  private initializeDaily(): void {
+    const dailySeed = this.gameSeedService.getDailySeed();
+    const storageSeed = localStorage.getItem('dailySeed');
 
-      const dailySeed = this.gameSeedService.getDailySeed();
-      const storageSeed = localStorage.getItem('dailySeed');
+    // Check if it's the same daily challenge
+    if (storageSeed && +storageSeed === dailySeed) {
+      if (this.finishedDaily()) {
+        // Daily already completed, show post-game dialog
+        const finalTime = localStorage.getItem('finalTime');
+        const finalGrid = localStorage.getItem('finalGrid');
 
-      // Check if it's the same daily challenge
-      if (storageSeed && +storageSeed === dailySeed) {
-        if (this.finishedDaily()) {
-          // Daily already completed, show post-game dialog
-          const finalTime = localStorage.getItem('finalTime');
-          const finalGrid = localStorage.getItem('finalGrid');
+        // Set the timer to the final time for some eye candy
+        const currentTime = localStorage.getItem('dailyCurrentTime');
+        if (currentTime) {
+          this.timerStartTime = +currentTime;
+        }
 
-          // Set the timer to the final time for some eye candy
-          const currentTime = localStorage.getItem('dailyCurrentTime');
-          if (currentTime) {
-            this.timerStartTime = +currentTime;
-          }
-
-          if (finalTime && finalGrid) {
-            this.isGridReady = true; // Prevent getting stuck on a loading state
-            this.openDialog({
-              time: finalTime,
-              grid: JSON.parse(finalGrid),
-              winnerDisplayName: 'You',
-              daily: true,
-              singlePlayer: true,
-              shareLink: this.generateShareLink(),
-            });
-          }
-          // Do not start the game
-          return;
-        } else {
-          // This is a daily game in progress, resume it.
-          const currentTime = localStorage.getItem('dailyCurrentTime');
-          if (currentTime) {
-            this.timerStartTime = +currentTime;
-          }
+        if (finalTime && finalGrid) {
+          this.isGridReady = true; // Prevent getting stuck on a loading state
+          this.openDialog({
+            time: finalTime,
+            grid: JSON.parse(finalGrid),
+            winnerDisplayName: 'You',
+            daily: true,
+            singlePlayer: true,
+            shareLink: this.generateShareLink(),
+          });
+        }
+        // Do not start the game
+        return;
+      } else {
+        // This is a daily game in progress, resume it.
+        const currentTime = localStorage.getItem('dailyCurrentTime');
+        if (currentTime) {
+          this.timerStartTime = +currentTime;
         }
       }
-
-      this.gameStateService.updateGameState({ gameSeed: dailySeed });
-      this.startAfterCountDown();
-      return;
     }
 
-    // Default to a non-seeded practice game
+    this.gameStateService.updateGameState({ gameSeed: dailySeed });
+    this.startAfterCountDown();
+    return;
+  }
+
+  private initializePractice(): void {
     this.gameStateService.updateGameState({
-      gameMode: 'practice',
       gameSeed: this.getRandomPuzzleSeed(),
     });
     this.startAfterCountDown();
+  }
+
+  private initializeFromUrl(): void {
+    if (this.route.snapshot.url[0]?.path === 'daily') {
+      this.gameStateService.updateGameState({ gameMode: 'daily' });
+    } else if (this.route.snapshot.url[0]?.path === 'practice') {
+      this.gameStateService.updateGameState({
+        gameMode: 'practice',
+      });
+    }
   }
 
   ngAfterViewInit() {
@@ -376,9 +382,9 @@ export class GameComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.gameState.gameMode === 'daily') {
-      this.location.replaceState('/daily');
-    }
+    // if (this.gameState.gameMode === 'daily') {
+    //   this.location.replaceState('/daily');
+    // }
     // For 'versus', the URL is already correct from the lobby.
 
     this.setLettersFromPuzzle();

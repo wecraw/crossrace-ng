@@ -1,19 +1,15 @@
-// src/app/websocket.service.ts
-
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { filter, map, take } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { environment } from '../environments/environment';
-import { DialogSettings } from './dialog/dialog-settings';
-import { Dialog } from './dialog/dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { GameStateService } from './game-state.service';
+import { LoadingService } from './loading.service';
 import {
   CreateGameResponse,
   JoinGameResponse,
 } from './interfaces/api-responses';
 
-// Import the new library
 import * as SocketIOClient from 'socket.io-client';
 const PLAYER_ID_STORAGE_KEY = 'crossrace_player_id';
 
@@ -21,18 +17,15 @@ const PLAYER_ID_STORAGE_KEY = 'crossrace_player_id';
   providedIn: 'root',
 })
 export class WebSocketService implements OnDestroy {
-  // Use the Socket.IO Socket type
   private socket: SocketIOClient.Socket | null = null;
 
-  // We can keep these as they are, they're for internal app logic
   private messageSubject = new Subject<any>();
   private connectionStatus = new BehaviorSubject<string>('disconnected');
 
-  // These state properties are still useful for rejoining
   private currentGameCode: string | null = null;
-  // private currentPlayerId: string | null = null;
 
   readonly dialog = inject(MatDialog);
+  private loadingService = inject(LoadingService);
 
   constructor(private gameStateService: GameStateService) {
     this.connect(); // Connect immediately on service instantiation
@@ -57,7 +50,6 @@ export class WebSocketService implements OnDestroy {
     this.disconnect();
   }
 
-  // --- New Connection Logic with Socket.IO ---
   private connect(): void {
     if (this.socket) {
       // If a socket exists, don't create a new one. Let Socket.IO handle it.
@@ -100,19 +92,23 @@ export class WebSocketService implements OnDestroy {
     this.socket.on('reconnect_attempt', (attempt: any) => {
       console.log(`Reconnect attempt #${attempt}`);
       this.connectionStatus.next('reconnecting');
-      // You can still show a dialog if you want
-      this.openReconnectDialog();
+      // Show loading component with "Reconnecting" message
+      this.loadingService.show({ message: 'Reconnecting' });
     });
 
     this.socket.on('reconnect', (attempt: any) => {
       console.log(`Successfully reconnected after ${attempt} attempts`);
       this.connectionStatus.next('connected');
+      // Hide loading component after successful reconnection
+      this.loadingService.hide();
       // Note: rejoinGame() is already called in the 'connect' event handler
     });
 
     this.socket.on('reconnect_failed', () => {
       console.error('Failed to reconnect to the server.');
       this.connectionStatus.next('failed');
+      // Hide loading component after failed reconnection
+      this.loadingService.hide();
     });
 
     // --- Unified Game Event Listener ---
@@ -132,14 +128,6 @@ export class WebSocketService implements OnDestroy {
     if (this.socket) {
       this.socket.disconnect();
     }
-  }
-
-  openReconnectDialog() {
-    // This logic can remain the same
-    const dialogRef = this.dialog.open(Dialog, {
-      data: DialogSettings.dialogSettingsReconnecting,
-      disableClose: true,
-    });
   }
 
   // This logic is still useful for re-establishing game state on a fresh connect
@@ -180,7 +168,6 @@ export class WebSocketService implements OnDestroy {
         `Socket not connected. Waiting for connection before emitting '${event}'...`,
       );
 
-      // THE FIX: Simply call .connect(). The library will handle the state.
       // If it's already trying to connect, this call is safely ignored.
       // If it's disconnected, this will start the connection process.
       this.socket.connect();
@@ -332,7 +319,7 @@ export class WebSocketService implements OnDestroy {
     }
   }
 
-  // --- Observable Getters (these can largely stay the same) ---
+  // --- Observable Getters ---
 
   getConnectionStatus(): Observable<string> {
     return this.connectionStatus.asObservable();

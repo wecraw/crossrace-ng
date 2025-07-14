@@ -239,7 +239,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       );
 
       // Since the join failed, clear the invalid game code from the URL and state
-      this.router.navigate(['/']);
+      this.router.navigate(['/versus-menu']);
       this.gameStateService.clearGameState();
     }
     // Note: We don't set `isProcessing = false` in the success case.
