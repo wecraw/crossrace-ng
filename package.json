@@ -1,10 +1,14 @@
 {
   "name": "crossrace-ng",
-  "version": "0.0.0",
+  "version": "0.8.3",
   "scripts": {
     "ng": "ng",
+    "prebuild": "node scripts/version.js",
+    "prebuild:prod": "node scripts/version.js --prod",
     "start": "ng serve",
+    "dev": "node scripts/version.js && ng serve --configuration=dev",
     "build": "ng build",
+    "build:prod": "npm run prebuild:prod && ng build --configuration=production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

@@ -58,6 +58,14 @@
                 }
               ]
             },
+            "dev": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.dev.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -74,6 +82,9 @@
           "configurations": {
             "production": {
               "buildTarget": "crossrace-ng:build:production"
+            },
+            "dev": {
+              "buildTarget": "crossrace-ng:build:dev"
             },
             "development": {
               "buildTarget": "crossrace-ng:build:development"

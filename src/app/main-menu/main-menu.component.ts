@@ -1,13 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
 import { Dialog } from '../dialog/dialog.component';
-
 import { GameSeedService } from '../game-seed.service';
 import {
   FormBuilder,
@@ -17,6 +14,7 @@ import {
 } from '@angular/forms';
 import { LoadingService } from '../loading.service';
 import { WebSocketService } from '../websocket.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-game',
@@ -37,6 +35,9 @@ export class MainMenuComponent implements OnInit {
   // Game State
   isVersus: boolean = false;
   joinGameForm!: FormGroup;
+
+  // Version info
+  version = environment.version?.displayVersion || '<version info not found>';
 
   constructor(
     private router: Router,
