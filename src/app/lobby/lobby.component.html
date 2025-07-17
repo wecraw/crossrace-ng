@@ -38,34 +38,30 @@
             </div>
           </div>
           <div class="self flex-fixed">
-            @for (player of connectedPlayers; track player.id) {
-              @if (isPlayerSelf(player)) {
-                <player-card
-                  [player]="player"
-                  [allowEdit]="true"
-                  [lastWinnerId]="gameState.lastWinnerId || ''"
-                  (onNameEdit)="updatePlayer({ displayName: $event })"
-                  (onColorSelect)="updatePlayer({ playerColor: $event })"
-                  (onEmojiSelect)="updatePlayer({ playerEmoji: $event })"
-                  (onReadyUp)="readyUp()"
-                ></player-card>
-              }
+            @if (selfPlayer) {
+              <player-card
+                [player]="selfPlayer"
+                [allowEdit]="true"
+                [lastWinnerId]="gameState.lastWinnerId || ''"
+                (onNameEdit)="updatePlayer({ displayName: $event })"
+                (onColorSelect)="updatePlayer({ playerColor: $event })"
+                (onEmojiSelect)="updatePlayer({ playerEmoji: $event })"
+                (onReadyUp)="readyUp()"
+              ></player-card>
             }
           </div>
         </div>
         <div class="flex-grow-1 overflow-auto">
-          @if (connectedPlayers.length < 2) {
+          @if (otherPlayers.length === 0 && connectedPlayers.length < 2) {
             <div class="waiting-for-players">Waiting for players....</div>
           }
           <div class="player-grid">
-            @for (player of connectedPlayers; track player.id) {
-              @if (!isPlayerSelf(player)) {
-                <player-card
-                  [player]="player"
-                  [lastWinnerId]="gameState.lastWinnerId || ''"
-                >
-                </player-card>
-              }
+            @for (player of otherPlayers; track player.id) {
+              <player-card
+                [player]="player"
+                [lastWinnerId]="gameState.lastWinnerId || ''"
+              >
+              </player-card>
             }
             <div class="fade-overlay"></div>
           </div>

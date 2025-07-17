@@ -127,7 +127,8 @@ export class MainMenuComponent implements OnInit {
   }
 
   createGame() {
-    this.router.navigate(['/join']);
+    // UPDATED: Navigate to '/create'
+    this.router.navigate(['/create']);
   }
 
   getFlipInClass(i: number) {
@@ -164,38 +165,11 @@ export class MainMenuComponent implements OnInit {
     this.joinGameForm.patchValue({ gameCode: input.value });
   }
 
-  async joinGame() {
+  joinGame() {
     if (this.joinGameForm.valid) {
       const gameCode = this.joinGameForm.get('gameCode')?.value;
-
-      // Show loading while verifying game exists
-      this.loadingService.show();
-
-      try {
-        // Verify the game exists by attempting to join it
-        await this.webSocketService.joinGame(gameCode);
-
-        // If successful, navigate to the join route
-        this.router.navigate(['/join', gameCode]);
-      } catch (error) {
-        // Game doesn't exist or other error occurred
-        console.error('Failed to verify game:', error);
-
-        // Show error dialog
-        const dialogRef = this.dialog.open(Dialog, {
-          data: {
-            dialogText:
-              typeof error === 'string'
-                ? error
-                : 'Game not found. Please check the game code and try again.',
-            showSpinner: false,
-            showConfirm: true,
-          },
-        });
-      } finally {
-        // Always hide loading
-        this.loadingService.hide();
-      }
+      // UPDATED: Navigate to '/join/:gameCode'
+      this.router.navigate(['/join', gameCode]);
     } else {
       console.log('Form is invalid');
     }

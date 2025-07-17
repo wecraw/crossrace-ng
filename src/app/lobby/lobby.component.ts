@@ -1,4 +1,3 @@
-// lobby.component.ts
 import {
   Component,
   OnInit,
@@ -22,7 +21,6 @@ import { MatInputModule } from '@angular/material/input';
 import { Dialog } from '../dialog/dialog.component';
 import { GameState, GameStateService } from '../game-state.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
-import { Location } from '@angular/common';
 import { PlayerCardComponent } from '../player-card/player-card.component';
 import { Player } from '../interfaces/player';
 import { DialogData } from '../interfaces/dialog-data';
@@ -52,13 +50,13 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   gameState!: GameState;
 
-  // This subject is used to automatically unsubscribe from all observables.
   private readonly destroy$ = new Subject<void>();
 
-  // Local UI state
   isShareSupported = false;
   isCopied = false;
-  isProcessing = false; // A single flag for spinners/dialogs (create/join)
+
+  selfPlayer: Player | undefined;
+  otherPlayers: Player[] = [];
 
   constructor(
     private webSocketService: WebSocketService,
@@ -67,7 +65,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-    private location: Location,
     private loadingService: LoadingService,
   ) {}
 
@@ -75,7 +72,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     if (!this.gameState?.players) {
       return [];
     }
-    // This filters out disconnected players for the UI.
     return this.gameState.players.filter((p) => !p.disconnected);
   }
 
@@ -100,26 +96,35 @@ export class LobbyComponent implements OnInit, OnDestroy {
       !!navigator.share &&
       /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
     this.setupSubscriptions();
-    this.handleRouteParameters();
+
+    const gameCode = this.route.snapshot.paramMap.get('gameCode');
+    if (!gameCode) {
+      // This is now an error state. A lobby should not exist without a game code.
+      console.error('LobbyComponent loaded without a game code.');
+      this.router.navigate(['/versus-menu']);
+      return;
+    }
+
+    // Ensure the WebSocket service knows the current game, especially for page reloads.
+    this.webSocketService.setCurrentGame(gameCode);
+    this.gameStateService.updateGameState({ gameCode });
+
+    // On a fresh load/reload of the lobby, explicitly request the player list.
+    // The server will respond with a 'playerList' message.
+    this.webSocketService.getPlayers(gameCode);
   }
 
   ngOnDestroy() {
-    // This is a clean way to manage subscriptions.
     this.destroy$.next();
     this.destroy$.complete();
 
-    // Only clear the game state if we have no active multiplayer game context
-    // (i.e., no gameCode and no localPlayerId, meaning we're not in a multiplayer session)
     if (!this.gameState.gameCode && !this.gameState.localPlayerId) {
       this.gameStateService.clearGameState();
-      // Optionally tell the service to disconnect if leaving the app entirely
-      // this.webSocketService.disconnect();
     }
   }
 
   readyUp() {
     if (this.gameState.gameCode && this.gameState.localPlayerId) {
-      // This is a special case of updating the player
       this.webSocketService.readyUp(
         this.gameState.gameCode,
         this.gameState.localPlayerId,
@@ -128,6 +133,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   copyOrShare() {
+    // UPDATED: The URL to share should be the public join URL.
     const gameShareUrl =
       window.location.origin + '/join/' + this.gameState.gameCode;
     const shareString = `Race me on Crossrace! \n${gameShareUrl}`;
@@ -147,6 +153,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   getDisplayUrl(): string {
+    // UPDATED: The URL to display should also be the public join URL.
     const gameShareUrl =
       window.location.origin + '/join/' + this.gameState.gameCode;
     const parsedUrl = new URL(gameShareUrl);
@@ -156,95 +163,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   isPlayerSelf(player: Player): boolean {
     return player.id === this.gameState.localPlayerId;
-  }
-
-  async createGame() {
-    this.isProcessing = true;
-    this.loadingService.show();
-
-    try {
-      const response = await this.webSocketService.createGame();
-      this.webSocketService.setCurrentGame(response.gameCode);
-      this.location.replaceState('/join/' + response.gameCode);
-
-      // Get the player ID from the response, as it's the source of truth
-      const localPlayerId = response.playerId;
-
-      this.gameStateService.updateGameState({
-        // Use updateGameState for safety
-        gameCode: response.gameCode,
-        isHost: true,
-        localPlayerId: localPlayerId,
-        players: [
-          {
-            // Create the initial player object for the host.
-            // No connectionId is needed here.
-            id: localPlayerId,
-            displayName: response.displayName,
-            playerColor: response.playerColor,
-            playerEmoji: response.playerEmoji,
-            isHost: true,
-            ready: false, // Initial state
-            winCount: 0, // Initial state
-            inGame: false, // Initial state
-          },
-        ],
-      });
-    } catch (error) {
-      console.error('Failed to create game:', error);
-      // Additional error handling here (dialog, toast, etc.)
-    } finally {
-      // Always clear the processing flag & hide loading overlay for CREATE flow.
-      // JOIN flow relies on the playerList message instead.
-      this.isProcessing = false;
-      this.loadingService.hide();
-      this.cdr.detectChanges();
-    }
-  }
-
-  async joinGame(gameCode: string) {
-    if (this.isProcessing) return; // Prevent double-calls
-
-    this.isProcessing = true;
-    this.loadingService.show();
-
-    // We first set the gameCode in our state service. This is important
-    // because if the connection drops and reconnects, the service knows which
-    // game to attempt to rejoin.
-    this.gameStateService.updateGameState({ gameCode: gameCode });
-
-    try {
-      // Pass the existing ID to the service. If it's null, the server will generate a new one.
-      const response = await this.webSocketService.joinGame(gameCode);
-
-      this.webSocketService.setCurrentGame(gameCode); // Only need to set game code
-      this.gameStateService.updateGameState({
-        localPlayerId: response.playerId,
-      });
-    } catch (error) {
-      // The promise from `joinGame` was rejected.
-      console.error('Failed to join game:', error);
-      this.isProcessing = false;
-      this.loadingService.hide(); // Close the "Joining..." dialog
-      this.openDialog(
-        {
-          dialogText:
-            typeof error === 'string'
-              ? error
-              : 'Game not found or an error occurred.',
-          showSpinner: false,
-          showConfirm: true,
-        },
-        false,
-      );
-
-      // Since the join failed, clear the invalid game code from the URL and state
-      this.router.navigate(['/versus-menu']);
-      this.gameStateService.clearGameState();
-    }
-    // Note: We don't set `isProcessing = false` in the success case.
-    // It gets set to false in `handleMessage` when the `playerList` arrives,
-    // which signifies the process is truly complete.
   }
 
   startGame(): void {
@@ -259,45 +177,23 @@ export class LobbyComponent implements OnInit, OnDestroy {
     return this.connectedPlayers.some((player) => !player.ready);
   }
 
-  private handleRouteParameters(): void {
-    const gameCodeParam = this.route.snapshot.paramMap.get('gameCode');
-
-    if (gameCodeParam) {
-      // SCENARIO 1: A game code is in the URL, so we are joining.
-      const gameCode = gameCodeParam.toUpperCase();
-      if (/^[A-Z]{4}$/.test(gameCode)) {
-        // This is the key change. We call joinGame, which will now handle
-        // the connection logic internally.
-        this.joinGame(gameCode);
-      } else {
-        this.router.navigate(['/']); // Invalid code format
-      }
-    } else {
-      // SCENARIO 2: No game code, so we are creating a new game.
-      if (!this.gameState.gameCode) {
-        this.createGame();
-      }
-    }
-  }
-
   private setupSubscriptions(): void {
-    // Subscribe to the game state
     this.gameStateService
       .getGameState()
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
         this.gameState = state;
-        // Trigger change detection whenever the central state updates
+        const connected = state.players.filter((p) => !p.disconnected);
+        this.selfPlayer = connected.find((p) => this.isPlayerSelf(p));
+        this.otherPlayers = connected.filter((p) => !this.isPlayerSelf(p));
         this.cdr.detectChanges();
       });
 
-    // Subscribe to WebSocket messages
     this.webSocketService
       .getMessages()
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => this.handleMessage(message));
 
-    // Subscribe to connection status changes
     this.webSocketService
       .getConnectionStatus()
       .pipe(takeUntil(this.destroy$))
@@ -305,10 +201,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
         if (status === 'reconnecting') {
           this.loadingService.show();
         } else if (status === 'connected') {
-          // Avoid hiding the overlay if we are still in the middle of a create/join flow
-          if (!this.isProcessing) {
-            this.loadingService.hide();
-          }
+          // The initial loading is handled by the connector. This only handles
+          // loading from reconnections.
+          this.loadingService.hide();
         }
       });
   }
@@ -317,12 +212,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
     console.log('Lobby received message:', message.type, message);
     switch (message.type) {
       case 'playerList':
-        this.isProcessing = false; // We have received state, stop processing
-        this.loadingService.hide();
-        // The playerList is the single source of truth for players
+        this.loadingService.hide(); // Hide any reconnecting spinners
         this.gameStateService.updateGameState({
           players: message.players,
-          // also update host status based on the new list
           isHost:
             message.players.find(
               (p: Player) => p.isHost && p.id === this.gameState.localPlayerId,
@@ -347,12 +239,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
         break;
 
       case 'gameEnded':
-        // Only handle gameEnded if we're not currently in a game
-        // This prevents race conditions when both lobby and game components
-        // receive the message simultaneously
         if (!this.gameState.isInGame) {
-          // When a game ends, the server resets the game state.
-          // The 'playerList' event within the gameEnded message provides the updated truth.
           this.gameStateService.updateGameState({
             players: message.players,
             isHost:
@@ -365,12 +252,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
         break;
 
       case 'gameStatusCheck':
-        // Handle response to game status check after reconnection in lobby
         this.handleGameStatusCheckResponse(message);
         break;
 
       case 'error':
-        this.isProcessing = false;
         this.loadingService.hide();
         console.error('Received server error:', message.message);
         this.openDialog(
@@ -387,12 +272,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   private handleGameStatusCheckResponse(message: any): void {
     console.log('Lobby received game status check response:', message);
-
     if (message.gameEnded) {
-      // A game ended while we were disconnected from the lobby
-      console.log('Game ended while disconnected from lobby');
-
-      // Update the player list with final game results
       if (message.players) {
         this.gameStateService.updateGameState({
           players: message.players,
@@ -402,22 +282,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
             ) != null,
         });
       }
-
-      // Could show a brief notification that a game ended while away
-      // For now, just update the state - the UI will reflect the new win counts
     } else if (message.gameActive === false && message.gameNotFound) {
-      // Game doesn't exist anymore, but we're in lobby so this is normal
       console.log('Game session has expired, staying in lobby');
     }
-    // If game is still active, no action needed in lobby
   }
 
-  // Debugging
-  // simulateDisconnect() {
-  //   this.webSocketService.manualDisconnect();
-  // }
-
-  //UI Helpers
   openTutorialDialog(data: any) {
     const dialogRef = this.dialog.open(DialogTutorial, {
       data: data,
@@ -440,7 +309,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
             this.router.navigate(['/']);
           }
         } else {
-          //closed modal by clicking outside
           this.router.navigate(['/']);
         }
       });

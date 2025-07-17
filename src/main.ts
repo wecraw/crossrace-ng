@@ -6,17 +6,26 @@ import { GameComponent } from './app/game/game.component';
 import { WebSocketService } from './app/websocket.service';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { MainMenuComponent } from './app/main-menu/main-menu.component';
+import { GameConnectorComponent } from './app/game-connector/game-connector.component';
+import { gameJoinGuard } from './app/game-join.guard';
 
 const routes: Routes = [
   { path: '', component: MainMenuComponent },
   { path: 'lobby', component: LobbyComponent },
   { path: 'versus-menu', component: MainMenuComponent },
   { path: 'versus', component: MainMenuComponent },
-  { path: 'join', component: LobbyComponent },
-  { path: 'join/:gameCode', component: LobbyComponent },
+  // { path: 'join', component: LobbyComponent },
+  // { path: 'join/:gameCode', component: LobbyComponent },
   { path: 'practice', component: GameComponent },
   { path: 'versus/:gameSeed', component: GameComponent },
   { path: 'daily', component: GameComponent },
+  { path: 'create', component: GameConnectorComponent },
+  { path: 'join/:gameCode', component: GameConnectorComponent },
+  {
+    path: 'lobby/:gameCode',
+    component: LobbyComponent,
+    canActivate: [gameJoinGuard],
+  },
   { path: '**', redirectTo: '' },
 ];
 
