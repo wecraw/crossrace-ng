@@ -6,10 +6,10 @@ export const environment: Environment = {
 
   version: {
     number: '0.8.3',
-    buildNumber: 1752560182,
-    buildDate: '2025-07-15T06:16:22.463Z',
-    gitHash: 'dde5c33',
+    buildNumber: 1752721459,
+    buildDate: '2025-07-17T03:04:19.205Z',
+    gitHash: '9473f39',
     gitBranch: 'multiplayer-routing',
-    displayVersion: '0.8.3.1752560182 (dev)'
+    displayVersion: '0.8.3.1752721459 (dev)'
   }
 };
