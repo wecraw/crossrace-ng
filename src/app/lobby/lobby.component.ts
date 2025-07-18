@@ -223,19 +223,18 @@ export class LobbyComponent implements OnInit, OnDestroy {
         break;
 
       case 'gameStarted':
-        await this.loadingService.showForDuration({
-          message: 'Game starting!',
-          duration: 3000,
+        this.gameStateService.updateGameState({
+          gameSeed: message.gameSeed,
+          isInGame: true,
+          gameMode: 'versus',
         });
 
-        this.router.navigate(['/versus', this.gameState.gameCode], {
-          state: {
-            gameSeed: message.gameSeed,
-            isInGame: true,
-            gameMode: 'versus',
-          },
+        await this.loadingService.showForDuration({
+          message: 'Game starting!',
+          duration: 2000, // timer before players are taken to the game
         });
-        console.log(this.gameState);
+
+        this.router.navigate(['/versus']);
         break;
 
       case 'gameEnded':

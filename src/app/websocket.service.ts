@@ -11,14 +11,24 @@ import {
 } from './interfaces/api-responses';
 
 import * as SocketIOClient from 'socket.io-client';
+
 // REMOVED PLAYER_ID_STORAGE_KEY constant, as it's now managed by GameStateService
 
 @Injectable({
   providedIn: 'root',
 })
 export class WebSocketService implements OnDestroy {
-  private socket: SocketIOClient.Socket | null = null;
-
+  private socket: SocketIOClient.Socket = SocketIOClient.default(
+    environment.serverUrl,
+    {
+      autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    },
+  );
   private messageSubject = new Subject<any>();
   private connectionStatus = new BehaviorSubject<string>('disconnected');
 
@@ -30,10 +40,9 @@ export class WebSocketService implements OnDestroy {
   private gameStateService = inject(GameStateService);
 
   constructor() {
-    this.connect(); // Connect immediately on service instantiation
+    this.setupSocketListeners();
     window.addEventListener('beforeunload', () => this.disconnect());
   }
-
   // REMOVED getPlayerId and setPlayerId methods.
 
   ngOnDestroy() {
@@ -46,21 +55,12 @@ export class WebSocketService implements OnDestroy {
     this.disconnect();
   }
 
-  private connect(): void {
-    if (this.socket) {
-      // If a socket exists, don't create a new one. Let Socket.IO handle it.
-      return;
+  public connect(): void {
+    if (this.socket.disconnected) {
+      this.socket.connect();
     }
-
-    // Connect to the server. Socket.IO will automatically handle reconnection.
-    this.socket = SocketIOClient.default(environment.serverUrl, {
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    });
-
+  }
+  private setupSocketListeners(): void {
     // --- Socket.IO Event Listeners ---
 
     this.socket.on('connect', () => {
@@ -109,9 +109,7 @@ export class WebSocketService implements OnDestroy {
   }
 
   disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-    }
+    this.socket.disconnect();
   }
 
   private async rejoinGame(): Promise<void> {
@@ -141,10 +139,6 @@ export class WebSocketService implements OnDestroy {
   }
 
   private async emitWithAck<T>(event: string, ...args: any[]): Promise<T> {
-    if (!this.socket) {
-      return Promise.reject('Socket service has not been initialized.');
-    }
-
     if (!this.socket.connected) {
       console.log(
         `Socket not connected. Waiting for connection before emitting '${event}'...`,
@@ -152,10 +146,12 @@ export class WebSocketService implements OnDestroy {
       this.socket.connect();
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          this.socket!.off('connect', resolve);
+          // MODIFIED: Removed non-null assertion
+          this.socket.off('connect', resolve);
           reject('Connection timeout while waiting to emit event.');
         }, 15000);
-        this.socket!.once('connect', () => {
+        // MODIFIED: Removed non-null assertion
+        this.socket.once('connect', () => {
           clearTimeout(timeout);
           console.log(`Socket connected! Proceeding with emit for '${event}'.`);
           resolve();
@@ -167,7 +163,8 @@ export class WebSocketService implements OnDestroy {
       const ackTimeout = setTimeout(() => {
         reject(`Server acknowledgement timeout for event '${event}'.`);
       }, 10000);
-      this.socket!.emit(
+      // MODIFIED: Removed non-null assertion
+      this.socket.emit(
         event,
         ...args,
         (response: { success: boolean; message?: string } & T) => {
@@ -226,7 +223,7 @@ export class WebSocketService implements OnDestroy {
   }
 
   getPlayers(gameCode: string): void {
-    this.socket?.emit('getPlayers', { gameCode });
+    this.socket.emit('getPlayers', { gameCode });
   }
 
   updatePlayer(gameCode: string, playerId: string, updates: any): Promise<any> {
@@ -234,16 +231,16 @@ export class WebSocketService implements OnDestroy {
   }
 
   readyUp(gameCode: string, playerId: string): void {
-    this.socket?.emit('playerReady', { gameCode, playerId });
+    this.socket.emit('playerReady', { gameCode, playerId });
   }
 
   startGame(gameCode: string): void {
-    this.socket?.emit('startGame', { gameCode });
+    this.socket.emit('startGame', { gameCode });
   }
 
   announceWin(playerId: string, condensedGrid: string[][], time: string): void {
     if (this.currentGameCode) {
-      this.socket?.emit('win', {
+      this.socket.emit('win', {
         gameCode: this.currentGameCode,
         playerId,
         condensedGrid,
@@ -255,16 +252,16 @@ export class WebSocketService implements OnDestroy {
   }
 
   requestGameState(gameCode: string): void {
-    this.socket?.emit('requestGameState', { gameCode });
+    this.socket.emit('requestGameState', { gameCode });
   }
 
   checkGameStatus(gameCode: string): void {
     console.log(`Checking if game ${gameCode} ended while disconnected...`);
-    this.socket?.emit('checkGameStatus', { gameCode });
+    this.socket.emit('checkGameStatus', { gameCode });
   }
 
   confirmGameParticipation(gameCode: string, playerId: string): void {
-    this.socket?.emit('confirmGameParticipation', { gameCode, playerId });
+    this.socket.emit('confirmGameParticipation', { gameCode, playerId });
   }
 
   simulateDisconnect(): void {
@@ -273,7 +270,7 @@ export class WebSocketService implements OnDestroy {
       setTimeout(() => {
         this.connectionStatus.next('reconnecting');
         setTimeout(() => {
-          this.socket?.connect();
+          this.socket.connect();
         }, 500);
       }, 1000);
     }

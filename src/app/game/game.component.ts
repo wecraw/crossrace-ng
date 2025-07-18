@@ -18,7 +18,6 @@ import {
   CdkDragEnter,
   CdkDragExit,
 } from '@angular/cdk/drag-drop';
-import { Location } from '@angular/common';
 import { PUZZLES } from './puzzles';
 import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
@@ -122,34 +121,36 @@ export class GameComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private ngZone: NgZone,
-    private location: Location,
     private gameSeedService: GameSeedService,
     private loadingService: LoadingService,
   ) {
-    const navigation = this.router.getCurrentNavigation();
-    const navState = navigation?.extras.state as {
-      gameSeed: number;
-      isInGame: boolean;
-      gameMode: 'versus' | 'daily' | 'practice';
-    };
-
-    const updates: Partial<GameState> = {};
-    if (navState?.gameSeed !== undefined) updates.gameSeed = navState.gameSeed;
-    if (navState?.isInGame !== undefined) updates.isInGame = navState.isInGame;
-    if (navState?.gameMode !== undefined) updates.gameMode = navState.gameMode;
-
-    if (Object.keys(updates).length > 0) {
-      this.gameStateService.updateGameState(updates);
-    }
-
     this.validWords = new Set(VALID_WORDS);
   }
 
   ngOnInit(): void {
-    // Get route info
-    this.initializeFromUrl();
+    const modeFromRoute = this.route.snapshot.data['gameMode'] as
+      | 'daily'
+      | 'practice'
+      | 'versus';
 
-    // Generate grid IDs (doesn't depend on state)
+    // Only set the gameMode from the route if it's a
+    // single-player mode. For 'versus', we trust that the LobbyComponent and
+    // the inGameGuard have already prepared the state correctly.
+    if (modeFromRoute === 'daily' || modeFromRoute === 'practice') {
+      this.gameStateService.updateGameState({ gameMode: modeFromRoute });
+    }
+
+    // Failsafe: At this point, the gameMode should be set in the state, regardless
+    // of how we got here.
+    if (!this.gameStateService.getCurrentState().gameMode) {
+      console.error(
+        'FATAL: GameComponent loaded without a valid gameMode. Redirecting.',
+      );
+      this.router.navigate(['/']);
+      return;
+    }
+
+    // Generate grid IDs
     this.generateGridCellIds();
 
     // Setup all subscriptions with proper cleanup
@@ -222,30 +223,28 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private initializeGame(): void {
+    // This switch statement is now reliable for all cases.
     switch (this.gameState.gameMode) {
       case 'versus':
-        // We are in a multiplayer game. Trust the state and start.
-        if (this.gameState.gameSeed === null || !this.gameState.isInGame) {
-          console.error('Versus mode state is invalid. Navigating home.');
-          this.router.navigate(['/']);
-          return;
-        }
+        // This path is taken when coming from the lobby.
         this.startAfterCountDown();
         break;
 
       case 'daily':
+        // This path is taken when navigating to /daily.
         this.initializeDaily();
         break;
 
       case 'practice':
+        // This path is taken when navigating to /practice.
         this.initializePractice();
         break;
 
       default:
-        // If we don't have a game mode, something is wrong.
-        console.error('No game mode specified. Checking URL as a fallback.');
-        // Fallback to the URL-based initialization
-        this.initializeFromUrl();
+        // This case should now be unreachable due to the failsafe in ngOnInit.
+        console.error('FATAL: initializeGame called with an invalid gameMode.');
+        this.router.navigate(['/']);
+        break;
     }
   }
 
@@ -298,16 +297,6 @@ export class GameComponent implements OnInit, OnDestroy {
       gameSeed: this.getRandomPuzzleSeed(),
     });
     this.startAfterCountDown();
-  }
-
-  private initializeFromUrl(): void {
-    if (this.route.snapshot.url[0]?.path === 'daily') {
-      this.gameStateService.updateGameState({ gameMode: 'daily' });
-    } else if (this.route.snapshot.url[0]?.path === 'practice') {
-      this.gameStateService.updateGameState({
-        gameMode: 'practice',
-      });
-    }
   }
 
   ngAfterViewInit() {

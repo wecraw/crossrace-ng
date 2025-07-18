@@ -34,6 +34,8 @@ export class GameConnectorComponent implements OnInit {
   private gameStateService = inject(GameStateService);
 
   ngOnInit(): void {
+    this.gameStateService.clearGameState();
+
     const gameCode = this.route.snapshot.paramMap.get('gameCode');
     if (gameCode) {
       this.joinExistingGame(gameCode.toUpperCase());
@@ -68,7 +70,6 @@ export class GameConnectorComponent implements OnInit {
       this.webSocketService.setCurrentGame(gameCode);
       this.gameStateService.updateGameState({ gameCode: gameCode });
 
-      // Navigate to the lobby, replacing the '/versus/join/:code' URL in history.
       this.router.navigate(['/lobby', gameCode], { replaceUrl: true });
     } catch (error) {
       this.handleConnectionError(error);

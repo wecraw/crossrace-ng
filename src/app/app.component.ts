@@ -1,15 +1,6 @@
-import {
-  Component,
-  ElementRef,
-  HostListener,
-  Inject,
-  OnDestroy,
-  OnInit,
-  Renderer2,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
-import { DOCUMENT } from '@angular/common';
 import { WebSocketService } from './websocket.service';
 import { LoadingService } from './loading.service';
 import { LoadingComponent } from './loading/loading.component';
@@ -33,7 +24,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     private renderer: Renderer2,
-    @Inject(DOCUMENT) private document: Document,
     private websocketService: WebSocketService,
     public loadingService: LoadingService,
   ) {}
