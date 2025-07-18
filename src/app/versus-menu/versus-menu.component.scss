@@ -1,4 +1,4 @@
-// Contains styles specific to the main menu's buttons ("PLAY", "VERSUS").
+// Contains styles specific to the versus menu's buttons and join form.
 
 @import "variables";
 @import "mixins";
@@ -22,6 +22,31 @@
   margin-bottom: auto;
   gap: 20px;
   padding-bottom: 5px;
+}
+
+// Modifier class to adjust spacing on the versus menu
+.versus-menu {
+  margin-top: 63px;
+}
+
+// Styles unique to the join form
+.join-form-container {
+  border: 1px solid #aaa;
+  border-radius: 16px;
+  background-color: #eee;
+  padding: 20px;
+  width: fit-content;
+}
+
+.join-input {
+  max-width: 185px;
+  font-size: 20px;
+  text-align: center;
+  border: 1px solid $success-color;
+}
+
+input:focus::placeholder {
+  color: transparent;
 }
 
 // Shared button styling (can be extracted to a shared partial later if desired)
@@ -64,5 +89,15 @@
 
   &.green:hover .tile-letter {
     background-color: $success-color-hover;
+  }
+
+  &.disabled .tile-letter,
+  &.disabled:hover .tile-letter,
+  &.disabled.green:hover .tile-letter {
+    opacity: 0.5;
+  }
+
+  &.disabled {
+    pointer-events: none;
   }
 }

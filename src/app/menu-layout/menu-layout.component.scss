@@ -1,0 +1,58 @@
+// Contains styles for the shared layout, logo, and background grid.
+
+@import "variables";
+@import "mixins";
+
+$grid-cell-size: 36px;
+
+.grid-wrapper {
+  margin: 175px auto 0;
+  opacity: 0.4; //controls opacity of grid background
+}
+
+.grid-fade-wrapper {
+  position: absolute;
+  z-index: -1000;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+}
+
+.letter-bank {
+  top: 50px;
+}
+
+.game-container {
+  margin-top: 20px;
+}
+
+.grid-container {
+  margin-left: -31px;
+  margin-top: -11px;
+}
+
+.fade-out-edges {
+  padding-top: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  @include fade-out-edges;
+}
+
+.logo-row-1 {
+  margin-left: 12px;
+}
+
+.logo-row-2 {
+  margin-left: 92px;
+}
+
+.version {
+  font-size: 10px;
+  color: $light-gray;
+  bottom: 5px;
+  position: absolute;
+  right: 10px;
+}

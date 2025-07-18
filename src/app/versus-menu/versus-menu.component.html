@@ -1,0 +1,53 @@
+<app-menu-layout>
+  <!-- This content is projected into the layout component's <ng-content> slot -->
+  <div class="main-menu m-lr-auto">
+    <div class="main-menu-buttons versus-menu">
+      <!-- HOST Button -->
+      <div class="tile-button-wrapper m-auto" (click)="createGame()">
+        <div class="tile-button-row noselect">
+          <div class="tile-letter">H</div>
+          <div class="tile-letter">O</div>
+          <div class="tile-letter">S</div>
+          <div class="tile-letter">T</div>
+        </div>
+      </div>
+
+      <!-- JOIN Form -->
+      <div class="join-form-container m-lr-auto">
+        <form [formGroup]="joinGameForm">
+          <div class="form-group">
+            <input
+              class="form-control form-control-lg mx-auto mb-3 join-input"
+              formControlName="gameCode"
+              placeholder="Enter room code"
+              (input)="onInputChange($event)"
+              (keydown.enter)="joinGame()"
+              maxlength="4"
+            />
+            <div
+              class="invalid-feedback"
+              *ngIf="
+                joinGameForm.get('gameCode')!.invalid &&
+                joinGameForm.get('gameCode')!.touched
+              "
+            >
+              Please input a valid room code
+            </div>
+          </div>
+          <div
+            class="tile-button-wrapper green m-auto"
+            [class.disabled]="!joinGameForm.valid"
+            (click)="joinGame()"
+          >
+            <div class="tile-button-row noselect">
+              <div class="tile-letter">J</div>
+              <div class="tile-letter">O</div>
+              <div class="tile-letter">I</div>
+              <div class="tile-letter">N</div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</app-menu-layout>

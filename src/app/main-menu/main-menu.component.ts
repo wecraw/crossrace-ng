@@ -1,81 +1,31 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import { GameSeedService } from '../game-seed.service';
 import { DialogTutorial } from '../dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
-import { Dialog } from '../dialog/dialog.component';
-import { GameSeedService } from '../game-seed.service';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { LoadingService } from '../loading.service';
-import { WebSocketService } from '../websocket.service';
-import { environment } from '../../environments/environment';
+import { MenuLayoutComponent } from '../menu-layout/menu-layout.component';
 
 @Component({
   selector: 'app-game',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, ReactiveFormsModule],
+  imports: [CommonModule, MatDialogModule, MenuLayoutComponent],
   templateUrl: './main-menu.component.html',
   styleUrls: ['./main-menu.component.scss'],
 })
-export class MainMenuComponent implements OnInit {
-  grid: string[][] = [];
-
-  // Grid DOM settings
-  GRID_SIZE: number = 12;
-
-  // Dialog
+export class MainMenuComponent {
+  // Dependencies are now much cleaner
+  private router = inject(Router);
+  private gameSeedService = inject(GameSeedService);
   readonly dialog = inject(MatDialog);
 
-  // Game State
-  isVersus: boolean = false;
-  joinGameForm!: FormGroup;
-
-  // Version info
-  version = environment.version?.displayVersion || '<version info not found>';
-
-  constructor(
-    private router: Router,
-    private route: ActivatedRoute,
-    private gameSeedService: GameSeedService,
-    private fb: FormBuilder,
-    private loadingService: LoadingService,
-    private webSocketService: WebSocketService,
-  ) {}
-
-  ngOnInit(): void {
-    // this.simulateApiCall();
-
-    this.joinGameForm = this.fb.group({
-      gameCode: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(4),
-          Validators.maxLength(4),
-          Validators.pattern('^[A-Za-z]{4}$'),
-        ],
-      ],
-    });
-
-    this.initializeGrid();
-    this.extractRouteInfo();
-  }
-
-  private extractRouteInfo() {
-    if (this.router.url.split('/')[1] === 'versus-menu') this.isVersus = true;
-  }
-
-  // DOM Helpers=========================================================
-
-  daily() {
-    let storageSeed = localStorage.getItem('dailySeed');
-    let dailySeed = this.gameSeedService.getDailySeed();
+  /**
+   * Sets up the daily game seed and navigates to the daily game.
+   */
+  daily(): void {
+    const storageSeed = localStorage.getItem('dailySeed');
+    const dailySeed = this.gameSeedService.getDailySeed();
     if (storageSeed === null) {
       localStorage.setItem('dailySeed', '' + dailySeed);
       localStorage.setItem('dailyCurrentTime', '0');
@@ -90,88 +40,43 @@ export class MainMenuComponent implements OnInit {
     this.router.navigate(['/daily']);
   }
 
-  navigateToVersusMenu() {
+  /**
+   * Navigates to the dedicated versus menu component.
+   */
+  navigateToVersusMenu(): void {
     this.router.navigate(['/versus-menu']);
   }
 
-  practice() {
+  /**
+   * Navigates to the practice mode.
+   */
+  practice(): void {
     this.router.navigate(['/practice']);
   }
 
-  closeDialog() {
+  // Dialog-related methods can remain if they are used for general purposes like tutorials.
+  closeDialog(): void {
     this.dialog.closeAll();
   }
 
-  openTutorialDialog(data: any) {
-    const dialogRef = this.dialog.open(DialogTutorial, {
+  openTutorialDialog(data: any): void {
+    this.dialog.open(DialogTutorial, {
       data: data,
       minWidth: 370,
     });
   }
 
-  openPostGameDialog(data: any) {
+  openPostGameDialog(data: any): void {
     const dialogRef = this.dialog.open(DialogPostGame, {
       data: data,
       minWidth: 370,
     });
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        if (result.event === 'confirm') {
-          this.router.navigate(['/practice']);
-        }
+      if (result?.event === 'confirm') {
+        this.router.navigate(['/practice']);
       } else {
-        //closed modal by clicking outside
         this.router.navigate(['/']);
       }
     });
-  }
-
-  createGame() {
-    // UPDATED: Navigate to '/create'
-    this.router.navigate(['/create']);
-  }
-
-  getFlipInClass(i: number) {
-    return 'notouch flip-in-hor-bottom-' + i;
-  }
-
-  navigateHome() {
-    this.router.navigate(['/']);
-  }
-
-  simulateApiCall(): void {
-    console.log('Showing loader...');
-    this.loadingService.show();
-
-    // Simulate a network request that takes 3 seconds
-    setTimeout(() => {
-      console.log('Hiding loader...');
-      this.loadingService.hide();
-    }, 3000);
-  }
-
-  initializeGrid() {
-    this.grid = Array(this.GRID_SIZE)
-      .fill(null)
-      .map(() => Array(this.GRID_SIZE).fill(null));
-  }
-
-  onInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    input.value = input.value
-      .toUpperCase()
-      .replace(/[^A-Z]/g, '')
-      .slice(0, 4);
-    this.joinGameForm.patchValue({ gameCode: input.value });
-  }
-
-  joinGame() {
-    if (this.joinGameForm.valid) {
-      const gameCode = this.joinGameForm.get('gameCode')?.value;
-      // UPDATED: Navigate to '/join/:gameCode'
-      this.router.navigate(['/join', gameCode]);
-    } else {
-      console.log('Form is invalid');
-    }
   }
 }

@@ -1,47 +1,8 @@
-<div class="container game-container noselect">
-  <div
-    id="letter-bank"
-    class="ab-center letter-bank m-lr-auto"
-    [ngClass]="{ 'cursor-pointer': isVersus }"
-    (click)="navigateHome()"
-  >
-    <div class="row logo-row-1">
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">C</div>
-      </div>
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">R</div>
-      </div>
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">O</div>
-      </div>
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">S</div>
-      </div>
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">S</div>
-      </div>
-    </div>
-
-    <div class="row logo-row-2">
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">R</div>
-      </div>
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">A</div>
-      </div>
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">C</div>
-      </div>
-      <div class="tile-wrapper">
-        <div class="letter m-lr-auto">E</div>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="main-menu m-lr-auto">
-  <div class="main-menu-buttons" [ngClass]="{ 'versus-menu': isVersus }">
-    @if (!isVersus) {
+<app-menu-layout>
+  <!-- This content is projected into the layout component's <ng-content> slot -->
+  <div class="main-menu m-lr-auto">
+    <div class="main-menu-buttons">
+      <!-- PLAY Button -->
       <div class="tile-button-wrapper m-auto" (click)="daily()">
         <div class="tile-button-row noselect">
           <div class="tile-letter">P</div>
@@ -51,6 +12,7 @@
         </div>
       </div>
 
+      <!-- VERSUS Button -->
       <div
         class="tile-button-wrapper green m-auto"
         (click)="navigateToVersusMenu()"
@@ -64,68 +26,6 @@
           <div class="tile-letter">S</div>
         </div>
       </div>
-    }
-
-    @if (isVersus) {
-      <div class="tile-button-wrapper m-auto" (click)="createGame()">
-        <div class="tile-button-row noselect">
-          <div class="tile-letter">H</div>
-          <div class="tile-letter">O</div>
-          <div class="tile-letter">S</div>
-          <div class="tile-letter">T</div>
-        </div>
-      </div>
-
-      <div class="join-form-container m-lr-auto">
-        <form [formGroup]="joinGameForm">
-          <div class="form-group">
-            <input
-              class="form-control form-control-lg mx-auto mb-3 join-input"
-              formControlName="gameCode"
-              placeholder="Enter room code"
-              (input)="onInputChange($event)"
-              (keydown.enter)="joinGame()"
-              maxlength="4"
-            />
-            <div
-              class="invalid-feedback"
-              *ngIf="
-                joinGameForm.get('gameCode')!.invalid &&
-                joinGameForm.get('gameCode')!.touched
-              "
-            >
-              Please input a valid room code
-            </div>
-          </div>
-          <div
-            class="tile-button-wrapper green m-auto"
-            [class.disabled]="!joinGameForm.valid"
-            (click)="joinGame()"
-          >
-            <div class="tile-button-row noselect">
-              <div class="tile-letter">J</div>
-              <div class="tile-letter">O</div>
-              <div class="tile-letter">I</div>
-              <div class="tile-letter">N</div>
-            </div>
-          </div>
-        </form>
-      </div>
-    }
-  </div>
-</div>
-<div #gridWrapper class="grid-wrapper">
-  <div class="fade-out-edges m-lr-auto">
-    <div #gridContainer class="grid-container">
-      @for (row of grid; track $index; let i = $index) {
-        <div class="grid-row">
-          @for (cell of row; track $index; let j = $index) {
-            <div class="grid-cell"></div>
-          }
-        </div>
-      }
     </div>
   </div>
-</div>
-<!-- <button (click)="simulateApiCall()">Simulate Slow API Call (3 seconds)</button> -->
-<div class="version">{{ version }}</div>
+</app-menu-layout>
