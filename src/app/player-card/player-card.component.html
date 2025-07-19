@@ -3,20 +3,20 @@
     class="emoji-mart-container"
     #emojiMartContainer
     [ngClass]="{ visible: editingEmoji }"
-  >
+    >
     <div class="avatar-tabs">
       <div
         class="tab"
         (click)="selectTab(0)"
         [ngClass]="{ selected: selectedTab === 0 }"
-      >
+        >
         Avatar
       </div>
       <div
         class="tab"
         (click)="selectTab(1)"
         [ngClass]="{ selected: selectedTab === 1 }"
-      >
+        >
         Color
       </div>
     </div>
@@ -27,7 +27,7 @@
           class="emoji-container noselect"
           (click)="selectEmoji(emoji)"
           [class.selected]="emoji === player.playerEmoji"
-        >
+          >
           <span class="emoji">{{ emoji }}</span>
         </div>
       }
@@ -57,11 +57,11 @@
       class="player-avatar"
       style="cursor: pointer"
       (click)="editEmoji()"
-    >
+      >
       <div class="emoji noselect">{{ player.playerEmoji }}</div>
     </div>
     <div class="player-name">
-      <ng-container *ngIf="!editingName">
+      @if (!editingName) {
         <span>{{ player.displayName }}</span>
         <i
           (click)="editName()"
@@ -71,8 +71,8 @@
         <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
           (Host)
         </div>
-      </ng-container>
-      <ng-container *ngIf="editingName">
+      }
+      @if (editingName) {
         <input
           #nameInput
           class="form-control"
@@ -80,67 +80,74 @@
           (keyup.enter)="submitName()"
           (blur)="submitName()"
           maxlength="14"
-        />
-      </ng-container>
-    </div>
-    <div
-      class="player-status"
+          />
+        }
+      </div>
+      <div
+        class="player-status"
       [ngClass]="{
         ready: player.ready,
         'not-ready': !player.ready,
       }"
-    >
-      <div style="margin-top: 10px" *ngIf="player.ready">
-        <button class="btn btn-outline-success" disabled>Ready</button>
+        >
+        @if (player.ready) {
+          <div style="margin-top: 10px">
+            <button class="btn btn-outline-success" disabled>Ready</button>
+          </div>
+        }
+
+        @if (!player.ready) {
+          <button
+            class="btn btn-success shimmering-button"
+            (click)="readyUp()"
+            >
+            Ready up!
+          </button>
+        }
       </div>
-
-      <button
-        class="btn btn-success shimmering-button"
-        *ngIf="!player.ready"
-        (click)="readyUp()"
-      >
-        Ready up!
-      </button>
     </div>
-  </div>
-}
+  }
 
-@if (!allowEdit) {
-  <div class="player-card fade-in">
-    <i
-      [ngClass]="{ transparent: player.id !== lastWinnerId }"
-      class="fa-solid fa-crown crown"
-    ></i>
-    <div
-      [ngStyle]="{ 'background-color': player.playerColor }"
-      class="player-avatar"
-    >
-      <div class="emoji noselect">{{ player.playerEmoji }}</div>
-    </div>
-    <div class="player-name">
-      <span
-        >{{ player.displayName }}
-        <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
-          (Host)
-        </div></span
-      >
-    </div>
+  @if (!allowEdit) {
+    <div class="player-card fade-in">
+      <i
+        [ngClass]="{ transparent: player.id !== lastWinnerId }"
+        class="fa-solid fa-crown crown"
+      ></i>
+      <div
+        [ngStyle]="{ 'background-color': player.playerColor }"
+        class="player-avatar"
+        >
+        <div class="emoji noselect">{{ player.playerEmoji }}</div>
+      </div>
+      <div class="player-name">
+        <span
+          >{{ player.displayName }}
+          <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
+            (Host)
+          </div></span
+          >
+        </div>
 
-    <div
-      class="player-status"
+        <div
+          class="player-status"
       [ngClass]="{
         ready: player.ready,
         'not-ready': !player.ready,
       }"
-    >
-      <div *ngIf="player.ready">
-        <button class="btn btn-outline-success" disabled>Ready</button>
+          >
+          @if (player.ready) {
+            <div>
+              <button class="btn btn-outline-success" disabled>Ready</button>
+            </div>
+          }
+          @if (!player.ready) {
+            <div>
+              <button class="btn btn-outline-danger" disabled>
+                {{ player.inGame ? "In Game" : "Not Ready" }}
+              </button>
+            </div>
+          }
+        </div>
       </div>
-      <div *ngIf="!player.ready">
-        <button class="btn btn-outline-danger" disabled>
-          {{ player.inGame ? "In Game" : "Not Ready" }}
-        </button>
-      </div>
-    </div>
-  </div>
-}
+    }

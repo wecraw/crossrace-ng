@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { GameSeedService } from '../game-seed.service';
@@ -9,7 +9,7 @@ import { MenuLayoutComponent } from '../menu-layout/menu-layout.component';
 
 @Component({
     selector: 'app-game',
-    imports: [CommonModule, MatDialogModule, MenuLayoutComponent],
+    imports: [MatDialogModule, MenuLayoutComponent],
     templateUrl: './main-menu.component.html',
     styleUrls: ['./main-menu.component.scss']
 })

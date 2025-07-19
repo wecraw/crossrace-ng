@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import {
   FormBuilder,
@@ -13,7 +13,7 @@ import { MenuLayoutComponent } from '../menu-layout/menu-layout.component';
 
 @Component({
     selector: 'app-versus-menu',
-    imports: [CommonModule, ReactiveFormsModule, MenuLayoutComponent],
+    imports: [ReactiveFormsModule, MenuLayoutComponent],
     templateUrl: './versus-menu.component.html',
     styleUrls: ['./versus-menu.component.scss']
 })

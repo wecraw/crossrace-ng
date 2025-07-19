@@ -1,11 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
 @Component({
     selector: 'app-menu-layout',
-    imports: [CommonModule],
+    imports: [],
     templateUrl: './menu-layout.component.html',
     styleUrls: ['./menu-layout.component.scss']
 })

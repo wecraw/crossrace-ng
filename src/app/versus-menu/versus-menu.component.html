@@ -23,31 +23,32 @@
               (input)="onInputChange($event)"
               (keydown.enter)="joinGame()"
               maxlength="4"
-            />
-            <div
-              class="invalid-feedback"
-              *ngIf="
+              />
+              @if (
                 joinGameForm.get('gameCode')!.invalid &&
                 joinGameForm.get('gameCode')!.touched
-              "
-            >
-              Please input a valid room code
+                ) {
+                <div
+                  class="invalid-feedback"
+                  >
+                  Please input a valid room code
+                </div>
+              }
             </div>
-          </div>
-          <div
-            class="tile-button-wrapper green m-auto"
-            [class.disabled]="!joinGameForm.valid"
-            (click)="joinGame()"
-          >
-            <div class="tile-button-row noselect">
-              <div class="tile-letter">J</div>
-              <div class="tile-letter">O</div>
-              <div class="tile-letter">I</div>
-              <div class="tile-letter">N</div>
+            <div
+              class="tile-button-wrapper green m-auto"
+              [class.disabled]="!joinGameForm.valid"
+              (click)="joinGame()"
+              >
+              <div class="tile-button-row noselect">
+                <div class="tile-letter">J</div>
+                <div class="tile-letter">O</div>
+                <div class="tile-letter">I</div>
+                <div class="tile-letter">N</div>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
-</app-menu-layout>
+  </app-menu-layout>

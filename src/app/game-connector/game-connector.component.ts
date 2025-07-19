@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { WebSocketService } from '../websocket.service';
@@ -9,7 +9,7 @@ import { GameStateService } from '../game-state.service';
 
 @Component({
     selector: 'app-game-connector',
-    imports: [CommonModule, MatDialogModule],
+    imports: [MatDialogModule],
     // This component's template is intentionally blank. It uses the global
     // loading service to show feedback, and its sole purpose is to process
     // and redirect.
