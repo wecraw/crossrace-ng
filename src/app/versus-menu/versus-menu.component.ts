@@ -12,11 +12,10 @@ import {
 import { MenuLayoutComponent } from '../menu-layout/menu-layout.component';
 
 @Component({
-  selector: 'app-versus-menu',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuLayoutComponent],
-  templateUrl: './versus-menu.component.html',
-  styleUrls: ['./versus-menu.component.scss'],
+    selector: 'app-versus-menu',
+    imports: [CommonModule, ReactiveFormsModule, MenuLayoutComponent],
+    templateUrl: './versus-menu.component.html',
+    styleUrls: ['./versus-menu.component.scss']
 })
 export class VersusMenuComponent implements OnInit {
   joinGameForm!: FormGroup;

@@ -27,22 +27,21 @@ import { DialogData } from '../interfaces/dialog-data';
 import { LoadingService } from '../loading.service';
 
 @Component({
-  selector: 'app-lobby',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ClipboardModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatListModule,
-    MatInputModule,
-    MatTooltipModule,
-    PlayerCardComponent,
-  ],
-  templateUrl: './lobby.component.html',
-  styleUrls: ['./lobby.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-lobby',
+    imports: [
+        CommonModule,
+        FormsModule,
+        ClipboardModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatListModule,
+        MatInputModule,
+        MatTooltipModule,
+        PlayerCardComponent,
+    ],
+    templateUrl: './lobby.component.html',
+    styleUrls: ['./lobby.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LobbyComponent implements OnInit, OnDestroy {
   @ViewChild('nameInput') nameInputElement!: ElementRef;

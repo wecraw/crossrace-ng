@@ -5,11 +5,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { WebSocketService } from '../websocket.service';
 
 @Component({
-  selector: 'app-header',
-  standalone: true,
-  imports: [RouterModule, MatDialogModule],
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss'],
+    selector: 'app-header',
+    imports: [RouterModule, MatDialogModule],
+    templateUrl: './header.component.html',
+    styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent {
   // Dialog

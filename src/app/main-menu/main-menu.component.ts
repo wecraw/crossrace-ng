@@ -8,11 +8,10 @@ import { DialogPostGame } from '../dialog-post-game/dialog-post-game.component';
 import { MenuLayoutComponent } from '../menu-layout/menu-layout.component';
 
 @Component({
-  selector: 'app-game',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MenuLayoutComponent],
-  templateUrl: './main-menu.component.html',
-  styleUrls: ['./main-menu.component.scss'],
+    selector: 'app-game',
+    imports: [CommonModule, MatDialogModule, MenuLayoutComponent],
+    templateUrl: './main-menu.component.html',
+    styleUrls: ['./main-menu.component.scss']
 })
 export class MainMenuComponent {
   // Dependencies are now much cleaner

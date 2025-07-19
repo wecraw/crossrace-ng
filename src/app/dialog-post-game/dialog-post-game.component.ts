@@ -18,17 +18,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
-  selector: 'dialog',
-  templateUrl: 'dialog-post-game.component.html',
-  styleUrls: ['./dialog-post-game.component.scss'],
-  standalone: true,
-  imports: [
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    CommonModule,
-    MatTooltipModule,
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'dialog',
+    templateUrl: 'dialog-post-game.component.html',
+    styleUrls: ['./dialog-post-game.component.scss'],
+    imports: [
+        MatButtonModule,
+        MatProgressSpinnerModule,
+        CommonModule,
+        MatTooltipModule,
+    ],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DialogPostGame implements OnInit, OnDestroy {
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;

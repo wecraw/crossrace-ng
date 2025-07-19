@@ -2,11 +2,10 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Player } from '../interfaces/player';
 
 @Component({
-  selector: 'app-leaderboard',
-  standalone: true,
-  imports: [],
-  templateUrl: './leaderboard.component.html',
-  styleUrl: './leaderboard.component.scss',
+    selector: 'app-leaderboard',
+    imports: [],
+    templateUrl: './leaderboard.component.html',
+    styleUrl: './leaderboard.component.scss'
 })
 export class LeaderboardComponent implements OnInit {
   @Input() players: Player[] = [];

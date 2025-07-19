@@ -8,22 +8,21 @@ import { Dialog } from '../dialog/dialog.component';
 import { GameStateService } from '../game-state.service';
 
 @Component({
-  selector: 'app-game-connector',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule],
-  // This component's template is intentionally blank. It uses the global
-  // loading service to show feedback, and its sole purpose is to process
-  // and redirect.
-  template: ``,
-  styles: [
-    `
+    selector: 'app-game-connector',
+    imports: [CommonModule, MatDialogModule],
+    // This component's template is intentionally blank. It uses the global
+    // loading service to show feedback, and its sole purpose is to process
+    // and redirect.
+    template: ``,
+    styles: [
+        `
       :host {
         display: block;
         height: 100%;
         width: 100%;
       }
     `,
-  ],
+    ]
 })
 export class GameConnectorComponent implements OnInit {
   private router = inject(Router);

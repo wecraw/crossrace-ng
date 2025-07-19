@@ -13,12 +13,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
-  selector: 'dialog',
-  templateUrl: 'dialog.component.html',
-  styleUrls: ['./dialog.component.scss'],
-  standalone: true,
-  imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'dialog',
+    templateUrl: 'dialog.component.html',
+    styleUrls: ['./dialog.component.scss'],
+    imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Dialog implements OnInit {
   public dialogLetters: string[] = [];

@@ -48,17 +48,16 @@ interface ValidatedWord {
 const DRAG_POSITION_INIT = { x: -237, y: -232 };
 
 @Component({
-  selector: 'app-game',
-  standalone: true,
-  imports: [
-    CdkDropList,
-    CdkDrag,
-    CommonModule,
-    TimerComponent,
-    MatDialogModule,
-  ],
-  templateUrl: './game.component.html',
-  styleUrls: ['./game.component.scss'],
+    selector: 'app-game',
+    imports: [
+        CdkDropList,
+        CdkDrag,
+        CommonModule,
+        TimerComponent,
+        MatDialogModule,
+    ],
+    templateUrl: './game.component.html',
+    styleUrls: ['./game.component.scss']
 })
 export class GameComponent implements OnInit, OnDestroy {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;

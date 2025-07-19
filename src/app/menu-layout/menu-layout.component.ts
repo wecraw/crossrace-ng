@@ -4,11 +4,10 @@ import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
 @Component({
-  selector: 'app-menu-layout',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './menu-layout.component.html',
-  styleUrls: ['./menu-layout.component.scss'],
+    selector: 'app-menu-layout',
+    imports: [CommonModule],
+    templateUrl: './menu-layout.component.html',
+    styleUrls: ['./menu-layout.component.scss']
 })
 export class MenuLayoutComponent implements OnInit {
   // Properties moved from MainMenuComponent

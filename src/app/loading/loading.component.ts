@@ -9,26 +9,23 @@ import {
 import { LoadingService } from '../loading.service';
 
 @Component({
-  selector: 'app-loading',
-  standalone: true,
-  imports: [],
-  templateUrl: './loading.component.html',
-  styleUrl: './loading.component.scss',
-  animations: [
-    trigger('fade', [
-      // State when the element is not in the DOM
-      state('void', style({ opacity: 0 })),
-
-      // State when the element is in the DOM
-      state('*', style({ opacity: 1 })),
-
-      // Transition for both entering and leaving
-      transition('void <=> *', [animate('250ms ease-in-out')]),
-    ]),
-  ],
-  host: {
-    '[@fade]': '',
-  },
+    selector: 'app-loading',
+    imports: [],
+    templateUrl: './loading.component.html',
+    styleUrl: './loading.component.scss',
+    animations: [
+        trigger('fade', [
+            // State when the element is not in the DOM
+            state('void', style({ opacity: 0 })),
+            // State when the element is in the DOM
+            state('*', style({ opacity: 1 })),
+            // Transition for both entering and leaving
+            transition('void <=> *', [animate('250ms ease-in-out')]),
+        ]),
+    ],
+    host: {
+        '[@fade]': '',
+    }
 })
 export class LoadingComponent {
   private readonly loadingService = inject(LoadingService);

@@ -24,19 +24,18 @@ import { Player } from '../interfaces/player';
 import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
 
 @Component({
-  selector: 'dialog',
-  templateUrl: 'dialog-post-game-mp.component.html',
-  styleUrls: ['./dialog-post-game-mp.component.scss'],
-  standalone: true,
-  imports: [CommonModule, MatTooltipModule, LeaderboardComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('slideContent', [
-      state('chessGrid', style({ transform: 'translateX(0%)' })),
-      state('leaderboard', style({ transform: 'translateX(-150%)' })),
-      transition('chessGrid <=> leaderboard', animate('300ms ease-in-out')),
-    ]),
-  ],
+    selector: 'dialog',
+    templateUrl: 'dialog-post-game-mp.component.html',
+    styleUrls: ['./dialog-post-game-mp.component.scss'],
+    imports: [CommonModule, MatTooltipModule, LeaderboardComponent],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    animations: [
+        trigger('slideContent', [
+            state('chessGrid', style({ transform: 'translateX(0%)' })),
+            state('leaderboard', style({ transform: 'translateX(-150%)' })),
+            transition('chessGrid <=> leaderboard', animate('300ms ease-in-out')),
+        ]),
+    ]
 })
 export class DialogPostGameMp implements OnInit, OnDestroy {
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;

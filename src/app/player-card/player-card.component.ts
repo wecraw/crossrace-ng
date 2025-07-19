@@ -14,11 +14,10 @@ import { Player } from '../interfaces/player';
 import { Emojis } from '../constants/emoji-list';
 
 @Component({
-  selector: 'player-card',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './player-card.component.html',
-  styleUrl: './player-card.component.scss',
+    selector: 'player-card',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './player-card.component.html',
+    styleUrl: './player-card.component.scss'
 })
 export class PlayerCardComponent implements AfterViewChecked {
   @ViewChild('nameInput') nameInputElement!: ElementRef;

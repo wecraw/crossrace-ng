@@ -71,12 +71,11 @@ const descriptionsVersus = [
 ];
 
 @Component({
-  selector: 'dialog',
-  templateUrl: 'dialog-tutorial.component.html',
-  styleUrls: ['./dialog-tutorial.component.scss'],
-  standalone: true,
-  imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'dialog',
+    templateUrl: 'dialog-tutorial.component.html',
+    styleUrls: ['./dialog-tutorial.component.scss'],
+    imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DialogTutorial implements OnInit, AfterViewInit {
   isAnimationFinished: boolean = false;
