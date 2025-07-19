@@ -1,7 +1,7 @@
 // Contains styles specific to the main menu's buttons ("PLAY", "VERSUS").
 
-@import "variables";
-@import "mixins";
+@use "variables" as *;
+@use "mixins" as *;
 
 // General structure for the menu button area
 .main-menu {

@@ -1,4 +1,4 @@
-@import "variables";
+@use "variables" as *;
 $grid-cell-size: 36px;
 
 .wrapper {

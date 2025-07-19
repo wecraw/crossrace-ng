@@ -1,9 +1,9 @@
-@import "variables";
-@import "common";
-@import "animations";
+@use "variables" as *;
+@use "common" as *;
+@use "animations" as *;
 
 /* You can add global styles to this file, and also import other style files */
-@import "../node_modules/bootstrap/scss/bootstrap";
+@use "../node_modules/bootstrap/scss/bootstrap" as bootstrap;
 
 // <uniquifier>: Use a unique and descriptive class name
 // <weight>: Use a value from 200 to 700

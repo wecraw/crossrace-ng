@@ -1,7 +1,7 @@
 // Contains styles specific to the versus menu's buttons and join form.
 
-@import "variables";
-@import "mixins";
+@use "variables" as *;
+@use "mixins" as *;
 
 // General structure for the menu button area
 .main-menu {

@@ -1,7 +1,7 @@
 // Contains styles for the shared layout, logo, and background grid.
 
-@import "variables";
-@import "mixins";
+@use "variables" as *;
+@use "mixins" as *;
 
 $grid-cell-size: 36px;
 
