@@ -1,7 +1,7 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from '../config/config.service';
 import { MatDialog } from '@angular/material/dialog';
 import { GameStateService } from '../game-state/game-state.service';
 import { LoadingService } from '../loading/loading.service';
@@ -18,17 +18,7 @@ import * as SocketIOClient from 'socket.io-client';
   providedIn: 'root',
 })
 export class WebSocketService implements OnDestroy {
-  private socket: SocketIOClient.Socket = SocketIOClient.default(
-    environment.serverUrl,
-    {
-      autoConnect: false,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    },
-  );
+  private socket: SocketIOClient.Socket;
   private messageSubject = new Subject<any>();
   private connectionStatus = new BehaviorSubject<string>('disconnected');
 
@@ -38,8 +28,18 @@ export class WebSocketService implements OnDestroy {
   private loadingService = inject(LoadingService);
   // Inject GameStateService here
   private gameStateService = inject(GameStateService);
+  private configService = inject(ConfigService);
 
   constructor() {
+    this.socket = SocketIOClient.default(this.configService.serverUrl, {
+      autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    });
+
     this.setupSocketListeners();
     window.addEventListener('beforeunload', () => this.disconnect());
   }

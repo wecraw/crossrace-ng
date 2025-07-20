@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 
 import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from '../../services/config/config.service';
 
 @Component({
   selector: 'app-menu-layout',
@@ -13,11 +13,13 @@ export class MenuLayoutComponent implements OnInit {
   // Properties moved from MainMenuComponent
   grid: string[][] = [];
   GRID_SIZE: number = 12;
-  version = environment.version?.displayVersion || '<version info not found>';
+  version: string = '';
 
   private router = inject(Router);
+  private configService = inject(ConfigService);
 
   ngOnInit(): void {
+    this.version = this.configService.displayVersion;
     this.initializeGrid();
   }
 

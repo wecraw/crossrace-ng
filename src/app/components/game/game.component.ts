@@ -108,6 +108,7 @@ export class GameComponent implements OnInit, OnDestroy {
   isWinner: boolean = false;
   isGameStarted: boolean = false;
   connectionStatus: string = 'disconnected';
+  serverStartTime: number | null = null;
 
   // Game State
   gameState!: GameState;
@@ -169,6 +170,14 @@ export class GameComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
         this.gameState = state;
+        // If the game state contains a server start time (likely passed from the lobby),
+        // set it here. This assumes your GameStateService is updated to handle this.
+        if (
+          this.gameState.gameMode === 'versus' &&
+          (state as any).serverStartTime
+        ) {
+          this.serverStartTime = (state as any).serverStartTime;
+        }
       });
 
     // Subscribe to WebSocket messages
@@ -186,7 +195,6 @@ export class GameComponent implements OnInit, OnDestroy {
         this.handleConnectionStatusChange(status);
       });
   }
-
   private handleConnectionStatusChange(status: string): void {
     // Only handle reconnection for multiplayer games
     if (this.gameState.gameMode !== 'versus') {
@@ -485,25 +493,21 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private syncGameStateAfterReconnection(serverGameState: any): void {
-    // This method would handle syncing local game state with server state
-    // after a reconnection. The exact implementation depends on what
-    // game state the server maintains and sends back.
-
-    // For example, the server might send:
-    // - Current game time/timer state
-    // - Whether the game is still active
-    // - Any other relevant game state
-
+    // This method handles syncing local game state with server state
+    // after a reconnection.
     console.log('Syncing game state after reconnection:', serverGameState);
 
-    // Example implementation:
     if (serverGameState.isGameActive !== undefined) {
       this.isGameStarted = serverGameState.isGameActive;
     }
 
-    if (serverGameState.gameTime !== undefined && this.timerComponent) {
-      // Sync timer if provided by server
-      this.timerStartTime = serverGameState.gameTime;
+    if (serverGameState.gameStartTime !== undefined) {
+      // Sync the server start time, which is the source of truth.
+      this.serverStartTime = serverGameState.gameStartTime;
+      // If the game is active, ensure the timer component is running.
+      if (this.isGameStarted) {
+        this.startTimer();
+      }
     }
   }
 
@@ -922,6 +926,8 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.timerComponent) {
       this.timerComponent.resetTimer();
     }
+    // Also clear the server start time when resetting.
+    this.serverStartTime = null;
   }
 
   // DOM Helpers=========================================================
