@@ -1,0 +1,55 @@
+@use "../../../styles/variables" as *;
+
+.leaderboard {
+  font-family: Arial, sans-serif;
+  max-width: 300px;
+  width: 300px;
+  margin: 0 auto;
+}
+
+h2 {
+  text-align: center;
+  color: $dark-gray-text;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-item {
+  background-color: $very-light-gray-bg;
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.player-emoji {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.player-name {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.wins-container {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 50px;
+}
+
+.player-wins {
+  font-weight: bold;
+  text-align: left;
+  width: 100%;
+}

@@ -1,16 +1,16 @@
 import { Component, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HeaderComponent } from './header/header.component';
-import { WebSocketService } from './websocket.service';
-import { LoadingService } from './loading.service';
-import { LoadingComponent } from './loading/loading.component';
+import { HeaderComponent } from './components/header/header.component';
+import { WebSocketService } from './services/websocket/websocket.service';
+import { LoadingService } from './services/loading/loading.service';
+import { LoadingComponent } from './components/loading/loading.component';
 import { environment } from '../environments/environment';
 
 @Component({
-    selector: 'app-root',
-    imports: [RouterOutlet, HeaderComponent, LoadingComponent],
-    templateUrl: './app.component.html',
-    styleUrl: './app.component.scss'
+  selector: 'app-root',
+  imports: [RouterOutlet, HeaderComponent, LoadingComponent],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'crossrace-ng';

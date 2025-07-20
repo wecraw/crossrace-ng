@@ -1,15 +1,15 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { provideRouter, Routes } from '@angular/router';
-import { LobbyComponent } from './app/lobby/lobby.component';
-import { GameComponent } from './app/game/game.component';
-import { WebSocketService } from './app/websocket.service';
+import { LobbyComponent } from './app/components/lobby/lobby.component';
+import { GameComponent } from './app/components/game/game.component';
+import { WebSocketService } from './app/services/websocket/websocket.service';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { MainMenuComponent } from './app/main-menu/main-menu.component';
-import { GameConnectorComponent } from './app/game-connector/game-connector.component';
-import { gameJoinGuard } from './app/game-join.guard';
-import { VersusMenuComponent } from './app/versus-menu/versus-menu.component';
-import { inGameGuard } from './app/in-game.guard';
+import { MainMenuComponent } from './app/components/main-menu/main-menu.component';
+import { GameConnectorComponent } from './app/components/game-connector/game-connector.component';
+import { gameJoinGuard } from './app/guards/game-join.guard';
+import { VersusMenuComponent } from './app/components/versus-menu/versus-menu.component';
+import { inGameGuard } from './app/guards/in-game.guard';
 
 const routes: Routes = [
   // Main Menu
