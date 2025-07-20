@@ -5,11 +5,11 @@ export const environment: Environment = {
   serverUrl: 'http://localhost:8080',
 
   version: {
-    number: '0.8.3',
-    buildNumber: 1752996125,
-    buildDate: '2025-07-20T07:22:05.076Z',
-    gitHash: '4c147ef',
+    number: '0.9.0',
+    buildNumber: 1752996227,
+    buildDate: '2025-07-20T07:23:47.946Z',
+    gitHash: 'd7e9d62',
     gitBranch: 'project-structure',
-    displayVersion: '0.8.3.1752996125 (dev)'
+    displayVersion: '0.9.0.1752996227 (dev)'
   }
 };

@@ -1,6 +1,6 @@
 {
   "name": "crossrace-ng",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "scripts": {
     "ng": "ng",
     "prebuild": "node scripts/version.js",
