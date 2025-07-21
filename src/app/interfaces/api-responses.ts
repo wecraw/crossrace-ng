@@ -33,4 +33,8 @@ export interface JoinGameResponse extends AckResponse {
     condensedGrid: string[][];
     time: string;
   };
+  // Properties for timer synchronization
+  gameState?: string;
+  currentGameTime?: number;
+  isGameActive?: boolean;
 }

@@ -218,6 +218,20 @@ export class WebSocketService implements OnDestroy {
           ...response.gameEndData,
         });
       }
+
+      // Handle timer synchronization data if present
+      if (response.isGameActive && response.currentGameTime !== undefined) {
+        console.log(
+          'Received timer sync data on join:',
+          response.currentGameTime,
+        );
+        this.messageSubject.next({
+          type: 'timerSync',
+          currentGameTime: response.currentGameTime,
+          gameState: response.gameState,
+          isGameActive: response.isGameActive,
+        });
+      }
     }
     return response;
   }
@@ -238,13 +252,12 @@ export class WebSocketService implements OnDestroy {
     this.socket.emit('startGame', { gameCode });
   }
 
-  announceWin(playerId: string, condensedGrid: string[][], time: string): void {
+  announceWin(playerId: string, condensedGrid: string[][]): void {
     if (this.currentGameCode) {
       this.socket.emit('win', {
         gameCode: this.currentGameCode,
         playerId,
         condensedGrid,
-        time,
       });
     } else {
       console.error('Cannot announce win: no game code available.');

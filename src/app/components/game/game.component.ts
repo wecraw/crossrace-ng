@@ -39,6 +39,14 @@ import { GameSeedService } from '../../services/game-seed/game-seed.service';
 import { DialogPostGameMp } from '../dialogs/dialog-post-game-mp/dialog-post-game-mp.component';
 import { LoadingService } from '../../services/loading/loading.service';
 import { Player } from '../../interfaces/player';
+import {
+  COUNTDOWN_INITIAL_VALUE,
+  COUNTDOWN_INTERVAL,
+  COUNTDOWN_FADEOUT_DELAY,
+  COUNTDOWN_ANIMATION_DELAY,
+  COUNTDOWN_START_DELAY,
+  WIN_DIALOG_DELAY,
+} from '../../constants/game-constants';
 
 interface ValidatedWord {
   word: string;
@@ -336,7 +344,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private startCountdown(onComplete: () => void) {
-    this.countdown = 3;
+    this.countdown = COUNTDOWN_INITIAL_VALUE;
     this.ngZone.runOutsideAngular(() => {
       const countInterval = setInterval(() => {
         this.ngZone.run(() => {
@@ -346,17 +354,17 @@ export class GameComponent implements OnInit, OnDestroy {
           this.isPulsating = false;
           setTimeout(() => {
             this.isPulsating = true;
-          }, 15);
+          }, COUNTDOWN_ANIMATION_DELAY);
 
           if (this.countdown <= 0) {
             this.countdownEnded = true;
             setTimeout(() => {
               clearInterval(countInterval);
               onComplete();
-            }, 500); //wait for the final fade out animation to finish
+            }, COUNTDOWN_FADEOUT_DELAY); //wait for the final fade out animation to finish
           }
         });
-      }, 1000); //countdown interval
+      }, COUNTDOWN_INTERVAL); //countdown interval
     });
   }
 
@@ -367,26 +375,19 @@ export class GameComponent implements OnInit, OnDestroy {
     this.initializeGrid(); // Sets up empty grid array
     this.initializeValidLetterIndices();
 
-    // *** Always get the seed from the GameState ***
     if (this.gameState.gameSeed === null) {
       console.error('Cannot start puzzle, game seed is null!');
       return;
     }
 
-    // if (this.gameState.gameMode === 'daily') {
-    //   this.location.replaceState('/daily');
-    // }
-    // For 'versus', the URL is already correct from the lobby.
-
     this.setLettersFromPuzzle();
 
     setTimeout(() => {
       this.startCountdown(() => {
-        // this.isGameStarted = true;
         this.startPuzzle();
         this.isCountingDown = false;
       });
-    }, 1600);
+    }, COUNTDOWN_START_DELAY);
   }
 
   handleWebSocketMessage(message: any): void {
@@ -419,6 +420,19 @@ export class GameComponent implements OnInit, OnDestroy {
             players: message.players,
           });
 
+          // Handle timer synchronization if game is active and we have game time info
+          if (
+            message.isGameActive &&
+            message.currentGameTime !== undefined &&
+            this.timerComponent
+          ) {
+            console.log(
+              'Syncing timer with server time:',
+              message.currentGameTime,
+            );
+            this.syncTimerWithServer(message.currentGameTime);
+          }
+
           // If we were disconnected and rejoined, we might need to sync our game state
           // The server should maintain the game state, but we can request updates if needed
           this.handlePlayerListUpdate(message.players);
@@ -430,6 +444,18 @@ export class GameComponent implements OnInit, OnDestroy {
         if (message.gameState && this.gameState.gameMode === 'versus') {
           console.log('Received game state sync after reconnection');
           this.syncGameStateAfterReconnection(message.gameState);
+        }
+        break;
+
+      case 'timerSync':
+        // Handle timer synchronization when joining/rejoining a game
+        if (
+          this.gameState.gameMode === 'versus' &&
+          message.isGameActive &&
+          message.currentGameTime !== undefined
+        ) {
+          console.log('Received timer sync message:', message.currentGameTime);
+          this.syncTimerWithServer(message.currentGameTime);
         }
         break;
 
@@ -501,9 +527,38 @@ export class GameComponent implements OnInit, OnDestroy {
       this.isGameStarted = serverGameState.isGameActive;
     }
 
-    if (serverGameState.gameTime !== undefined && this.timerComponent) {
-      // Sync timer if provided by server
-      this.timerStartTime = serverGameState.gameTime;
+    if (
+      serverGameState.currentGameTime !== undefined &&
+      this.timerComponent &&
+      serverGameState.isGameActive
+    ) {
+      // Sync timer with server time
+      this.syncTimerWithServer(serverGameState.currentGameTime);
+    }
+  }
+
+  private syncTimerWithServer(serverGameTime: number): void {
+    // Only sync timer if the game is actually started and we have a timer component
+    if (!this.timerComponent || !this.isGameStarted) {
+      return;
+    }
+
+    console.log(
+      `Syncing local timer to server time: ${serverGameTime} seconds`,
+    );
+
+    // Set the timer component's start time to match the server
+    this.timerStartTime = serverGameTime;
+
+    // Set the timer to the server time using the public method
+    this.timerComponent.setTimer(serverGameTime);
+
+    // Update the display
+    this.onTimeChanged(serverGameTime);
+
+    // Ensure the timer is running if the game is active
+    if (this.timerRunning) {
+      this.startTimer();
     }
   }
 
@@ -652,7 +707,6 @@ export class GameComponent implements OnInit, OnDestroy {
       this.webSocketService.announceWin(
         this.gameState.localPlayerId!,
         this.condensedGrid,
-        this.currentTimeString,
       );
     } else {
       if (this.gameState.gameMode === 'daily') {
@@ -667,7 +721,7 @@ export class GameComponent implements OnInit, OnDestroy {
           shareLink: this.generateShareLink(),
           daily: this.gameState.gameMode === 'daily',
         });
-      }, 1100);
+      }, WIN_DIALOG_DELAY);
 
       this.isGameStarted = false;
       this.waitingForRestart = true;
@@ -706,7 +760,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.webSocketService.announceWin(
       this.gameState.localPlayerId!,
       this.condensedGrid,
-      this.currentTimeString,
     );
   }
 

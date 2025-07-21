@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebSocketService } from '../../services/websocket/websocket.service';
-import { Subject, Subscription, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
@@ -28,6 +28,7 @@ import { PlayerCardComponent } from '../player-card/player-card.component';
 import { Player } from '../../interfaces/player';
 import { DialogData } from '../../interfaces/dialog-data';
 import { LoadingService } from '../../services/loading/loading.service';
+import { LOBBY_GAME_START_COUNTDOWN_DURATION } from '../../constants/game-constants';
 
 @Component({
   selector: 'app-lobby',
@@ -233,7 +234,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
         await this.loadingService.showForDuration({
           message: 'Game starting!',
-          duration: 2000, // timer before players are taken to the game
+          duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
         });
 
         this.router.navigate(['/versus']);

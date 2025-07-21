@@ -68,6 +68,11 @@ export class TimerComponent implements OnInit, OnDestroy, OnChanges {
     this.timeChanged.emit(this.seconds);
   }
 
+  setTimer(seconds: number) {
+    this.seconds = seconds;
+    this.timeChanged.emit(this.seconds);
+  }
+
   private startStopwatch(): void {
     if (!this.timer) {
       this.timer = setInterval(() => {
