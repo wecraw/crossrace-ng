@@ -4,7 +4,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { WebSocketService } from './services/websocket/websocket.service';
 import { LoadingService } from './services/loading/loading.service';
 import { LoadingComponent } from './components/loading/loading.component';
-import { environment } from '../environments/environment';
+import { ConfigService } from './services/config/config.service';
 
 @Component({
   selector: 'app-root',
@@ -19,12 +19,13 @@ export class AppComponent implements OnInit, OnDestroy {
   private doubleTapThreshold = 300; // milliseconds
 
   // Debug properties
-  isProduction = environment.production;
+  isProduction = this.configService.isProduction;
 
   constructor(
     private renderer: Renderer2,
     private websocketService: WebSocketService,
     public loadingService: LoadingService,
+    private configService: ConfigService,
   ) {}
 
   ngOnInit() {

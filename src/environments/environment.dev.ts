@@ -2,7 +2,7 @@ import { Environment } from './environment.interface';
 
 export const environment: Environment = {
   production: false,
-  serverUrl: 'https://crossrace-server-498949919131.us-west1.run.app',
+  serverUrl: 'http://localhost:8080',
 
   version: {
     number: '0.9.0',
@@ -10,6 +10,6 @@ export const environment: Environment = {
     buildDate: '2025-07-20T07:26:18.629Z',
     gitHash: 'f368519',
     gitBranch: 'dev',
-    displayVersion: '0.9.0.1752996378 (dev)'
-  }
+    displayVersion: '0.9.0.1752996378 (dev)',
+  },
 };
