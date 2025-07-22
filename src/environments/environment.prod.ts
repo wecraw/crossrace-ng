@@ -2,14 +2,14 @@ import { Environment } from './environment.interface';
 
 export const environment: Environment = {
   production: true,
-  serverUrl: 'https://crossrace-server-953048050004.us-west1.run.app',
+  serverUrl: '__SERVER_URL__',
 
   version: {
     number: '0.9.0',
-    buildNumber: 1753080617,
-    buildDate: '2025-07-21T06:50:17.989Z',
-    gitHash: 'abb332f',
-    gitBranch: 'versus-timer-sync-v2',
-    displayVersion: '0.9.0.1753080617'
-  }
+    buildNumber: 1753143064,
+    buildDate: '2025-07-22T00:11:04.394Z',
+    gitHash: '0c1c75a',
+    gitBranch: 'dev',
+    displayVersion: '0.9.0.1753143064',
+  },
 };
