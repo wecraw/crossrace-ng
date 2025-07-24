@@ -12,3 +12,6 @@ export const WIN_DIALOG_DELAY = 1100; // Delay before showing win dialog
 
 // Countdown animation constants
 export const COUNTDOWN_ANIMATION_DELAY = 15; // Delay for pulsating animation
+
+// Drag position constants
+export const DRAG_POSITION_INIT = { x: -237, y: -232 };

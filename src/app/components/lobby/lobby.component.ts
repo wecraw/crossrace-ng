@@ -196,26 +196,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
       .getMessages()
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => this.handleMessage(message));
-
-    this.webSocketService
-      .getConnectionStatus()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((status) => {
-        if (status === 'reconnecting') {
-          this.loadingService.show();
-        } else if (status === 'connected') {
-          // The initial loading is handled by the connector. This only handles
-          // loading from reconnections.
-          this.loadingService.hide();
-        }
-      });
   }
 
   private async handleMessage(message: any) {
     console.log('Lobby received message:', message.type, message);
     switch (message.type) {
       case 'playerList':
-        this.loadingService.hide(); // Hide any reconnecting spinners
         this.gameStateService.updateGameState({
           players: message.players,
           isHost:
@@ -258,7 +244,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         break;
 
       case 'error':
-        this.loadingService.hide();
         console.error('Received server error:', message.message);
         this.openDialog(
           {

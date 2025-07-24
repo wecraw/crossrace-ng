@@ -37,7 +37,6 @@ import {
 import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
 import { GameSeedService } from '../../services/game-seed/game-seed.service';
 import { DialogPostGameMp } from '../dialogs/dialog-post-game-mp/dialog-post-game-mp.component';
-import { LoadingService } from '../../services/loading/loading.service';
 import { Player } from '../../interfaces/player';
 import {
   COUNTDOWN_INITIAL_VALUE,
@@ -46,6 +45,7 @@ import {
   COUNTDOWN_ANIMATION_DELAY,
   COUNTDOWN_START_DELAY,
   WIN_DIALOG_DELAY,
+  DRAG_POSITION_INIT,
 } from '../../constants/game-constants';
 
 interface ValidatedWord {
@@ -55,8 +55,6 @@ interface ValidatedWord {
   startJ: number;
   direction: 'horizontal' | 'vertical';
 }
-
-const DRAG_POSITION_INIT = { x: -237, y: -232 };
 
 @Component({
   selector: 'app-game',
@@ -132,7 +130,6 @@ export class GameComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private ngZone: NgZone,
     private gameSeedService: GameSeedService,
-    private loadingService: LoadingService,
   ) {
     this.validWords = new Set(VALID_WORDS);
   }
@@ -202,15 +199,8 @@ export class GameComponent implements OnInit, OnDestroy {
     }
 
     switch (status) {
-      case 'reconnecting':
-        // Show loading overlay with reconnecting message
-        this.loadingService.show({
-          message: 'Reconnecting',
-        });
-        break;
       case 'connected':
-        // Hide loading and request fresh player state
-        this.loadingService.hide();
+        //request fresh player state
         if (this.gameState.gameCode && this.gameState.localPlayerId) {
           console.log('Reconnected during game, requesting updates');
           // Request both player list and game state updates
