@@ -399,6 +399,7 @@ export class GameComponent implements OnInit, OnDestroy {
         break;
 
       case 'timerSync':
+        //TODO: reconnecting player still gets way too many messages (mostly player list)
         // Handle timer synchronization when joining/rejoining a game
         if (
           this.gameState.gameMode === 'versus' &&

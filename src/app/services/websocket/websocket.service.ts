@@ -121,10 +121,10 @@ export class WebSocketService implements OnDestroy {
         // First, await the acknowledgment that we have successfully rejoined the game.
         await this.joinGame(gameCode, localPlayerId, true);
 
-        // THE FIX: Now that we're back in the room, explicitly request the
-        // full player list to re-sync our client's state.
-        console.log('Rejoin successful. Requesting updated player list.');
-        this.getPlayers(gameCode);
+        // // THE FIX: Now that we're back in the room, explicitly request the
+        // // full player list to re-sync our client's state.
+        // console.log('Rejoin successful. Requesting updated player list.');
+        // this.getPlayers(gameCode);
       } catch (error) {
         console.log('Failed to rejoin game:', error);
         // Handle failed rejoin if necessary (e.g., game was deleted while disconnected)
@@ -220,10 +220,6 @@ export class WebSocketService implements OnDestroy {
         response.isGameActive &&
         response.currentGameTime !== undefined
       ) {
-        console.log(
-          'Received timer sync data on rejoin:',
-          response.currentGameTime,
-        );
         this.messageSubject.next({
           type: 'timerSync',
           currentGameTime: response.currentGameTime,
