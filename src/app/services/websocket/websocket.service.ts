@@ -79,7 +79,7 @@ export class WebSocketService implements OnDestroy {
           message: 'Reconnecting',
         });
       } else {
-        // This was a deliberate disconnect (e.g., user logged out).
+        // This was a deliberate disconnect (e.g., user left the lobby or game).
         // Just update the status, no loading spinner needed.
         this.connectionStatus.next('disconnected');
       }
@@ -208,13 +208,6 @@ export class WebSocketService implements OnDestroy {
       this.gameStateService.updateGameState({
         localPlayerId: response.playerId,
       });
-
-      if (response.gameEnded && response.gameEndData) {
-        this.messageSubject.next({
-          type: 'gameEndedWhileDisconnected',
-          ...response.gameEndData,
-        });
-      }
 
       // Handle timer synchronization data if rejoin
       if (

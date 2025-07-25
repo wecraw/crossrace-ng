@@ -346,20 +346,22 @@ export class GameComponent implements OnInit, OnDestroy {
 
     switch (message.type) {
       case 'gameEnded':
-        this.isGameOver = true;
         this.isWinner = message.winner === this.gameState.localPlayerId; // More reliable check
         this.gameStateService.updateGameState({
           players: message.players,
           lastWinnerId: message.winner,
         });
-        this.openDialog({
-          winnerDisplayName: message.winnerDisplayName,
-          winnerColor: message.winnerColor,
-          winnerEmoji: message.winnerEmoji,
-          players: message.players,
-          grid: message.condensedGrid,
-          time: message.time,
-        });
+        if (!this.isGameOver) {
+          this.openDialog({
+            winnerDisplayName: message.winnerDisplayName,
+            winnerColor: message.winnerColor,
+            winnerEmoji: message.winnerEmoji,
+            players: message.players,
+            grid: message.condensedGrid,
+            time: message.time,
+          });
+          this.isGameOver = true; // prevent the dialog from being opened again
+        }
         this.stopTimer();
         break;
 
@@ -407,14 +409,6 @@ export class GameComponent implements OnInit, OnDestroy {
         ) {
           console.log('Received timer sync message:', message.currentGameTime);
           this.syncTimerWithServer(message.currentGameTime);
-        }
-        break;
-
-      case 'gameEndedWhileDisconnected':
-        // Handle game end that occurred while disconnected (from joinGame response)
-        if (this.gameState.gameMode === 'versus') {
-          console.log('Game ended while disconnected (detected on rejoin)');
-          this.handleGameEndWhileDisconnected(message);
         }
         break;
 
@@ -504,34 +498,6 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.timerRunning) {
       this.startTimer();
     }
-  }
-
-  private handleGameEndWhileDisconnected(message: any): void {
-    console.log('Handling game that ended while disconnected:', message);
-
-    // Set local state to reflect that the game is over
-    this.isGameOver = true;
-    this.isWinner = message.winner === this.gameState.localPlayerId;
-    this.stopTimer();
-
-    // Update game state with final player list
-    if (message.players) {
-      this.gameStateService.updateGameState({
-        players: message.players,
-        lastWinnerId: message.winner,
-      });
-    }
-
-    // Show the post-game dialog with the final results
-    this.openDialog({
-      winnerDisplayName: message.winnerDisplayName,
-      winnerColor: message.winnerColor,
-      winnerEmoji: message.winnerEmoji,
-      players: message.players,
-      grid: message.condensedGrid,
-      time: message.time,
-      reconnectedAfterEnd: true, // Flag to indicate this was shown after reconnection
-    });
   }
 
   startPuzzle() {
