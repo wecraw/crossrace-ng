@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebSocketService } from '../../services/websocket/websocket.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
@@ -99,22 +99,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       !!navigator.share &&
       /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
     this.setupSubscriptions();
-
-    const gameCode = this.route.snapshot.paramMap.get('gameCode');
-    if (!gameCode) {
-      // This is now an error state. A lobby should not exist without a game code.
-      console.error('LobbyComponent loaded without a game code.');
-      this.router.navigate(['/versus-menu']);
-      return;
-    }
-
-    // Ensure the WebSocket service knows the current game, especially for page reloads.
-    this.webSocketService.setCurrentGame(gameCode);
-    this.gameStateService.updateGameState({ gameCode });
-
-    // On a fresh load/reload of the lobby, explicitly request the player list.
-    // The server will respond with a 'playerList' message.
-    this.webSocketService.getPlayers(gameCode);
   }
 
   ngOnDestroy() {
@@ -136,7 +120,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   copyOrShare() {
-    // UPDATED: The URL to share should be the public join URL.
     const gameShareUrl =
       window.location.origin + '/join/' + this.gameState.gameCode;
     const shareString = `Race me on Crossrace! \n${gameShareUrl}`;
@@ -156,7 +139,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   getDisplayUrl(): string {
-    // UPDATED: The URL to display should also be the public join URL.
     const gameShareUrl =
       window.location.origin + '/join/' + this.gameState.gameCode;
     const parsedUrl = new URL(gameShareUrl);
@@ -186,10 +168,28 @@ export class LobbyComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
         this.gameState = state;
+        if (!this.gameState.gameCode) {
+          // A lobby should not exist without a game code.
+          console.error('LobbyComponent loaded without a game code.');
+          this.router.navigate(['/versus-menu']);
+          return;
+        }
+
         const connected = state.players.filter((p) => !p.disconnected);
         this.selfPlayer = connected.find((p) => this.isPlayerSelf(p));
         this.otherPlayers = connected.filter((p) => !this.isPlayerSelf(p));
         this.cdr.detectChanges();
+      });
+
+    // On a fresh load/reload of the lobby, explicitly request the player list.
+    this.gameStateService
+      .getGameState()
+      .pipe(take(1))
+      .subscribe((state) => {
+        if (state.gameCode) {
+          console.log('Component initialized, fetching initial player list...');
+          this.webSocketService.getPlayers(state.gameCode);
+        }
       });
 
     this.webSocketService
@@ -239,10 +239,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         }
         break;
 
-      case 'gameStatusCheck':
-        this.handleGameStatusCheckResponse(message);
-        break;
-
       case 'error':
         console.error('Received server error:', message.message);
         this.openDialog(
@@ -254,23 +250,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
           false,
         );
         break;
-    }
-  }
-
-  private handleGameStatusCheckResponse(message: any): void {
-    console.log('Lobby received game status check response:', message);
-    if (message.gameEnded) {
-      if (message.players) {
-        this.gameStateService.updateGameState({
-          players: message.players,
-          isHost:
-            message.players.find(
-              (p: Player) => p.isHost && p.id === this.gameState.localPlayerId,
-            ) != null,
-        });
-      }
-    } else if (message.gameActive === false && message.gameNotFound) {
-      console.log('Game session has expired, staying in lobby');
     }
   }
 

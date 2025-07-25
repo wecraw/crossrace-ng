@@ -24,7 +24,6 @@ const routes: Routes = [
   },
 
   // Versus
-  { path: 'lobby', component: LobbyComponent },
   { path: 'versus-menu', component: VersusMenuComponent },
   { path: 'create', component: GameConnectorComponent },
   { path: 'join/:gameCode', component: GameConnectorComponent },

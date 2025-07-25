@@ -10,9 +10,6 @@ import { GameStateService } from '../../services/game-state/game-state.service';
 @Component({
   selector: 'app-game-connector',
   imports: [MatDialogModule],
-  // This component's template is intentionally blank. It uses the global
-  // loading service to show feedback, and its sole purpose is to process
-  // and redirect.
   template: ``,
   styles: [
     `
@@ -47,7 +44,6 @@ export class GameConnectorComponent implements OnInit {
     this.loadingService.show({ message: 'Creating game...' });
     try {
       const response = await this.webSocketService.createGame();
-      this.webSocketService.setCurrentGame(response.gameCode);
 
       this.gameStateService.updateGameState({ gameCode: response.gameCode });
 
@@ -64,9 +60,8 @@ export class GameConnectorComponent implements OnInit {
   private async joinExistingGame(gameCode: string): Promise<void> {
     this.loadingService.show({ message: 'Joining game...' });
     try {
-      // The websocket service will verify the game exists.
+      // Verify the game exists
       await this.webSocketService.joinGame(gameCode);
-      this.webSocketService.setCurrentGame(gameCode);
       this.gameStateService.updateGameState({ gameCode: gameCode });
 
       this.router.navigate(['/lobby', gameCode], { replaceUrl: true });
@@ -90,7 +85,7 @@ export class GameConnectorComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(() => {
-      // On error, always send the user back to the versus menu to try again.
+      // On error, send the user back to the versus menu
       this.router.navigate(['/versus-menu']);
     });
   }

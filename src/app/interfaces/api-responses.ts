@@ -16,7 +16,6 @@ export interface CreateGameResponse extends AckResponse {
 
 // The specific shape for the 'join' event's response
 export interface JoinGameResponse extends AckResponse {
-  type: 'selfJoined';
   playerId: string;
   gameCode: string;
   displayName: string;

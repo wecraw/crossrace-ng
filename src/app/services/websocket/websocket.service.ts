@@ -22,8 +22,6 @@ export class WebSocketService implements OnDestroy {
   private messageSubject = new Subject<any>();
   private connectionStatus = new BehaviorSubject<string>('disconnected');
 
-  private currentGameCode: string | null = null;
-
   readonly dialog = inject(MatDialog);
   private loadingService = inject(LoadingService);
   // Inject GameStateService here
@@ -43,7 +41,6 @@ export class WebSocketService implements OnDestroy {
     this.setupSocketListeners();
     window.addEventListener('beforeunload', () => this.disconnect());
   }
-  // REMOVED getPlayerId and setPlayerId methods.
 
   ngOnDestroy() {
     this.disconnect();
@@ -51,7 +48,6 @@ export class WebSocketService implements OnDestroy {
   }
 
   clearAndDisconnect() {
-    this.currentGameCode = null;
     this.disconnect();
   }
 
@@ -113,29 +109,27 @@ export class WebSocketService implements OnDestroy {
   }
 
   private async rejoinGame(): Promise<void> {
-    // Get the player ID directly from the GameStateService.
-    const playerId = this.gameStateService.getCurrentState().localPlayerId;
-    if (this.currentGameCode && playerId) {
+    // Get the game state from the GameStateService.
+    const gameState = this.gameStateService.getCurrentState();
+    const { gameCode, localPlayerId } = gameState;
+
+    if (gameCode && localPlayerId) {
       console.log(
-        `Attempting to rejoin game: ${this.currentGameCode} as player ${playerId}`,
+        `Attempting to rejoin game: ${gameCode} as player ${localPlayerId}`,
       );
       try {
         // First, await the acknowledgment that we have successfully rejoined the game.
-        await this.joinGame(this.currentGameCode, playerId);
+        await this.joinGame(gameCode, localPlayerId, true);
 
         // THE FIX: Now that we're back in the room, explicitly request the
         // full player list to re-sync our client's state.
         console.log('Rejoin successful. Requesting updated player list.');
-        this.getPlayers(this.currentGameCode);
+        this.getPlayers(gameCode);
       } catch (error) {
         console.log('Failed to rejoin game:', error);
         // Handle failed rejoin if necessary (e.g., game was deleted while disconnected)
       }
     }
-  }
-
-  setCurrentGame(gameCode: string): void {
-    this.currentGameCode = gameCode;
   }
 
   private async emitWithAck<T>(event: string, ...args: any[]): Promise<T> {
@@ -196,6 +190,7 @@ export class WebSocketService implements OnDestroy {
   async joinGame(
     gameCode: string,
     playerId?: string | null,
+    isRejoin?: boolean,
   ): Promise<JoinGameResponse> {
     // Get the playerId from GameStateService if not provided.
     const finalPlayerId =
@@ -219,10 +214,14 @@ export class WebSocketService implements OnDestroy {
         });
       }
 
-      // Handle timer synchronization data if present
-      if (response.isGameActive && response.currentGameTime !== undefined) {
+      // Handle timer synchronization data if rejoin
+      if (
+        isRejoin &&
+        response.isGameActive &&
+        response.currentGameTime !== undefined
+      ) {
         console.log(
-          'Received timer sync data on join:',
+          'Received timer sync data on rejoin:',
           response.currentGameTime,
         );
         this.messageSubject.next({
@@ -253,9 +252,12 @@ export class WebSocketService implements OnDestroy {
   }
 
   announceWin(playerId: string, condensedGrid: string[][]): void {
-    if (this.currentGameCode) {
+    // Get the current game code from GameStateService
+    const gameCode = this.gameStateService.getCurrentState().gameCode;
+
+    if (gameCode) {
       this.socket.emit('win', {
-        gameCode: this.currentGameCode,
+        gameCode,
         playerId,
         condensedGrid,
       });
@@ -266,15 +268,6 @@ export class WebSocketService implements OnDestroy {
 
   requestGameState(gameCode: string): void {
     this.socket.emit('requestGameState', { gameCode });
-  }
-
-  checkGameStatus(gameCode: string): void {
-    console.log(`Checking if game ${gameCode} ended while disconnected...`);
-    this.socket.emit('checkGameStatus', { gameCode });
-  }
-
-  confirmGameParticipation(gameCode: string, playerId: string): void {
-    this.socket.emit('confirmGameParticipation', { gameCode, playerId });
   }
 
   simulateDisconnect(): void {

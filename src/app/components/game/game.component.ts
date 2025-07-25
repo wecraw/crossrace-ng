@@ -182,45 +182,39 @@ export class GameComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => this.handleWebSocketMessage(message));
 
-    // Subscribe to connection status changes with reconnection handling
-    this.webSocketService
-      .getConnectionStatus()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((status) => {
-        this.connectionStatus = status;
-        this.handleConnectionStatusChange(status);
-      });
+    // // Subscribe to connection status changes with reconnection handling
+    // this.webSocketService
+    //   .getConnectionStatus()
+    //   .pipe(takeUntil(this.destroy$))
+    //   .subscribe((status) => {
+    //     this.connectionStatus = status;
+    //     this.handleConnectionStatusChange(status);
+    //   });
   }
 
-  private handleConnectionStatusChange(status: string): void {
-    // Only handle reconnection for multiplayer games
-    if (this.gameState.gameMode !== 'versus') {
-      return;
-    }
+  // private handleConnectionStatusChange(status: string): void {
+  //   // Only handle reconnection for multiplayer games
+  //   if (this.gameState.gameMode !== 'versus') {
+  //     return;
+  //   }
 
-    switch (status) {
-      case 'connected':
-        //request fresh player state
-        if (this.gameState.gameCode && this.gameState.localPlayerId) {
-          console.log('Reconnected during game, requesting updates');
-          // Request both player list and game state updates
-          this.webSocketService.getPlayers(this.gameState.gameCode);
-          this.webSocketService.requestGameState(this.gameState.gameCode);
-
-          // Confirm we're back in the game
-          this.webSocketService.confirmGameParticipation(
-            this.gameState.gameCode,
-            this.gameState.localPlayerId,
-          );
-        }
-        break;
-      case 'disconnected':
-      case 'error':
-        // Don't show loading overlay for these states - Socket.IO will automatically attempt to reconnect
-        // and trigger 'reconnecting' status when it does
-        break;
-    }
-  }
+  //   switch (status) {
+  //     case 'connected':
+  //       //request fresh player state
+  //       if (this.gameState.gameCode && this.gameState.localPlayerId) {
+  //         console.log('Reconnected during game, requesting updates');
+  //         // Request both player list and game state updates
+  //         this.webSocketService.getPlayers(this.gameState.gameCode); //todo examine this
+  //         this.webSocketService.requestGameState(this.gameState.gameCode);
+  //       }
+  //       break;
+  //     case 'disconnected':
+  //     case 'error':
+  //       // Don't show loading overlay for these states - Socket.IO will automatically attempt to reconnect
+  //       // and trigger 'reconnecting' status when it does
+  //       break;
+  //   }
+  // }
 
   private initializeGame(): void {
     // This switch statement is now reliable for all cases.
@@ -449,13 +443,6 @@ export class GameComponent implements OnInit, OnDestroy {
         }
         break;
 
-      case 'gameStatusCheck':
-        // Handle response to game status check after reconnection
-        if (this.gameState.gameMode === 'versus') {
-          this.handleGameStatusCheckResponse(message);
-        }
-        break;
-
       case 'gameEndedWhileDisconnected':
         // Handle game end that occurred while disconnected (from joinGame response)
         if (this.gameState.gameMode === 'versus') {
@@ -550,44 +537,6 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.timerRunning) {
       this.startTimer();
     }
-  }
-
-  private handleGameStatusCheckResponse(message: any): void {
-    console.log('Received game status check response:', message);
-
-    if (message.gameEnded) {
-      // The game ended while we were disconnected
-      console.log('Game ended while disconnected, showing end game dialog');
-
-      // Set local state to reflect that the game is over
-      this.isGameOver = true;
-      this.isWinner = message.winner === this.gameState.localPlayerId;
-      this.stopTimer();
-
-      // Update game state with final player list
-      if (message.players) {
-        this.gameStateService.updateGameState({
-          players: message.players,
-          lastWinnerId: message.winner,
-        });
-      }
-
-      // Show the post-game dialog with the final results
-      this.openDialog({
-        winnerDisplayName: message.winnerDisplayName,
-        winnerColor: message.winnerColor,
-        winnerEmoji: message.winnerEmoji,
-        players: message.players,
-        grid: message.condensedGrid,
-        time: message.time,
-        reconnectedAfterEnd: true, // Flag to indicate this was shown after reconnection
-      });
-    } else if (message.gameActive === false && message.gameNotFound) {
-      // Game doesn't exist anymore (expired/deleted)
-      console.log('Game no longer exists, returning to main menu');
-      this.router.navigate(['/']);
-    }
-    // If gameActive is true or gameEnded is false, the game is still ongoing - no action needed
   }
 
   private handleGameEndWhileDisconnected(message: any): void {
