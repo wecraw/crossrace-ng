@@ -105,7 +105,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
 
-    if (!this.gameState.gameCode && !this.gameState.localPlayerId) {
+    // If we are not in a game, it means the user is leaving the lobby (e.g. back button).
+    // In this case, we should disconnect them from the server and clear the game state.
+    if (!this.gameState.isInGame) {
+      this.webSocketService.disconnect();
       this.gameStateService.clearGameState();
     }
   }
