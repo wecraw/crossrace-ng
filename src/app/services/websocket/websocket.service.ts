@@ -62,14 +62,27 @@ export class WebSocketService implements OnDestroy {
     this.socket.on('connect', () => {
       console.log('Connected to server with socket ID:', this.socket!.id);
       this.connectionStatus.next('connected');
-
+      this.loadingService.hide(); // Hide loading on successful connect/reconnect
       // If we were in a game, attempt to rejoin
       this.rejoinGame();
     });
 
     this.socket.on('disconnect', (reason: string) => {
       console.log('Disconnected from server. Reason:', reason);
-      this.connectionStatus.next('disconnected');
+
+      // If the disconnect was NOT initiated by our client code calling .disconnect()
+      // then it's an unexpected event (server crash, network loss) and we should
+      // immediately show the user we are trying to reconnect.
+      if (reason !== 'io client disconnect') {
+        this.connectionStatus.next('reconnecting');
+        this.loadingService.show({
+          message: 'Reconnecting',
+        });
+      } else {
+        // This was a deliberate disconnect (e.g., user logged out).
+        // Just update the status, no loading spinner needed.
+        this.connectionStatus.next('disconnected');
+      }
     });
 
     this.socket.on('connect_error', (error: any) => {
@@ -79,14 +92,10 @@ export class WebSocketService implements OnDestroy {
 
     this.socket.on('reconnect_attempt', (attempt: any) => {
       console.log(`Reconnect attempt #${attempt}`);
-      this.connectionStatus.next('reconnecting');
-      this.loadingService.show({ message: 'Reconnecting' });
     });
 
     this.socket.on('reconnect', (attempt: any) => {
       console.log(`Successfully reconnected after ${attempt} attempts`);
-      this.connectionStatus.next('connected');
-      this.loadingService.hide();
     });
 
     this.socket.on('reconnect_failed', () => {
@@ -120,11 +129,6 @@ export class WebSocketService implements OnDestroy {
       try {
         // First, await the acknowledgment that we have successfully rejoined the game.
         await this.joinGame(gameCode, localPlayerId, true);
-
-        // // THE FIX: Now that we're back in the room, explicitly request the
-        // // full player list to re-sync our client's state.
-        // console.log('Rejoin successful. Requesting updated player list.');
-        // this.getPlayers(gameCode);
       } catch (error) {
         console.log('Failed to rejoin game:', error);
         // Handle failed rejoin if necessary (e.g., game was deleted while disconnected)
@@ -140,11 +144,9 @@ export class WebSocketService implements OnDestroy {
       this.socket.connect();
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          // MODIFIED: Removed non-null assertion
           this.socket.off('connect', resolve);
           reject('Connection timeout while waiting to emit event.');
         }, 15000);
-        // MODIFIED: Removed non-null assertion
         this.socket.once('connect', () => {
           clearTimeout(timeout);
           console.log(`Socket connected! Proceeding with emit for '${event}'.`);
@@ -267,8 +269,13 @@ export class WebSocketService implements OnDestroy {
   }
 
   simulateDisconnect(): void {
+    //this simulates a "clean" disconnect, triggered by the user.
     if (this.socket) {
       this.socket.disconnect();
+      // need to manually show the loading spinner in this case because it's typically skipped for other clean disconnects
+      this.loadingService.show({
+        message: 'Reconnecting',
+      });
       setTimeout(() => {
         this.connectionStatus.next('reconnecting');
         setTimeout(() => {
