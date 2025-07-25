@@ -181,40 +181,7 @@ export class GameComponent implements OnInit, OnDestroy {
       .getMessages()
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => this.handleWebSocketMessage(message));
-
-    // // Subscribe to connection status changes with reconnection handling
-    // this.webSocketService
-    //   .getConnectionStatus()
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe((status) => {
-    //     this.connectionStatus = status;
-    //     this.handleConnectionStatusChange(status);
-    //   });
   }
-
-  // private handleConnectionStatusChange(status: string): void {
-  //   // Only handle reconnection for multiplayer games
-  //   if (this.gameState.gameMode !== 'versus') {
-  //     return;
-  //   }
-
-  //   switch (status) {
-  //     case 'connected':
-  //       //request fresh player state
-  //       if (this.gameState.gameCode && this.gameState.localPlayerId) {
-  //         console.log('Reconnected during game, requesting updates');
-  //         // Request both player list and game state updates
-  //         this.webSocketService.getPlayers(this.gameState.gameCode); //todo examine this
-  //         this.webSocketService.requestGameState(this.gameState.gameCode);
-  //       }
-  //       break;
-  //     case 'disconnected':
-  //     case 'error':
-  //       // Don't show loading overlay for these states - Socket.IO will automatically attempt to reconnect
-  //       // and trigger 'reconnecting' status when it does
-  //       break;
-  //   }
-  // }
 
   private initializeGame(): void {
     // This switch statement is now reliable for all cases.
