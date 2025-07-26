@@ -242,6 +242,18 @@ export class LobbyComponent implements OnInit, OnDestroy {
         }
         break;
 
+      case 'forceDisconnect':
+        console.warn('Forcefully disconnected:', message.message);
+        this.openDialog(
+          {
+            dialogText: message.message,
+            showSpinner: false,
+            showConfirm: true,
+          },
+          true,
+        );
+        break;
+
       case 'error':
         console.error('Received server error:', message.message);
         this.openDialog(
