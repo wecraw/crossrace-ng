@@ -113,7 +113,6 @@ export class GameComponent implements OnInit, OnDestroy {
   isGameOver: boolean = false;
   isWinner: boolean = false;
   isGameStarted: boolean = false;
-  connectionStatus: string = 'disconnected';
 
   // Game State
   gameState!: GameState;

@@ -85,6 +85,34 @@ export class WebSocketService implements OnDestroy {
       }
     });
 
+    this.socket.on('forceDisconnect', (data: { message: string }) => {
+      console.warn('Forcefully disconnected by server:', data.message);
+
+      // We were kicked because a new tab took over.
+      // 1. Stop any "reconnecting..." spinners.
+      this.loadingService.hide();
+      this.connectionStatus.next('disconnected');
+
+      // 2. Prevent this client from attempting to reconnect automatically.
+      // By calling disconnect(), we ensure 'io client disconnect' is the reason,
+      // which our 'disconnect' handler above will ignore for reconnection purposes.
+      this.disconnect();
+
+      // 3. Inform the user in this (now old) tab.
+      // Replace with your actual dialog component or use a simple alert.
+      // this.dialog.open(InfoDialogComponent, {
+      //   data: {
+      //     title: 'Session Replaced',
+      //     message: data.message,
+      //   },
+      //   disableClose: true,
+      // });
+      alert(data.message); // Using a simple alert for demonstration
+
+      // 4. Clear local game state so a page refresh doesn't try to rejoin.
+      this.gameStateService.clearGameState();
+    });
+
     this.socket.on('connect_error', (error: any) => {
       console.error('Connection Error:', error);
       this.connectionStatus.next('error');
