@@ -11,6 +11,12 @@ export interface GameState {
   gameSeed: number | null;
   gameMode: 'versus' | 'daily' | 'practice' | null;
   lastWinnerId: string | null;
+  // Add win state for handling disconnected wins
+  pendingWin: {
+    playerId: string;
+    condensedGrid: string[][];
+    timestamp: number;
+  } | null;
 }
 
 const initialState: GameState = {
@@ -22,6 +28,7 @@ const initialState: GameState = {
   gameSeed: null,
   gameMode: null,
   lastWinnerId: null,
+  pendingWin: null,
 };
 
 const PLAYER_ID_STORAGE_KEY = 'crossrace_player_id';
@@ -70,5 +77,34 @@ export class GameStateService {
     // The server will handle whether this player can rejoin a game.
     const localPlayerId = this.getCurrentState().localPlayerId;
     this.gameState.next({ ...initialState, localPlayerId });
+  }
+
+  // Add methods to handle pending win state
+  setPendingWin(playerId: string, condensedGrid: string[][]): void {
+    this.updateGameState({
+      pendingWin: {
+        playerId,
+        condensedGrid,
+        timestamp: Date.now(),
+      },
+    });
+  }
+
+  clearPendingWin(): void {
+    this.updateGameState({ pendingWin: null });
+  }
+
+  hasPendingWin(): boolean {
+    const pendingWin = this.getCurrentState().pendingWin;
+    if (!pendingWin) return false;
+
+    // Clear pending wins older than 5 minutes to prevent stale data
+    const FIVE_MINUTES = 5 * 60 * 1000;
+    if (Date.now() - pendingWin.timestamp > FIVE_MINUTES) {
+      this.clearPendingWin();
+      return false;
+    }
+
+    return true;
   }
 }

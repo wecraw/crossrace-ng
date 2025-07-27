@@ -242,23 +242,20 @@ export class LobbyComponent implements OnInit, OnDestroy {
         }
         break;
 
-      case 'forceDisconnect':
-        console.warn('Forcefully disconnected:', message.message);
-        this.openDialog(
-          {
-            dialogText: message.message,
-            showSpinner: false,
-            showConfirm: true,
-          },
-          true,
-        );
-        break;
-
       case 'error':
-        console.error('Received server error:', message.message);
+        const errorMessage = message.message || '';
+        console.error('Received server error:', errorMessage);
+
+        // Don't show a disruptive dialog for "start game" errors. The UI will
+        // update to show the new host when the player list is refreshed,
+        // which is better and sufficient feedback for the user.
+        if (errorMessage.includes('Failed to start game')) {
+          return; // Silently ignore, do not show dialog or navigate.
+        }
+
         this.openDialog(
           {
-            dialogText: message.message || 'An unknown error occurred.',
+            dialogText: errorMessage || 'An unknown error occurred.',
             showSpinner: false,
             showConfirm: true,
           },

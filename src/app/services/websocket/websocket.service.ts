@@ -1,6 +1,7 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { ConfigService } from '../config/config.service';
 import { MatDialog } from '@angular/material/dialog';
 import { GameStateService } from '../game-state/game-state.service';
@@ -12,8 +13,6 @@ import {
 
 import * as SocketIOClient from 'socket.io-client';
 
-// REMOVED PLAYER_ID_STORAGE_KEY constant, as it's now managed by GameStateService
-
 @Injectable({
   providedIn: 'root',
 })
@@ -21,10 +20,12 @@ export class WebSocketService implements OnDestroy {
   private socket: SocketIOClient.Socket;
   private messageSubject = new Subject<any>();
   private connectionStatus = new BehaviorSubject<string>('disconnected');
+  private reconnectionTimeout: any = null;
+  private readonly RECONNECTION_TIMEOUT_MS = 20000; // 20 seconds
 
   readonly dialog = inject(MatDialog);
   private loadingService = inject(LoadingService);
-  // Inject GameStateService here
+  private router = inject(Router);
   private gameStateService = inject(GameStateService);
   private configService = inject(ConfigService);
 
@@ -43,12 +44,31 @@ export class WebSocketService implements OnDestroy {
   }
 
   ngOnDestroy() {
+    this.clearReconnectionTimeout();
     this.disconnect();
     window.removeEventListener('beforeunload', () => this.disconnect());
   }
 
   clearAndDisconnect() {
     this.disconnect();
+  }
+
+  private startReconnectionTimeout(): void {
+    this.clearReconnectionTimeout();
+    this.reconnectionTimeout = setTimeout(() => {
+      console.log('Reconnection timeout reached. Redirecting to home.');
+      this.loadingService.hide();
+      this.connectionStatus.next('failed');
+      this.gameStateService.clearGameState();
+      this.router.navigate(['/disconnected']);
+    }, this.RECONNECTION_TIMEOUT_MS);
+  }
+
+  private clearReconnectionTimeout(): void {
+    if (this.reconnectionTimeout) {
+      clearTimeout(this.reconnectionTimeout);
+      this.reconnectionTimeout = null;
+    }
   }
 
   public connect(): void {
@@ -63,6 +83,7 @@ export class WebSocketService implements OnDestroy {
       console.log('Connected to server with socket ID:', this.socket!.id);
       this.connectionStatus.next('connected');
       this.loadingService.hide(); // Hide loading on successful connect/reconnect
+      this.clearReconnectionTimeout(); // Clear timeout on successful connection
       // If we were in a game, attempt to rejoin
       this.rejoinGame();
     });
@@ -78,10 +99,12 @@ export class WebSocketService implements OnDestroy {
         this.loadingService.show({
           message: 'Reconnecting',
         });
+        this.startReconnectionTimeout(); // Start timeout for reconnection
       } else {
         // This was a deliberate disconnect (e.g., user left the lobby or game).
         // Just update the status, no loading spinner needed.
         this.connectionStatus.next('disconnected');
+        this.clearReconnectionTimeout(); // Clear timeout for deliberate disconnects
       }
     });
 
@@ -92,21 +115,19 @@ export class WebSocketService implements OnDestroy {
       // 1. Stop any "reconnecting..." spinners.
       this.loadingService.hide();
       this.connectionStatus.next('disconnected');
+      this.clearReconnectionTimeout(); // Clear timeout for force disconnect
 
       // 2. Prevent this client from attempting to reconnect automatically.
       // By calling disconnect(), we ensure 'io client disconnect' is the reason,
       // which our 'disconnect' handler above will ignore for reconnection purposes.
       this.disconnect();
 
-      // 3. Inform the user in this (now old) tab.
-      // Emit a message that components can listen to and handle
-      this.messageSubject.next({
-        type: 'forceDisconnect',
-        message: data.message,
+      // 3. Redirect the user to the main menu with a disconnected state, which triggers the disconnected modal.
+      this.router.navigate(['/disconnected']).then(() => {
+        // 4. Clear local game state so a page refresh doesn't try to rejoin.
+        // This is done after navigation completes to avoid race condition with LobbyComponent
+        this.gameStateService.clearGameState();
       });
-
-      // 4. Clear local game state so a page refresh doesn't try to rejoin.
-      this.gameStateService.clearGameState();
     });
 
     this.socket.on('connect_error', (error: any) => {
@@ -126,15 +147,30 @@ export class WebSocketService implements OnDestroy {
       console.error('Failed to reconnect to the server.');
       this.connectionStatus.next('failed');
       this.loadingService.hide();
+      this.clearReconnectionTimeout(); // Clear timeout when reconnection definitively fails
+      this.router.navigate(['/disconnected']);
     });
 
     this.socket.on('message', (data: { type: string; [key: string]: any }) => {
       this.messageSubject.next(data);
+
+      // Clear pending wins when the game ends
+      if (data.type === 'gameEnded') {
+        this.gameStateService.clearPendingWin();
+      }
     });
 
-    this.socket.on('error', (data: any) =>
-      this.messageSubject.next({ type: 'error', ...data }),
-    );
+    this.socket.on('error', (data: any) => {
+      this.messageSubject.next({ type: 'error', ...data });
+
+      // Clear pending wins on certain errors that indicate the game is no longer valid
+      if (
+        data.message &&
+        (data.message.includes('not found') || data.message.includes('expired'))
+      ) {
+        this.gameStateService.clearPendingWin();
+      }
+    });
   }
 
   disconnect(): void {
@@ -153,6 +189,23 @@ export class WebSocketService implements OnDestroy {
       try {
         // First, await the acknowledgment that we have successfully rejoined the game.
         await this.joinGame(gameCode, localPlayerId, true);
+
+        // After successfully rejoining, check for any pending win that needs to be sent
+        if (this.gameStateService.hasPendingWin()) {
+          const pendingWin = gameState.pendingWin;
+          if (pendingWin && pendingWin.playerId === localPlayerId) {
+            console.log(
+              'Resending pending win announcement after reconnection',
+            );
+            this.socket.emit('win', {
+              gameCode,
+              playerId: pendingWin.playerId,
+              condensedGrid: pendingWin.condensedGrid,
+            });
+            // Clear the pending win since we've now sent it
+            this.gameStateService.clearPendingWin();
+          }
+        }
       } catch (error) {
         console.log('Failed to rejoin game:', error);
         // Handle failed rejoin if necessary (e.g., game was deleted while disconnected)
@@ -183,7 +236,6 @@ export class WebSocketService implements OnDestroy {
       const ackTimeout = setTimeout(() => {
         reject(`Server acknowledgement timeout for event '${event}'.`);
       }, 10000);
-      // MODIFIED: Removed non-null assertion
       this.socket.emit(
         event,
         ...args,
@@ -266,18 +318,44 @@ export class WebSocketService implements OnDestroy {
     this.socket.emit('startGame', { gameCode });
   }
 
-  announceWin(playerId: string, condensedGrid: string[][]): void {
+  async announceWin(
+    playerId: string,
+    condensedGrid: string[][],
+  ): Promise<void> {
     // Get the current game code from GameStateService
     const gameCode = this.gameStateService.getCurrentState().gameCode;
 
-    if (gameCode) {
-      this.socket.emit('win', {
-        gameCode,
-        playerId,
-        condensedGrid,
-      });
-    } else {
+    if (!gameCode) {
       console.error('Cannot announce win: no game code available.');
+      return;
+    }
+
+    // Check if we're connected before attempting to send
+    if (this.socket.connected) {
+      try {
+        // Use emitWithAck for reliable delivery of this critical message
+        await this.emitWithAck('win', {
+          gameCode,
+          playerId,
+          condensedGrid,
+        });
+        // Clear any pending win since we successfully sent it
+        this.gameStateService.clearPendingWin();
+        console.log('Win announcement sent successfully');
+      } catch (error) {
+        console.error('Failed to send win announcement:', error);
+        // Store the win information for later transmission when we reconnect
+        this.gameStateService.setPendingWin(playerId, condensedGrid);
+      }
+    } else {
+      // Store the win information for later transmission when we reconnect
+      console.log(
+        'Socket disconnected during win announcement. Storing win information for reconnect.',
+      );
+      this.gameStateService.setPendingWin(playerId, condensedGrid);
+
+      // Try to reconnect immediately
+      // this.connect();
     }
   }
 
@@ -290,15 +368,19 @@ export class WebSocketService implements OnDestroy {
     if (this.socket) {
       this.socket.disconnect();
       // need to manually show the loading spinner in this case because it's typically skipped for other clean disconnects
-      this.loadingService.show({
-        message: 'Reconnecting',
-      });
+      // show this after a delay for debugging
+      setTimeout(() => {
+        this.loadingService.show({
+          message: 'Reconnecting',
+        });
+      }, 3000);
+      this.startReconnectionTimeout(); // Start timeout for simulated reconnection
       setTimeout(() => {
         this.connectionStatus.next('reconnecting');
         setTimeout(() => {
           this.socket.connect();
         }, 500);
-      }, 1000);
+      }, 4000);
     }
   }
 

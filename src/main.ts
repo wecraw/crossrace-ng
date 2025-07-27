@@ -38,6 +38,11 @@ const routes: Routes = [
     canActivate: [inGameGuard],
     data: { gameMode: 'versus' },
   },
+  {
+    path: 'disconnected',
+    component: MainMenuComponent,
+    data: { disconnected: true },
+  },
 
   // 404
   { path: '**', redirectTo: '' },

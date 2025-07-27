@@ -1,10 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 
 import { Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { GameSeedService } from '../../services/game-seed/game-seed.service';
 import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialogs/dialog-post-game/dialog-post-game.component';
+import { Dialog } from '../dialogs/dialog/dialog.component';
 import { MenuLayoutComponent } from '../menu-layout/menu-layout.component';
 
 @Component({
@@ -13,11 +15,34 @@ import { MenuLayoutComponent } from '../menu-layout/menu-layout.component';
   templateUrl: './main-menu.component.html',
   styleUrls: ['./main-menu.component.scss'],
 })
-export class MainMenuComponent {
+export class MainMenuComponent implements OnInit {
   // Dependencies are now much cleaner
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private gameSeedService = inject(GameSeedService);
   readonly dialog = inject(MatDialog);
+
+  ngOnInit(): void {
+    // Check if we were navigated here due to disconnection
+    if (this.route.snapshot.data['disconnected']) {
+      this.openDisconnectedDialog();
+    }
+  }
+
+  /**
+   * Opens a dialog to inform the user they were disconnected
+   */
+  openDisconnectedDialog(): void {
+    this.dialog.open(Dialog, {
+      data: {
+        dialogText: 'Disconnected',
+        showSpinner: false,
+        showConfirm: true,
+        confirmText: 'Ok',
+      },
+      minWidth: 370,
+    });
+  }
 
   /**
    * Sets up the daily game seed and navigates to the daily game.

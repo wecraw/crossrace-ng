@@ -278,6 +278,11 @@ export class GameComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
 
+    // Clear any pending win when leaving the game component
+    if (this.gameState.gameMode === 'versus') {
+      this.gameStateService.clearPendingWin();
+    }
+
     // It's good practice to only clear the 'in-game' part of the state here,
     // not the whole gameSeed, as the lobby might need it.
     this.gameStateService.updateGameState({
@@ -350,6 +355,10 @@ export class GameComponent implements OnInit, OnDestroy {
           players: message.players,
           lastWinnerId: message.winner,
         });
+
+        // Clear any pending win since the game has ended
+        this.gameStateService.clearPendingWin();
+
         if (!this.isGameOver) {
           this.openDialog({
             winnerDisplayName: message.winnerDisplayName,
@@ -575,10 +584,8 @@ export class GameComponent implements OnInit, OnDestroy {
     this.createCondensedGrid();
     this.stopTimer();
     if (this.gameState.gameMode === 'versus') {
-      this.webSocketService.announceWin(
-        this.gameState.localPlayerId!,
-        this.condensedGrid,
-      );
+      // Handle async win announcement
+      this.announceWinAsync();
     } else {
       if (this.gameState.gameMode === 'daily') {
         this.updateDailyLocalStorage();
@@ -599,6 +606,19 @@ export class GameComponent implements OnInit, OnDestroy {
     }
     this.renderConfetti();
     return true;
+  }
+
+  private async announceWinAsync(): Promise<void> {
+    try {
+      await this.webSocketService.announceWin(
+        this.gameState.localPlayerId!,
+        this.condensedGrid,
+      );
+    } catch (error) {
+      console.error('Error announcing win:', error);
+      // The error handling is already done in the WebSocketService
+      // The win will be stored and retransmitted on reconnection
+    }
   }
 
   updateDailyLocalStorage() {
@@ -628,10 +648,7 @@ export class GameComponent implements OnInit, OnDestroy {
   forceWin() {
     this.renderConfetti();
     this.createCondensedGrid();
-    this.webSocketService.announceWin(
-      this.gameState.localPlayerId!,
-      this.condensedGrid,
-    );
+    this.announceWinAsync();
   }
 
   // Helper function to check if all words are interconnected
@@ -870,11 +887,14 @@ export class GameComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) {
+        // User closed dialog without action
         if (this.gameState.gameMode === 'versus') {
           this.router.navigate(['/join/' + this.gameState.gameCode]);
         } else {
           this.router.navigate(['/']);
         }
+        // Clear pending wins when navigating away
+        this.gameStateService.clearPendingWin();
       } else {
         if (result.event === 'confirm') {
           if (this.gameState.gameMode === 'versus')
@@ -887,6 +907,8 @@ export class GameComponent implements OnInit, OnDestroy {
           }
         }
         if (result.event === 'quit') {
+          // Clear pending wins when quitting
+          this.gameStateService.clearPendingWin();
           this.router.navigate(['/']);
         }
       }
