@@ -355,7 +355,7 @@ export class WebSocketService implements OnDestroy {
       this.gameStateService.setPendingWin(playerId, condensedGrid);
 
       // Try to reconnect immediately
-      // this.connect();
+      this.connect();
     }
   }
 
