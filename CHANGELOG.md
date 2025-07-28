@@ -5,13 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.3] - 2025-6-19
+## [0.9.1] - 2025-7-27
+
+### Fixed
+
+- A rare visual bug for players that join a lobby with a game in progress
+
+## [0.9.0] - 2025-7-27
 
 ### Changed
 
 - Menu flow and styles
 - Animations in game (pulse on new correct word, drag and drop animations + general refactor)
 - Migrate servers to GCP, refactor websockets connection on frontend
+- Greatly improved reconnect behavior and overall robustness with disconnects
 
 ## [0.7.1] - 2024-10-23
 

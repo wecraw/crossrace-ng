@@ -232,19 +232,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         this.router.navigate(['/versus']);
         break;
 
-      case 'gameEnded':
-        if (!this.gameState.isInGame) {
-          this.gameStateService.updateGameState({
-            players: message.players,
-            isHost:
-              message.players.find(
-                (p: Player) =>
-                  p.isHost && p.id === this.gameState.localPlayerId,
-              ) != null,
-          });
-        }
-        break;
-
       case 'error':
         this.isStartingGame = false;
         const errorMessage = message.message || '';
