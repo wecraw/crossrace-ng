@@ -289,7 +289,13 @@ export class WebSocketService implements OnDestroy {
       if (isRejoin) {
         this.messageSubject.next({
           type: 'gameState',
-          gameState: response.gameState,
+          gameState: {
+            state: response.gameState,
+            currentGameTime: response.currentGameTime,
+            isGameActive: response.isGameActive,
+            gameEnded: response.gameEnded,
+            gameEndData: response.gameEndData,
+          },
         });
       }
     }

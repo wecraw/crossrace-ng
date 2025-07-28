@@ -345,32 +345,34 @@ export class GameComponent implements OnInit, OnDestroy {
     }, COUNTDOWN_START_DELAY);
   }
 
+  private handleVersusGameOver(data: any): void {
+    this.isWinner = data.winner === this.gameState.localPlayerId;
+    this.gameStateService.updateGameState({
+      players: data.players,
+      lastWinnerId: data.winner,
+    });
+    this.gameStateService.clearPendingWin();
+
+    if (!this.isGameOver) {
+      this.openDialog({
+        winnerDisplayName: data.winnerDisplayName,
+        winnerColor: data.winnerColor,
+        winnerEmoji: data.winnerEmoji,
+        players: data.players,
+        grid: data.condensedGrid,
+        time: data.time,
+      });
+      this.isGameOver = true;
+    }
+    this.stopTimer();
+  }
+
   handleWebSocketMessage(message: any): void {
     console.log('Game received message:', message.type, message);
 
     switch (message.type) {
       case 'gameEnded':
-        this.isWinner = message.winner === this.gameState.localPlayerId; // More reliable check
-        this.gameStateService.updateGameState({
-          players: message.players,
-          lastWinnerId: message.winner,
-        });
-
-        // Clear any pending win since the game has ended
-        this.gameStateService.clearPendingWin();
-
-        if (!this.isGameOver) {
-          this.openDialog({
-            winnerDisplayName: message.winnerDisplayName,
-            winnerColor: message.winnerColor,
-            winnerEmoji: message.winnerEmoji,
-            players: message.players,
-            grid: message.condensedGrid,
-            time: message.time,
-          });
-          this.isGameOver = true; // prevent the dialog from being opened again
-        }
-        this.stopTimer();
+        this.handleVersusGameOver(message);
         break;
 
       case 'playerList':
@@ -392,6 +394,9 @@ export class GameComponent implements OnInit, OnDestroy {
         if (message.gameState && this.gameState.gameMode === 'versus') {
           console.log('Received game state sync after reconnection');
           this.syncGameStateAfterReconnection(message.gameState);
+        }
+        if (message.gameState.gameEnded && message.gameState.gameEndData) {
+          this.handleVersusGameOver(message.gameState.gameEndData);
         }
         break;
 
@@ -471,6 +476,12 @@ export class GameComponent implements OnInit, OnDestroy {
       if (this.isGameStarted) {
         this.startTimer();
       }
+    }
+
+    // Check if the game ended while we were disconnected
+    if (serverGameState.gameEnded && serverGameState.gameEndData) {
+      console.log('Game ended while disconnected, showing end game dialog');
+      this.handleVersusGameOver(serverGameState.gameEndData);
     }
   }
 
