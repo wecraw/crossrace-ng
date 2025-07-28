@@ -355,7 +355,7 @@ export class WebSocketService implements OnDestroy {
       this.gameStateService.setPendingWin(playerId, condensedGrid);
 
       // Try to reconnect immediately
-      // this.connect();
+      this.connect();
     }
   }
 
@@ -374,7 +374,7 @@ export class WebSocketService implements OnDestroy {
           message: 'Reconnecting',
         });
         this.startReconnectionTimeout(); // Start timeout for simulated reconnection
-      }, 2000);
+      }, 0);
       setTimeout(() => {
         this.connectionStatus.next('reconnecting');
         setTimeout(() => {

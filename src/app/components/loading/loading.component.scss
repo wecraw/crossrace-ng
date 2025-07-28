@@ -33,6 +33,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
+
+  // Delay appearance by 1 second
+  opacity: 0;
+  animation: delayedFadeIn 0.1s ease-in-out 1s forwards;
 }
 
 .message {
@@ -104,5 +108,14 @@
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes delayedFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }
