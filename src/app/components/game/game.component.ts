@@ -381,19 +381,6 @@ export class GameComponent implements OnInit, OnDestroy {
             players: message.players,
           });
 
-          // Handle timer synchronization if game is active and we have game time info
-          if (
-            message.isGameActive &&
-            message.currentGameTime !== undefined &&
-            this.timerComponent
-          ) {
-            console.log(
-              'Syncing timer with server time:',
-              message.currentGameTime,
-            );
-            this.syncTimerWithServer(message.currentGameTime);
-          }
-
           // If we were disconnected and rejoined, we might need to sync our game state
           // The server should maintain the game state, but we can request updates if needed
           this.handlePlayerListUpdate(message.players);
@@ -405,18 +392,6 @@ export class GameComponent implements OnInit, OnDestroy {
         if (message.gameState && this.gameState.gameMode === 'versus') {
           console.log('Received game state sync after reconnection');
           this.syncGameStateAfterReconnection(message.gameState);
-        }
-        break;
-
-      case 'timerSync':
-        // Handle timer synchronization when joining/rejoining a game
-        if (
-          this.gameState.gameMode === 'versus' &&
-          message.isGameActive &&
-          message.currentGameTime !== undefined
-        ) {
-          console.log('Received timer sync message:', message.currentGameTime);
-          this.syncTimerWithServer(message.currentGameTime);
         }
         break;
 
@@ -452,7 +427,6 @@ export class GameComponent implements OnInit, OnDestroy {
         'Players reconnected:',
         reconnectedPlayers.map((p) => p.displayName),
       );
-      // Could show a brief notification that players have reconnected
     }
   }
 
@@ -479,32 +453,24 @@ export class GameComponent implements OnInit, OnDestroy {
       serverGameState.isGameActive
     ) {
       // Sync timer with server time
-      this.syncTimerWithServer(serverGameState.currentGameTime);
-    }
-  }
+      const serverGameTime = serverGameState.currentGameTime;
+      console.log(
+        `Syncing local timer to server time: ${serverGameTime} seconds`,
+      );
 
-  private syncTimerWithServer(serverGameTime: number): void {
-    // Only sync timer if the game is actually started and we have a timer component
-    if (!this.timerComponent || !this.isGameStarted) {
-      return;
-    }
+      // Set the timer component's start time to match the server
+      this.timerStartTime = serverGameTime;
 
-    console.log(
-      `Syncing local timer to server time: ${serverGameTime} seconds`,
-    );
+      // Set the timer to the server time using the public method
+      this.timerComponent.setTimer(serverGameTime);
 
-    // Set the timer component's start time to match the server
-    this.timerStartTime = serverGameTime;
+      // Update the display
+      this.onTimeChanged(serverGameTime);
 
-    // Set the timer to the server time using the public method
-    this.timerComponent.setTimer(serverGameTime);
-
-    // Update the display
-    this.onTimeChanged(serverGameTime);
-
-    // Ensure the timer is running if the game is active
-    if (this.timerRunning) {
-      this.startTimer();
+      // Ensure the timer is running if the game is active
+      if (this.isGameStarted) {
+        this.startTimer();
+      }
     }
   }
 

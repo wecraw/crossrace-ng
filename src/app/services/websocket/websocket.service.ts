@@ -285,17 +285,11 @@ export class WebSocketService implements OnDestroy {
         localPlayerId: response.playerId,
       });
 
-      // Handle timer synchronization data if rejoin
-      if (
-        isRejoin &&
-        response.isGameActive &&
-        response.currentGameTime !== undefined
-      ) {
+      // Handle game state synchronization data if rejoin
+      if (isRejoin) {
         this.messageSubject.next({
-          type: 'timerSync',
-          currentGameTime: response.currentGameTime,
+          type: 'gameState',
           gameState: response.gameState,
-          isGameActive: response.isGameActive,
         });
       }
     }
@@ -355,7 +349,7 @@ export class WebSocketService implements OnDestroy {
       this.gameStateService.setPendingWin(playerId, condensedGrid);
 
       // Try to reconnect immediately
-      this.connect();
+      // this.connect();
     }
   }
 
