@@ -60,6 +60,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   selfPlayer: Player | undefined;
   otherPlayers: Player[] = [];
+  isStartingGame = false;
 
   constructor(
     private webSocketService: WebSocketService,
@@ -155,6 +156,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   startGame(): void {
     if (this.gameState.isHost && this.gameState.gameCode) {
+      this.isStartingGame = true;
+      this.cdr.detectChanges();
       this.webSocketService.startGame(this.gameState.gameCode);
     } else {
       console.error('Cannot start game: not host or no game code');
@@ -243,6 +246,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
         break;
 
       case 'error':
+        this.isStartingGame = false;
         const errorMessage = message.message || '';
         console.error('Received server error:', errorMessage);
 

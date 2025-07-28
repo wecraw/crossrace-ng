@@ -11,7 +11,7 @@
               matTooltip="Copied!"
               (mouseenter)="$event.stopImmediatePropagation()"
               (mouseleave)="$event.stopImmediatePropagation()"
-              >
+            >
               <div class="d-flex code-wrapper" (click)="copyOrShare()">
                 @for (letter of gameState.gameCode.split(""); track $index) {
                   <div class="tile-wrapper">
@@ -23,18 +23,15 @@
                 @if (!isShareSupported) {
                   <i
                     class="copy-icon"
-                  [ngClass]="
-                    isCopied
-                      ? 'fa-regular fa-circle-check'
-                      : 'fa-regular fa-copy'
-                  "
+                    [ngClass]="
+                      isCopied
+                        ? 'fa-regular fa-circle-check'
+                        : 'fa-regular fa-copy'
+                    "
                   ></i>
                 }
                 @if (isShareSupported) {
-                  <img
-                    src="assets/share.svg"
-                    alt="Share icon"
-                    />
+                  <img src="assets/share.svg" alt="Share icon" />
                 }
               </div>
             </div>
@@ -62,7 +59,7 @@
               <player-card
                 [player]="player"
                 [lastWinnerId]="gameState.lastWinnerId || ''"
-                >
+              >
               </player-card>
             }
             <div class="fade-overlay"></div>
@@ -80,19 +77,26 @@
         class="btn btn-lg btn-primary mt-4 flex-fixed small"
         color="primary"
         (click)="startGame()"
-        [disabled]="anyNotReady() || connectedPlayers.length < 2"
-      [ngClass]="{
-        'shimmering-start-button':
-          !anyNotReady() && connectedPlayers.length > 1,
-      }"
-        >
-        Start Game
+        [disabled]="
+          anyNotReady() || connectedPlayers.length < 2 || isStartingGame
+        "
+        [ngClass]="{
+          'shimmering-start-button':
+            !anyNotReady() && connectedPlayers.length > 1 && !isStartingGame,
+        }"
+      >
+        <span class="button-content">
+          {{ isStartingGame ? "Starting" : "Start Game" }}
+          @if (isStartingGame) {
+            <div class="spinner"></div>
+          }
+        </span>
       </button>
     }
     <button
       class="btn btn-lg btn-outline-secondary mt-4 flex-fixed small"
       (click)="openTutorialDialog({ mode: 'versus' })"
-      >
+    >
       How to Play
     </button>
   </div>

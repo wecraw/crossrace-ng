@@ -47,6 +47,7 @@ import {
   WIN_DIALOG_DELAY,
   DRAG_POSITION_INIT,
 } from '../../constants/game-constants';
+import { LoadingService } from '../../services/loading/loading.service';
 
 interface ValidatedWord {
   word: string;
@@ -129,11 +130,21 @@ export class GameComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private ngZone: NgZone,
     private gameSeedService: GameSeedService,
+    private loadingService: LoadingService,
   ) {
     this.validWords = new Set(VALID_WORDS);
   }
 
   ngOnInit(): void {
+    // Hide loading service if it's showing "Game starting!"
+    // This should never happen, but just in case.
+    if (
+      this.loadingService.isLoading() &&
+      this.loadingService.loadingMessage() === 'Game starting!'
+    ) {
+      this.loadingService.hide();
+    }
+
     const modeFromRoute = this.route.snapshot.data['gameMode'] as
       | 'daily'
       | 'practice'

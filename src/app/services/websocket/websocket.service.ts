@@ -369,10 +369,12 @@ export class WebSocketService implements OnDestroy {
       this.socket.disconnect();
       // need to manually show the loading spinner in this case because it's typically skipped for other clean disconnects
       // show this after a delay for debugging
-      this.loadingService.show({
-        message: 'Reconnecting',
-      });
-      this.startReconnectionTimeout(); // Start timeout for simulated reconnection
+      setTimeout(() => {
+        this.loadingService.show({
+          message: 'Reconnecting',
+        });
+        this.startReconnectionTimeout(); // Start timeout for simulated reconnection
+      }, 2000);
       setTimeout(() => {
         this.connectionStatus.next('reconnecting');
         setTimeout(() => {
