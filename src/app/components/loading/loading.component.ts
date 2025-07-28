@@ -30,6 +30,7 @@ import { LoadingService } from '../../services/loading/loading.service';
 export class LoadingComponent {
   private readonly loadingService = inject(LoadingService);
   public readonly message = this.loadingService.loadingMessage;
+  public readonly inGame = this.loadingService.isInGame;
   // This component is purely presentational.
   // Its existence in the DOM is controlled by the parent (AppComponent).
 }

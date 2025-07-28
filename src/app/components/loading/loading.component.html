@@ -1,6 +1,8 @@
-<div class="overlay">
-  <span class="loader"></span>
+<div [class]="inGame() ? 'overlay-in-game' : 'overlay'">
+  <span [class]="inGame() ? 'loader-in-game' : 'loader'"></span>
   @if (message()) {
-    <span class="message">{{ message() }}</span>
+    <span [class]="inGame() ? 'message-in-game' : 'message'">{{
+      message()
+    }}</span>
   }
 </div>
