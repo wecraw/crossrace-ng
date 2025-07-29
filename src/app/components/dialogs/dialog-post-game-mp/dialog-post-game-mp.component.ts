@@ -125,11 +125,8 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       .subscribe((state) => {
         console.log('Game state updated:', state);
         this.gameState = state;
-        ((this.isHost =
-          state.players.find(
-            (p: Player) => p.isHost && p.id === this.gameState.localPlayerId,
-          ) != null),
-          this.cdr.detectChanges()); // Update UI if host status changes
+        this.isHost = state.isHost;
+        this.cdr.detectChanges(); // Update UI if host status changes
       });
 
     // Subscribe to WebSocket messages for cell clicks

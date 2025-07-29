@@ -95,6 +95,10 @@ export class WebSocketService implements OnDestroy {
       // then it's an unexpected event (server crash, network loss) and we should
       // immediately show the user we are trying to reconnect.
       if (reason !== 'io client disconnect') {
+        // Immediately clear host status from client
+        this.gameStateService.updateGameState({
+          isHost: false,
+        });
         this.connectionStatus.next('reconnecting');
         this.loadingService.show({
           message: 'Reconnecting',
@@ -297,6 +301,7 @@ export class WebSocketService implements OnDestroy {
             gameEndData: response.gameEndData,
           },
         });
+        this.getPlayers(response.gameCode);
       }
     }
     return response;
@@ -368,6 +373,10 @@ export class WebSocketService implements OnDestroy {
       // need to manually show the loading spinner in this case because it's typically skipped for other clean disconnects
       // show this after a delay for debugging
       setTimeout(() => {
+        // Immediately clear host status from client
+        this.gameStateService.updateGameState({
+          isHost: false,
+        });
         this.loadingService.show({
           message: 'Reconnecting',
         });
