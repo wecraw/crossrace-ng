@@ -142,7 +142,6 @@ h2 {
   font-size: $font-size-l;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  line-height: 1;
 }
 
 .letter-tile.highlighted {
@@ -209,29 +208,29 @@ h2 {
 
 @keyframes pulsate-fwd-intense {
   0% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
   }
   50% {
-    -webkit-transform: scale(1.25);
-    transform: scale(1.25);
+    -webkit-transform: scale3d(1.25, 1.25, 1);
+    transform: scale3d(1.25, 1.25, 1);
   }
   100% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
   }
 }
 @-webkit-keyframes pulsate-fwd-intense {
   0% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
   }
   50% {
-    -webkit-transform: scale(1.25);
-    transform: scale(1.25);
+    -webkit-transform: scale3d(1.25, 1.25, 1);
+    transform: scale3d(1.25, 1.25, 1);
   }
   100% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
   }
 }
