@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/game/game.component.ts
 import {
   Component,
   ElementRef,
@@ -23,7 +24,7 @@ import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
 import { DialogPostGame } from '../dialogs/dialog-post-game/dialog-post-game.component';
-
+import { MOCK_WIN } from '../../mock/mock-winner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { WebSocketService } from '../../services/websocket/websocket.service';
@@ -105,6 +106,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   // Debug
   debug: boolean = false;
+  mockWin = MOCK_WIN;
 
   // Dialog
   readonly dialog = inject(MatDialog);
@@ -183,7 +185,19 @@ export class GameComponent implements OnInit, OnDestroy {
       .getGameState()
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
+        const oldStateHasForceWinFlag = this.gameState?.debugForceWin;
         this.gameState = state;
+
+        if (
+          this.gameState.debugForceWin &&
+          !oldStateHasForceWinFlag &&
+          !this.isGameOver &&
+          !this.waitingForRestart
+        ) {
+          this.forceWin();
+          // Reset the flag
+          this.gameStateService.updateGameState({ debugForceWin: false });
+        }
       });
 
     // Subscribe to WebSocket messages
@@ -600,7 +614,8 @@ export class GameComponent implements OnInit, OnDestroy {
     try {
       await this.webSocketService.announceWin(
         this.gameState.localPlayerId!,
-        this.condensedGrid,
+        // this.condensedGrid,
+        this.mockWin.grid,
       );
     } catch (error) {
       console.error('Error announcing win:', error);
@@ -633,10 +648,32 @@ export class GameComponent implements OnInit, OnDestroy {
   private allWordsAreValid(): boolean {
     return this.formedWords.every((word) => word.isValid);
   }
+
   forceWin() {
     this.renderConfetti();
     this.createCondensedGrid();
-    this.announceWinAsync();
+    this.stopTimer();
+
+    if (this.gameState.gameMode === 'versus') {
+      this.announceWinAsync();
+    } else {
+      if (this.gameState.gameMode === 'daily') {
+        this.updateDailyLocalStorage();
+      }
+      setTimeout(() => {
+        this.openDialog({
+          winnerDisplayName: 'You',
+          grid: this.mockWin.grid,
+          time: this.mockWin.time,
+          singlePlayer: true,
+          shareLink: this.generateShareLink(),
+          daily: this.gameState.gameMode === 'daily',
+        });
+      }, WIN_DIALOG_DELAY);
+
+      this.isGameStarted = false;
+      this.waitingForRestart = true;
+    }
   }
 
   // Helper function to check if all words are interconnected
@@ -864,12 +901,13 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.gameState.gameMode === 'versus') {
       dialogRef = this.dialog.open(DialogPostGameMp, {
         data: data,
-        minWidth: 370,
+        minWidth: 380,
+        disableClose: true,
       });
     } else {
       dialogRef = this.dialog.open(DialogPostGame, {
         data: data,
-        minWidth: 370,
+        minWidth: 380,
       });
     }
 
@@ -940,7 +978,7 @@ export class GameComponent implements OnInit, OnDestroy {
   openTutorialDialog(data: any) {
     const dialogRef = this.dialog.open(DialogTutorial, {
       data: data,
-      minWidth: 370,
+      minWidth: 380,
     });
   }
 

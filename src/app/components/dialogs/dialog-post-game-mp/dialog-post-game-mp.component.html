@@ -6,7 +6,7 @@
         <div
           [ngStyle]="{ 'background-color': data.winnerColor }"
           class="player-avatar"
-          >
+        >
           <div class="emoji noselect">{{ data.winnerEmoji }}</div>
         </div>
       </div>
@@ -26,7 +26,7 @@
               <div
                 class="grid-cell noselect"
                 [ngClass]="{ 'letter-tile': data.grid[i] && data.grid[i][j] }"
-                >
+              >
                 {{ data.grid[i] && data.grid[i][j] ? data.grid[i][j] : "" }}
               </div>
             }
@@ -36,8 +36,8 @@
 
       <app-leaderboard [players]="data.players"></app-leaderboard>
       <div class="navigation-arrows">
-        <i class="fa chevron fa-chevron-right" (click)="manualToggleView()"></i>
-        <i class="fa chevron fa-chevron-left" (click)="manualToggleView()"></i>
+        <i class="fa chevron fa-chevron-right" (click)="toggleView()"></i>
+        <i class="fa chevron fa-chevron-left" (click)="toggleView()"></i>
       </div>
     </div>
 

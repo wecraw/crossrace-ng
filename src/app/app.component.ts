@@ -5,6 +5,7 @@ import { WebSocketService } from './services/websocket/websocket.service';
 import { LoadingService } from './services/loading/loading.service';
 import { LoadingComponent } from './components/loading/loading.component';
 import { ConfigService } from './services/config/config.service';
+import { GameStateService } from './services/game-state/game-state.service';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private websocketService: WebSocketService,
     public loadingService: LoadingService,
     private configService: ConfigService,
+    private gameStateService: GameStateService,
   ) {}
 
   ngOnInit() {
@@ -54,5 +56,9 @@ export class AppComponent implements OnInit, OnDestroy {
   // Debug method for testing disconnections
   simulateDisconnect(): void {
     this.websocketService.simulateDisconnect();
+  }
+
+  forceWin() {
+    this.gameStateService.updateGameState({ debugForceWin: true });
   }
 }

@@ -40,7 +40,7 @@ export class MainMenuComponent implements OnInit {
         showConfirm: true,
         confirmText: 'Ok',
       },
-      minWidth: 370,
+      minWidth: 380,
     });
   }
 
@@ -86,14 +86,14 @@ export class MainMenuComponent implements OnInit {
   openTutorialDialog(data: any): void {
     this.dialog.open(DialogTutorial, {
       data: data,
-      minWidth: 370,
+      minWidth: 380,
     });
   }
 
   openPostGameDialog(data: any): void {
     const dialogRef = this.dialog.open(DialogPostGame, {
       data: data,
-      minWidth: 370,
+      minWidth: 380,
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result?.event === 'confirm') {

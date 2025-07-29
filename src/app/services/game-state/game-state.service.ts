@@ -8,6 +8,7 @@ export interface GameState {
   players: Player[];
   isHost: boolean;
   isInGame: boolean;
+  debugForceWin?: boolean; // For testing purposes
   gameSeed: number | null;
   gameMode: 'versus' | 'daily' | 'practice' | null;
   lastWinnerId: string | null;

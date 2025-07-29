@@ -1,3 +1,4 @@
+// crossrace-ng\src\app\components\dialogs\dialog-post-game-mp\dialog-post-game-mp.component.ts
 import {
   Component,
   inject,
@@ -6,7 +7,6 @@ import {
   ChangeDetectorRef,
   OnInit,
   ViewChild,
-  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -19,7 +19,6 @@ import {
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 
-import { interval, Subscription } from 'rxjs';
 import { Player } from '../../../interfaces/player';
 import { LeaderboardComponent } from '../../leaderboard/leaderboard.component';
 
@@ -37,15 +36,13 @@ import { LeaderboardComponent } from '../../leaderboard/leaderboard.component';
     ]),
   ],
 })
-export class DialogPostGameMp implements OnInit, OnDestroy {
+export class DialogPostGameMp implements OnInit {
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
 
   isShareSupported: boolean = false;
   isCopied: boolean = false;
   currentView: 'chessGrid' | 'leaderboard' = 'chessGrid';
 
-  private autoScrollSubscription?: Subscription;
-  ANIMATION_DURATION_MS = 5000;
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -69,46 +66,16 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   ngOnInit() {
     // Slightly dangerous because the longest word could theoretically be 12 characters long
     // In practice, this never happens
-    let gridSize = 10;
+    const gridSize = 10;
     this.grid = Array(gridSize)
       .fill(0)
       .map(() => Array(gridSize).fill(0));
-    this.startAutoScroll();
-  }
-
-  startAutoScroll() {
-    this.autoScrollSubscription = interval(
-      this.ANIMATION_DURATION_MS,
-    ).subscribe(() => {
-      this.toggleView();
-    });
-  }
-
-  private resetAutoScroll() {
-    if (this.autoScrollSubscription) {
-      this.autoScrollSubscription.unsubscribe();
-    }
-    this.autoScrollSubscription = interval(
-      this.ANIMATION_DURATION_MS,
-    ).subscribe(() => {
-      this.toggleView();
-    });
   }
 
   toggleView() {
     this.currentView =
       this.currentView === 'chessGrid' ? 'leaderboard' : 'chessGrid';
     this.cdr.detectChanges();
-  }
-
-  manualToggleView() {
-    this.currentView =
-      this.currentView === 'chessGrid' ? 'leaderboard' : 'chessGrid';
-    this.cdr.detectChanges();
-    if (this.autoScrollSubscription) {
-      //stop the autoscroll behavior if the user manually scrolls
-      this.autoScrollSubscription.unsubscribe();
-    }
   }
 
   close() {
@@ -121,11 +88,5 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
 
   confirm() {
     this.dialogRef.close({ event: 'confirm' });
-  }
-
-  ngOnDestroy() {
-    if (this.autoScrollSubscription) {
-      this.autoScrollSubscription.unsubscribe();
-    }
   }
 }

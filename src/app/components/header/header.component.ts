@@ -19,7 +19,7 @@ export class HeaderComponent {
   openTutorialDialog(data: any) {
     const dialogRef = this.dialog.open(DialogTutorial, {
       data: data,
-      minWidth: 370,
+      minWidth: 380,
     });
   }
 
