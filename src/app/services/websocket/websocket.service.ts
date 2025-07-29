@@ -314,6 +314,12 @@ export class WebSocketService implements OnDestroy {
     this.socket.emit('startGame', { gameCode });
   }
 
+  sendPostGameCellClick(gameCode: string, row: number, col: number): void {
+    if (this.socket.connected) {
+      this.socket.emit('postGameCellClick', { gameCode, row, col });
+    }
+  }
+
   async announceWin(
     playerId: string,
     condensedGrid: string[][],

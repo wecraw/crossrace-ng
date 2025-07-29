@@ -86,6 +86,8 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   }[] = [];
   private nextExclamationId = 0;
   private exclamationTimeout: any;
+  private lastMessageSentTime = 0;
+  private readonly MESSAGE_THROTTLE_MS = 500;
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
@@ -125,6 +127,19 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
         this.gameState = state;
         this.isHost = state.isHost;
         this.cdr.detectChanges(); // Update UI if host status changes
+      });
+
+    // Subscribe to WebSocket messages for cell clicks
+    this.webSocketService
+      .getMessages()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((message) => {
+        if (message.type === 'postGameCellClicked') {
+          // Trigger the exclamation animation with the sender's color
+          this.triggerExclamation(message.row, message.col, message.color);
+          // Trigger the word highlighting and pulsation animation
+          this.highlightWordAt(message.row, message.col);
+        }
       });
 
     // 5-second countdown before host can start the next game
@@ -255,16 +270,15 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     return color;
   }
 
-  onCellClick(row: number, col: number): void {
-    // Exclamation animation
+  private triggerExclamation(row: number, col: number, color: string): void {
     const newId = this.nextExclamationId++;
     this.exclamations.push({
       id: newId,
       row,
       col,
-      randX: Math.random() * 800 - 400, // Random horizontal drift (-100% to 100%)
-      randY: Math.random() * -100 - 150, // Random upward drift (-150% to -250%)
-      color: this.getRandomColor(),
+      randX: Math.random() * 800 - 400,
+      randY: Math.random() * -100 - 150,
+      color: color,
     });
     this.cdr.detectChanges();
 
@@ -272,7 +286,9 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       this.exclamations = this.exclamations.filter((e) => e.id !== newId);
       this.cdr.detectChanges();
     }, 2000); // Animation duration is 2s
+  }
 
+  private highlightWordAt(row: number, col: number): void {
     // Word highlighting logic
     let nextHighlightedCells: { row: number; col: number }[] = [];
     const wordsAtCell = this.words.filter((w) =>
@@ -328,6 +344,31 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       this.highlightedCells = nextHighlightedCells;
       this.cdr.detectChanges();
     }, 10);
+  }
+
+  onCellClick(row: number, col: number): void {
+    // 1. Trigger local effects immediately.
+    // Find local player from the gameState to get their color.
+    const localPlayer = this.gameState.players.find(
+      (p) => p.id === this.gameState.localPlayerId,
+    );
+    // Fallback to random color if player not found (should not happen).
+    const color = localPlayer ? localPlayer.playerColor : this.getRandomColor();
+    this.triggerExclamation(row, col, color);
+    this.highlightWordAt(row, col);
+
+    // 2. Send throttled WebSocket message.
+    const now = Date.now();
+    if (now - this.lastMessageSentTime > this.MESSAGE_THROTTLE_MS) {
+      if (this.gameState.gameCode) {
+        this.webSocketService.sendPostGameCellClick(
+          this.gameState.gameCode,
+          row,
+          col,
+        );
+      }
+      this.lastMessageSentTime = now;
+    }
   }
 
   isCellHighlighted(row: number, col: number): boolean {
