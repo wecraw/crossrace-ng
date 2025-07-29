@@ -44,9 +44,17 @@ export class LoadingService {
    */
   show(options?: { message?: string; inGame?: boolean }): void {
     this.showTime = Date.now();
-    this.message.set(options?.message);
-    // Use provided inGame value, or auto-detect based on current route
-    const shouldBeInGame = options?.inGame ?? this.isOnVersusRoute();
+
+    const messageText = options?.message;
+    this.message.set(messageText);
+
+    const isReconnecting = messageText === 'Reconnecting';
+
+    // Is `inGame` explicitly true OR are we on the versus route?
+    const meetsInGameCriteria = options?.inGame || this.isOnVersusRoute();
+
+    const shouldBeInGame = isReconnecting && meetsInGameCriteria;
+
     this.inGame.set(shouldBeInGame);
     this.loading.set(true);
   }

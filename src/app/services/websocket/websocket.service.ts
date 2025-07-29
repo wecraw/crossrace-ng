@@ -310,10 +310,6 @@ export class WebSocketService implements OnDestroy {
     return this.emitWithAck('updatePlayer', { gameCode, playerId, updates });
   }
 
-  readyUp(gameCode: string, playerId: string): void {
-    this.socket.emit('playerReady', { gameCode, playerId });
-  }
-
   startGame(gameCode: string): void {
     this.socket.emit('startGame', { gameCode });
   }

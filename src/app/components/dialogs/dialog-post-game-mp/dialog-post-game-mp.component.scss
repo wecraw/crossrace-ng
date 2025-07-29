@@ -1,3 +1,4 @@
+// crossrace-ng\src/app\components\dialogs\dialog-post-game-mp\dialog-post-game-mp.component.scss
 @use "variables" as *;
 @use "mixins" as *;
 
@@ -99,6 +100,11 @@ h2 {
   button {
     min-width: 75px;
   }
+
+  .start-button {
+    min-width: 180px;
+    transition: opacity 300ms ease-in-out;
+  }
 }
 
 .quit {
@@ -134,4 +140,36 @@ h2 {
   color: $white;
   border-radius: $border-radius-tile;
   font-size: $font-size-l;
+}
+
+// Styles for new buttons
+.de-emphasized {
+  opacity: 0.6;
+}
+
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0; //override existing margin
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

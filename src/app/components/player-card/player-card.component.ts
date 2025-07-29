@@ -41,10 +41,8 @@ export class PlayerCardComponent implements AfterViewChecked {
   @Input() player!: Player;
   @Input() playerIndex: number = 0;
   @Input() allowEdit: boolean = false;
-  @Input() lastWinnerId: string = '';
 
   @Output() onNameEdit: EventEmitter<string> = new EventEmitter<string>();
-  @Output() onReadyUp: EventEmitter<void> = new EventEmitter<void>();
   @Output() onColorSelect: EventEmitter<string> = new EventEmitter<string>();
   @Output() onEmojiSelect: EventEmitter<string> = new EventEmitter<string>();
 
@@ -122,11 +120,6 @@ export class PlayerCardComponent implements AfterViewChecked {
   selectEmoji(emoji: string) {
     this.player.playerEmoji = emoji;
     this.onEmojiSelect.emit(emoji);
-  }
-
-  readyUp() {
-    this.onReadyUp.emit();
-    this.player.ready = true;
   }
 
   selectColor(color: string) {

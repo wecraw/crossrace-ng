@@ -47,6 +47,7 @@ import {
   COUNTDOWN_START_DELAY,
   WIN_DIALOG_DELAY,
   DRAG_POSITION_INIT,
+  LOBBY_GAME_START_COUNTDOWN_DURATION,
 } from '../../constants/game-constants';
 import { LoadingService } from '../../services/loading/loading.service';
 
@@ -80,6 +81,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   // Add this subject for proper subscription management
   private readonly destroy$ = new Subject<void>();
+  private dialogCloseSubscription: Subscription | null = null;
 
   bankLetters: string[] = [];
   grid: string[][][] = [];
@@ -303,6 +305,11 @@ export class GameComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
 
+    // Clean up dialog subscription
+    if (this.dialogCloseSubscription) {
+      this.dialogCloseSubscription.unsubscribe();
+    }
+
     // Clear any pending win when leaving the game component
     if (this.gameState.gameMode === 'versus') {
       this.gameStateService.clearPendingWin();
@@ -392,12 +399,41 @@ export class GameComponent implements OnInit, OnDestroy {
     this.stopTimer();
   }
 
-  handleWebSocketMessage(message: any): void {
+  async handleWebSocketMessage(message: any): Promise<void> {
     console.log('Game received message:', message.type, message);
 
     switch (message.type) {
       case 'gameEnded':
         this.handleVersusGameOver(message);
+        break;
+
+      case 'gameStarted':
+        // This is received when the host starts a new game from the post-game dialog.
+        if (this.isGameOver) {
+          // Unsubscribe from the dialog's afterClosed event to prevent
+          // the navigation logic from firing when we programmatically close it.
+          if (this.dialogCloseSubscription) {
+            this.dialogCloseSubscription.unsubscribe();
+            this.dialogCloseSubscription = null;
+          }
+          // Show loading message, similar to the lobby.
+          await this.loadingService.showForDuration({
+            message: 'Game starting!',
+            duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
+          });
+
+          this.closeDialog(); // Now it's safe to close the post-game dialog.
+
+          this.gameStateService.updateGameState({
+            gameSeed: message.gameSeed,
+            isInGame: true,
+            lastWinnerId: null, // Clear the winner from the previous game.
+          });
+
+          // Reset the component's state for the new game without reloading.
+          this.resetForNewGame();
+          this.startAfterCountDown();
+        }
         break;
 
       case 'playerList':
@@ -406,6 +442,9 @@ export class GameComponent implements OnInit, OnDestroy {
           console.log('Updating player list during gameplay');
           this.gameStateService.updateGameState({
             players: message.players,
+            isHost: message.players.some(
+              (p: Player) => p.id === this.gameState.localPlayerId,
+            ),
           });
 
           // If we were disconnected and rejoined, we might need to sync our game state
@@ -430,16 +469,34 @@ export class GameComponent implements OnInit, OnDestroy {
           'Received server error during gameplay:',
           message.message,
         );
-        // Handle errors gracefully without disrupting gameplay too much
-        if (
-          message.message.includes('not found') ||
-          message.message.includes('expired')
-        ) {
-          // Game no longer exists, redirect to lobby
-          this.router.navigate(['/']);
-        }
+        this.router.navigate(['/']);
+
         break;
     }
+  }
+
+  private resetForNewGame(): void {
+    // Reset game state flags
+    this.isGameOver = false;
+    this.isWinner = false;
+    this.isGameStarted = false;
+    this.waitingForRestart = false;
+    this.countdownEnded = false;
+    this.countdown = COUNTDOWN_INITIAL_VALUE;
+    this.isPulsating = true;
+    this.isCountingDown = false;
+
+    // Reset timer state
+    this.timerRunning = false;
+    this.timerStartTime = 0;
+    this.currentTimeString = '0:00';
+    if (this.timerComponent) {
+      this.timerComponent.resetTimer();
+    }
+
+    // Clear game data that isn't reset by the countdown sequence
+    this.condensedGrid = [];
+    this.formedWords = [];
   }
 
   private handlePlayerListUpdate(players: Player[]): void {
@@ -472,7 +529,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
     console.log('Syncing game state after reconnection:', serverGameState);
 
-    // Example implementation:
     if (serverGameState.isGameActive !== undefined) {
       this.isGameStarted = serverGameState.isGameActive;
     }
@@ -897,6 +953,13 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   openDialog(data: any) {
+    // Unsubscribe from any previous dialog subscription to prevent memory leaks
+    // and unexpected navigation.
+    if (this.dialogCloseSubscription) {
+      this.dialogCloseSubscription.unsubscribe();
+      this.dialogCloseSubscription = null;
+    }
+
     let dialogRef;
     if (this.gameState.gameMode === 'versus') {
       dialogRef = this.dialog.open(DialogPostGameMp, {
@@ -911,34 +974,39 @@ export class GameComponent implements OnInit, OnDestroy {
       });
     }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (!result) {
-        // User closed dialog without action
-        if (this.gameState.gameMode === 'versus') {
-          this.router.navigate(['/join/' + this.gameState.gameCode]);
-        } else {
-          this.router.navigate(['/']);
-        }
-        // Clear pending wins when navigating away
-        this.gameStateService.clearPendingWin();
-      } else {
-        if (result.event === 'confirm') {
-          if (this.gameState.gameMode === 'versus')
+    this.dialogCloseSubscription = dialogRef
+      .afterClosed()
+      .subscribe((result) => {
+        // This logic will now only run when the user manually interacts with the
+        // dialog (e.g., clicks "Quit" or "Back to Lobby"), not when a new game
+        // is started via WebSockets.
+        if (!result) {
+          // User closed dialog without action
+          if (this.gameState.gameMode === 'versus') {
             this.router.navigate(['/join/' + this.gameState.gameCode]);
-          if (this.gameState.gameMode === 'daily')
-            this.router.navigate(['/practice']);
-          if (this.gameState.gameMode === 'practice') {
-            this.gameSeed = this.getRandomPuzzleSeed();
-            this.startAfterCountDown();
+          } else {
+            this.router.navigate(['/']);
+          }
+          // Clear pending wins when navigating away
+          this.gameStateService.clearPendingWin();
+        } else {
+          if (result.event === 'confirm') {
+            if (this.gameState.gameMode === 'versus')
+              this.router.navigate(['/join/' + this.gameState.gameCode]);
+            if (this.gameState.gameMode === 'daily')
+              this.router.navigate(['/practice']);
+            if (this.gameState.gameMode === 'practice') {
+              this.gameSeed = this.getRandomPuzzleSeed();
+              this.startAfterCountDown();
+            }
+          }
+          if (result.event === 'quit') {
+            // Clear pending wins when quitting
+            this.gameStateService.clearPendingWin();
+            this.router.navigate(['/']);
           }
         }
-        if (result.event === 'quit') {
-          // Clear pending wins when quitting
-          this.gameStateService.clearPendingWin();
-          this.router.navigate(['/']);
-        }
-      }
-    });
+      });
   }
 
   closeDialog() {

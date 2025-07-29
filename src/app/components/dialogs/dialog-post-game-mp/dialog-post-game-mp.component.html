@@ -1,3 +1,4 @@
+<!-- crossrace-ng\src/app\components\dialogs\dialog-post-game-mp\dialog-post-game-mp.component.html -->
 <div class="wrapper">
   <div class="d-flex flex-column h-100">
     <div class="row m-lr-auto" style="margin-bottom: 5px">
@@ -45,7 +46,34 @@
       <button class="btn btn-outline-secondary quit" (click)="quit()">
         Quit
       </button>
-      <button class="btn btn-primary" (click)="confirm()">Play again</button>
+
+      <!-- Host Button -->
+      @if (isHost) {
+        <button
+          class="btn btn-primary start-button"
+          (click)="startNextGame()"
+          [disabled]="isNextGameCountdown || isStartingGame"
+          [class.de-emphasized]="isNextGameCountdown"
+        >
+          <span class="button-content">
+            {{ isStartingGame ? "Starting" : "Start Next Game" }}
+            @if (isStartingGame || isNextGameCountdown) {
+              <div class="spinner"></div>
+            }
+          </span>
+        </button>
+      }
+
+      <!-- Non-Host Button -->
+      @if (!isHost) {
+        <button
+          class="btn btn-primary start-button"
+          disabled
+          [class.de-emphasized]="isNextGameCountdown"
+        >
+          Waiting for Host
+        </button>
+      }
     </div>
   </div>
 </div>

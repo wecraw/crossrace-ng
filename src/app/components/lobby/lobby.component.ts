@@ -114,15 +114,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }
   }
 
-  readyUp() {
-    if (this.gameState.gameCode && this.gameState.localPlayerId) {
-      this.webSocketService.readyUp(
-        this.gameState.gameCode,
-        this.gameState.localPlayerId,
-      );
-    }
-  }
-
   copyOrShare() {
     const gameShareUrl =
       window.location.origin + '/join/' + this.gameState.gameCode;
@@ -162,10 +153,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     } else {
       console.error('Cannot start game: not host or no game code');
     }
-  }
-
-  anyNotReady(): boolean {
-    return this.connectedPlayers.some((player) => !player.ready);
   }
 
   private setupSubscriptions(): void {

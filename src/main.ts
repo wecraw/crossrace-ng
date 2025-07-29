@@ -1,6 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
-import { provideRouter, Routes } from '@angular/router';
+import { provideRouter, Routes, withRouterConfig } from '@angular/router';
 import { LobbyComponent } from './app/components/lobby/lobby.component';
 import { GameComponent } from './app/components/game/game.component';
 import { WebSocketService } from './app/services/websocket/websocket.service';

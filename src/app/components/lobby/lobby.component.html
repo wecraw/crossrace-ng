@@ -41,11 +41,9 @@
               <player-card
                 [player]="selfPlayer"
                 [allowEdit]="true"
-                [lastWinnerId]="gameState.lastWinnerId || ''"
                 (onNameEdit)="updatePlayer({ displayName: $event })"
                 (onColorSelect)="updatePlayer({ playerColor: $event })"
                 (onEmojiSelect)="updatePlayer({ playerEmoji: $event })"
-                (onReadyUp)="readyUp()"
               ></player-card>
             }
           </div>
@@ -56,11 +54,7 @@
           }
           <div class="player-grid">
             @for (player of otherPlayers; track player.id) {
-              <player-card
-                [player]="player"
-                [lastWinnerId]="gameState.lastWinnerId || ''"
-              >
-              </player-card>
+              <player-card [player]="player"> </player-card>
             }
             <div class="fade-overlay"></div>
           </div>
@@ -77,12 +71,10 @@
         class="btn btn-lg btn-primary mt-4 flex-fixed small"
         color="primary"
         (click)="startGame()"
-        [disabled]="
-          anyNotReady() || connectedPlayers.length < 2 || isStartingGame
-        "
+        [disabled]="connectedPlayers.length < 2 || isStartingGame"
         [ngClass]="{
           'shimmering-start-button':
-            !anyNotReady() && connectedPlayers.length > 1 && !isStartingGame,
+            connectedPlayers.length > 1 && !isStartingGame,
         }"
       >
         <span class="button-content">

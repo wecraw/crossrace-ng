@@ -99,7 +99,7 @@ hr {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
   padding: 16px;
-  overflow-y: auto;
+  // overflow-y: auto;
   width: 100%;
   margin-bottom: 50px;
   box-sizing: border-box;
