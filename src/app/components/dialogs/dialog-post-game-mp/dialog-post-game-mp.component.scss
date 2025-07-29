@@ -1,4 +1,4 @@
-// crossrace-ng\src/app\components\dialogs\dialog-post-game-mp\dialog-post-game-mp.component.scss
+// crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.scss
 @use "variables" as *;
 @use "mixins" as *;
 
@@ -44,7 +44,7 @@ app-leaderboard {
 .wrapper {
   height: 1px; //needed so that child height 100 works
   padding: $spacing-l;
-  min-height: 550px;
+  min-height: 600px;
   overflow-x: hidden;
 }
 
@@ -132,7 +132,7 @@ h2 {
 .letter-tile {
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
-  background-color: $success-color;
+  background-color: $success-green;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -140,6 +140,12 @@ h2 {
   color: $white;
   border-radius: $border-radius-tile;
   font-size: $font-size-l;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.letter-tile.highlighted {
+  animation: shimmer 2s infinite;
 }
 
 // Styles for new buttons
@@ -171,5 +177,60 @@ h2 {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    box-shadow:
+      0 0 5px $success-green,
+      0 0 10px $success-green,
+      0 0 15px $success-green;
+  }
+  50% {
+    box-shadow:
+      0 0 8px $success-green,
+      0 0 15px $success-green,
+      0 0 23px $success-green;
+  }
+  100% {
+    box-shadow:
+      0 0 5px $success-green,
+      0 0 10px $success-green,
+      0 0 15px $success-green;
+  }
+}
+
+.pulsate-fwd-intense {
+  -webkit-animation: pulsate-fwd-intense 0.3s ease-in-out both;
+  animation: pulsate-fwd-intense 0.3s ease-in-out both;
+}
+
+@keyframes pulsate-fwd-intense {
+  0% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+  50% {
+    -webkit-transform: scale(1.25);
+    transform: scale(1.25);
+  }
+  100% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+}
+@-webkit-keyframes pulsate-fwd-intense {
+  0% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+  50% {
+    -webkit-transform: scale(1.25);
+    transform: scale(1.25);
+  }
+  100% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
   }
 }

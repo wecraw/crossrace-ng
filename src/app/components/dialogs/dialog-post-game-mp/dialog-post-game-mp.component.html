@@ -1,4 +1,4 @@
-<!-- crossrace-ng\src/app\components\dialogs\dialog-post-game-mp\dialog-post-game-mp.component.html -->
+<!-- crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.html -->
 <div class="wrapper">
   <div class="d-flex flex-column h-100">
     <div class="row m-lr-auto" style="margin-bottom: 5px">
@@ -26,9 +26,13 @@
             @for (cell of row; track cell; let j = $index) {
               <div
                 class="grid-cell noselect"
-                [ngClass]="{ 'letter-tile': data.grid[i] && data.grid[i][j] }"
+                [ngClass]="{
+                  'letter-tile': data.grid[i][j],
+                  'pulsate-fwd-intense': isCellHighlighted(i, j),
+                }"
+                (click)="data.grid[i][j] && onCellClick(i, j)"
               >
-                {{ data.grid[i] && data.grid[i][j] ? data.grid[i][j] : "" }}
+                {{ data.grid[i][j] }}
               </div>
             }
           </div>

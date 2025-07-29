@@ -42,7 +42,7 @@
   max-width: 185px;
   font-size: 20px;
   text-align: center;
-  border: 1px solid $success-color;
+  border: 1px solid $success-green;
 }
 
 input:focus::placeholder {
@@ -80,7 +80,7 @@ input:focus::placeholder {
   }
 
   &.green .tile-letter {
-    background-color: $success-color;
+    background-color: $success-green;
   }
 
   &:hover .tile-letter {
@@ -88,7 +88,7 @@ input:focus::placeholder {
   }
 
   &.green:hover .tile-letter {
-    background-color: $success-color-hover;
+    background-color: $success-green-hover;
   }
 
   &.disabled .tile-letter,

@@ -58,7 +58,7 @@ $grid-cell-size: 36px;
 
 .formed-words {
   .valid {
-    color: $success-color;
+    color: $success-green;
   }
 }
 
@@ -67,7 +67,7 @@ $grid-cell-size: 36px;
 
   &.valid-letter {
     .letter-tile {
-      background-color: $success-color !important;
+      background-color: $success-green !important;
     }
   }
 }
@@ -77,7 +77,7 @@ $grid-cell-size: 36px;
 
   &.valid-letter {
     .letter-tile {
-      background-color: $success-color !important;
+      background-color: $success-green !important;
     }
   }
 }
@@ -325,6 +325,20 @@ $grid-cell-size: 36px;
     transform: scale(1);
   }
 }
+@-webkit-keyframes pulsate-fwd-intense {
+  0% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+  50% {
+    -webkit-transform: scale(1.25);
+    transform: scale(1.25);
+  }
+  100% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+}
 
 .countdown-number {
   position: absolute;
@@ -335,7 +349,7 @@ $grid-cell-size: 36px;
 }
 
 .loader {
-  background: $success-color;
+  background: $success-green;
   width: 48px;
   height: 48px;
   position: relative;

@@ -55,7 +55,7 @@
   }
 
   &.green .tile-letter {
-    background-color: $success-color;
+    background-color: $success-green;
   }
 
   &:hover .tile-letter {
@@ -63,6 +63,6 @@
   }
 
   &.green:hover .tile-letter {
-    background-color: $success-color-hover;
+    background-color: $success-green-hover;
   }
 }
