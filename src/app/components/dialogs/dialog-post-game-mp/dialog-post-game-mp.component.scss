@@ -124,6 +124,7 @@ h2 {
   margin-bottom: $spacing-m;
 }
 .grid-cell {
+  position: relative; // Needed for exclamation mark positioning
   width: $grid-cell-size;
   height: $grid-cell-size;
   border: 1px solid $grid-cell-border-color;
@@ -142,6 +143,36 @@ h2 {
   font-size: $font-size-l;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  transform: scale3d(1, 1, 1);
+  z-index: 9999; //appear above the grid cells
+}
+
+.exclamation-mark {
+  position: absolute;
+  top: 0%;
+  left: 50%;
+  color: $black;
+  font-size: $font-size-huge;
+  font-weight: bold;
+  pointer-events: none; // Prevent it from capturing clicks
+  animation: float-off-random 2s ease-out forwards;
+  --rand-x: 0;
+  --rand-y: -150;
+}
+
+@keyframes float-off-random {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+        calc(-50% + var(--rand-x) * 1%),
+        calc(-50% + var(--rand-y) * 1%)
+      )
+      scale(1.5);
+  }
 }
 
 .letter-tile.highlighted {
@@ -202,7 +233,6 @@ h2 {
 }
 
 .pulsate-fwd-intense {
-  -webkit-animation: pulsate-fwd-intense 0.3s ease-in-out both;
   animation: pulsate-fwd-intense 0.3s ease-in-out both;
 }
 

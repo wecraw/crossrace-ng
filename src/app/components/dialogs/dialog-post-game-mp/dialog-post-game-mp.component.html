@@ -1,4 +1,4 @@
-<!-- crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.html -->
+<!-- // crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.html -->
 <div class="wrapper">
   <div class="d-flex flex-column h-100">
     <div class="row m-lr-auto" style="margin-bottom: 5px">
@@ -33,6 +33,19 @@
                 (click)="cell && onCellClick(i, j)"
               >
                 {{ cell ?? "" }}
+                @for (
+                  exclamation of getExclamationsForCell(i, j);
+                  track exclamation.id
+                ) {
+                  <div
+                    class="exclamation-mark"
+                    [style.--rand-x]="exclamation.randX"
+                    [style.--rand-y]="exclamation.randY"
+                    [style.color]="exclamation.color"
+                  >
+                    !
+                  </div>
+                }
               </div>
             }
           </div>

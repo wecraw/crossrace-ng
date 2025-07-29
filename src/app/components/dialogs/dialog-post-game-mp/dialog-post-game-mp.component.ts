@@ -73,6 +73,20 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   // Sliced grid for display
   displayGrid: string[][] = [];
 
+  // Property for exclamation animation
+  exclamationCell: { row: number; col: number } | null = null;
+  // Property for exclamation animations
+  exclamations: {
+    id: number;
+    row: number;
+    col: number;
+    randX: number;
+    randY: number;
+    color: string;
+  }[] = [];
+  private nextExclamationId = 0;
+  private exclamationTimeout: any;
+
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -123,6 +137,9 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.exclamationTimeout) {
+      clearTimeout(this.exclamationTimeout);
+    }
   }
 
   toggleView() {
@@ -215,7 +232,48 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     return words;
   }
 
+  getExclamationsForCell(
+    row: number,
+    col: number,
+  ): {
+    id: number;
+    row: number;
+    col: number;
+    randX: number;
+    randY: number;
+    color: string;
+  }[] {
+    return this.exclamations.filter((e) => e.row === row && e.col === col);
+  }
+
+  private getRandomColor(): string {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+
   onCellClick(row: number, col: number): void {
+    // Exclamation animation
+    const newId = this.nextExclamationId++;
+    this.exclamations.push({
+      id: newId,
+      row,
+      col,
+      randX: Math.random() * 800 - 400, // Random horizontal drift (-100% to 100%)
+      randY: Math.random() * -100 - 150, // Random upward drift (-150% to -250%)
+      color: this.getRandomColor(),
+    });
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.exclamations = this.exclamations.filter((e) => e.id !== newId);
+      this.cdr.detectChanges();
+    }, 2000); // Animation duration is 2s
+
+    // Word highlighting logic
     let nextHighlightedCells: { row: number; col: number }[] = [];
     const wordsAtCell = this.words.filter((w) =>
       w.cells.some((c) => c.row === row && c.col === col),
@@ -274,5 +332,11 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
 
   isCellHighlighted(row: number, col: number): boolean {
     return this.highlightedCells.some((c) => c.row === row && c.col === col);
+  }
+
+  isExclamationVisible(row: number, col: number): boolean {
+    return (
+      this.exclamationCell?.row === row && this.exclamationCell?.col === col
+    );
   }
 }
