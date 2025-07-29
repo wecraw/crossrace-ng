@@ -460,9 +460,6 @@ export class GameComponent implements OnInit, OnDestroy {
           console.log('Received game state sync after reconnection');
           this.syncGameStateAfterReconnection(message.gameState);
         }
-        if (message.gameState.gameEnded && message.gameState.gameEndData) {
-          this.handleVersusGameOver(message.gameState.gameEndData);
-        }
         break;
 
       case 'error':
