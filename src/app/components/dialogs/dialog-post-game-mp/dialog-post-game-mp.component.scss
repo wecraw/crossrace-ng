@@ -142,6 +142,7 @@ h2 {
   font-size: $font-size-l;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  line-height: 1;
 }
 
 .letter-tile.highlighted {

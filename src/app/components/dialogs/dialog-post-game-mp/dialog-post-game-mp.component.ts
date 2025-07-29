@@ -70,6 +70,9 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   private intersectionHighlightDirection: 'horizontal' | 'vertical' =
     'horizontal';
 
+  // Sliced grid for display
+  displayGrid: string[][] = [];
+
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -90,15 +93,13 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
 
   readonly dialogRef = inject(MatDialogRef<DialogPostGameMp>);
 
-  grid!: number[][];
-
   ngOnInit() {
-    // Slightly dangerous because the longest word could theoretically be 12 characters long
-    // In practice, this never happens
-    const gridSize = 10;
-    this.grid = Array(gridSize)
-      .fill(0)
-      .map(() => Array(gridSize).fill(0));
+    const displayGridSize = 10;
+    if (this.data.grid) {
+      this.displayGrid = this.data.grid
+        .slice(0, displayGridSize)
+        .map((row) => row.slice(0, displayGridSize));
+    }
 
     this.words = this.parseWordsFromGrid(this.data.grid);
 
@@ -215,23 +216,17 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   }
 
   onCellClick(row: number, col: number): void {
+    let nextHighlightedCells: { row: number; col: number }[] = [];
     const wordsAtCell = this.words.filter((w) =>
       w.cells.some((c) => c.row === row && c.col === col),
     );
 
     if (wordsAtCell.length === 0) {
-      this.highlightedCells = [];
       this.lastClickedIntersectionCell = null;
-      return;
-    }
-
-    if (wordsAtCell.length === 1) {
-      this.highlightedCells = wordsAtCell[0].cells;
+    } else if (wordsAtCell.length === 1) {
+      nextHighlightedCells = wordsAtCell[0].cells;
       this.lastClickedIntersectionCell = null;
-      return;
-    }
-
-    if (wordsAtCell.length >= 2) {
+    } else if (wordsAtCell.length >= 2) {
       const isSameIntersection =
         this.lastClickedIntersectionCell &&
         this.lastClickedIntersectionCell.row === row &&
@@ -245,10 +240,10 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       if (!isSameIntersection) {
         this.lastClickedIntersectionCell = { row, col };
         if (horizontalWord) {
-          this.highlightedCells = horizontalWord.cells;
+          nextHighlightedCells = horizontalWord.cells;
           this.intersectionHighlightDirection = 'horizontal';
         } else if (verticalWord) {
-          this.highlightedCells = verticalWord.cells;
+          nextHighlightedCells = verticalWord.cells;
           this.intersectionHighlightDirection = 'vertical';
         }
       } else {
@@ -256,14 +251,25 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
           this.intersectionHighlightDirection === 'horizontal' &&
           verticalWord
         ) {
-          this.highlightedCells = verticalWord.cells;
+          nextHighlightedCells = verticalWord.cells;
           this.intersectionHighlightDirection = 'vertical';
         } else if (horizontalWord) {
-          this.highlightedCells = horizontalWord.cells;
+          nextHighlightedCells = horizontalWord.cells;
           this.intersectionHighlightDirection = 'horizontal';
         }
       }
     }
+
+    // Reset current highlights to force re-animation
+    this.highlightedCells = [];
+    this.cdr.detectChanges();
+
+    // Use a minimal timeout to allow the DOM to update (remove the class)
+    // before re-applying it. This forces the animation to restart.
+    setTimeout(() => {
+      this.highlightedCells = nextHighlightedCells;
+      this.cdr.detectChanges();
+    }, 10);
   }
 
   isCellHighlighted(row: number, col: number): boolean {

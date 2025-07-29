@@ -21,18 +21,18 @@
         {{ data.time }}
       </div>
       <div class="chess-grid m-lr-auto fade-out-edges">
-        @for (row of grid; track row; let i = $index) {
+        @for (row of displayGrid; track row; let i = $index) {
           <div class="grid-row">
             @for (cell of row; track cell; let j = $index) {
               <div
                 class="grid-cell noselect"
                 [ngClass]="{
-                  'letter-tile': data.grid[i][j],
+                  'letter-tile': cell,
                   'pulsate-fwd-intense': isCellHighlighted(i, j),
                 }"
-                (click)="data.grid[i][j] && onCellClick(i, j)"
+                (click)="cell && onCellClick(i, j)"
               >
-                {{ data.grid[i][j] }}
+                {{ cell ?? "" }}
               </div>
             }
           </div>
@@ -61,7 +61,7 @@
         >
           <span class="button-content">
             {{ isStartingGame ? "Starting" : "Start Next Game" }}
-            @if (isStartingGame || isNextGameCountdown) {
+            @if (isNextGameCountdown || isStartingGame) {
               <div class="spinner"></div>
             }
           </span>
