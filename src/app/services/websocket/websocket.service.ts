@@ -361,10 +361,6 @@ export class WebSocketService implements OnDestroy {
     }
   }
 
-  requestGameState(gameCode: string): void {
-    this.socket.emit('requestGameState', { gameCode });
-  }
-
   simulateDisconnect(): void {
     //this simulates a "clean" disconnect, triggered by the user.
     if (this.socket) {

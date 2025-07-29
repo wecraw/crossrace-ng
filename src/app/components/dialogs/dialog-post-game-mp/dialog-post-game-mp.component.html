@@ -52,7 +52,7 @@
         }
       </div>
 
-      <app-leaderboard [players]="data.players"></app-leaderboard>
+      <app-leaderboard [players]="gameState.players"></app-leaderboard>
       <div class="navigation-arrows">
         <i class="fa chevron fa-chevron-right" (click)="toggleView()"></i>
         <i class="fa chevron fa-chevron-left" (click)="toggleView()"></i>
@@ -60,7 +60,11 @@
     </div>
 
     <div class="action-buttons d-flex">
-      <button class="btn btn-outline-secondary quit" (click)="quit()">
+      <button
+        class="btn btn-outline-secondary quit"
+        (click)="quit()"
+        [disabled]="isNextGameCountdown || isStartingGame"
+      >
         Quit
       </button>
 
@@ -70,10 +74,9 @@
           class="btn btn-primary start-button"
           (click)="startNextGame()"
           [disabled]="isNextGameCountdown || isStartingGame"
-          [class.de-emphasized]="isNextGameCountdown"
         >
           <span class="button-content">
-            {{ isStartingGame ? "Starting" : "Start Next Game" }}
+            {{ isStartingGame ? "Starting" : "Start next game" }}
             @if (isNextGameCountdown || isStartingGame) {
               <div class="spinner"></div>
             }
@@ -83,12 +86,8 @@
 
       <!-- Non-Host Button -->
       @if (!isHost) {
-        <button
-          class="btn btn-primary start-button"
-          disabled
-          [class.de-emphasized]="isNextGameCountdown"
-        >
-          Waiting for Host
+        <button class="btn btn-primary start-button" disabled>
+          Waiting for host
         </button>
       }
     </div>

@@ -100,7 +100,6 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       singlePlayer?: boolean;
       daily?: boolean;
       shareLink?: string;
-      players: Player[];
     },
     private cdr: ChangeDetectorRef,
     private gameStateService: GameStateService,
@@ -124,9 +123,13 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       .getGameState()
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
+        console.log('Game state updated:', state);
         this.gameState = state;
-        this.isHost = state.isHost;
-        this.cdr.detectChanges(); // Update UI if host status changes
+        ((this.isHost =
+          state.players.find(
+            (p: Player) => p.isHost && p.id === this.gameState.localPlayerId,
+          ) != null),
+          this.cdr.detectChanges()); // Update UI if host status changes
       });
 
     // Subscribe to WebSocket messages for cell clicks

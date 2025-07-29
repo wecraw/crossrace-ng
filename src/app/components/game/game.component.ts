@@ -390,7 +390,6 @@ export class GameComponent implements OnInit, OnDestroy {
         winnerDisplayName: data.winnerDisplayName,
         winnerColor: data.winnerColor,
         winnerEmoji: data.winnerEmoji,
-        players: data.players,
         grid: data.condensedGrid,
         time: data.time,
       });
@@ -442,9 +441,11 @@ export class GameComponent implements OnInit, OnDestroy {
           console.log('Updating player list during gameplay');
           this.gameStateService.updateGameState({
             players: message.players,
-            isHost: message.players.some(
-              (p: Player) => p.id === this.gameState.localPlayerId,
-            ),
+            isHost:
+              message.players.find(
+                (p: Player) =>
+                  p.isHost && p.id === this.gameState.localPlayerId,
+              ) != null,
           });
 
           // If we were disconnected and rejoined, we might need to sync our game state

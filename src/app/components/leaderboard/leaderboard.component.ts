@@ -1,23 +1,24 @@
-import { Component, Input, OnInit } from '@angular/core';
+// crossrace-ng/src/app/components/leaderboard/leaderboard.component.ts
+import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
 import { Player } from '../../interfaces/player';
 
 @Component({
   selector: 'app-leaderboard',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './leaderboard.component.html',
   styleUrl: './leaderboard.component.scss',
 })
-export class LeaderboardComponent implements OnInit {
-  @Input() players: Player[] = [];
+export class LeaderboardComponent {
   sortedPlayers: Player[] = [];
 
-  ngOnInit() {
-    this.sortPlayers();
-  }
-
-  sortPlayers() {
-    this.sortedPlayers = [...this.players].sort(
-      (a, b) => b.winCount - a.winCount,
-    );
+  @Input()
+  set players(value: Player[] | undefined) {
+    // When the 'players' input is updated, filter out disconnected players,
+    // then sort the remaining players by win count.
+    this.sortedPlayers = [...(value || [])]
+      .filter((player) => !player.disconnected)
+      .sort((a, b) => b.winCount - a.winCount);
   }
 }

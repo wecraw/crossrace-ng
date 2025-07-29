@@ -34,7 +34,7 @@ $grid-cell-size: 30px;
 app-leaderboard {
   margin-top: $spacing-s;
   position: absolute;
-  right: -480px;
+  right: -490px;
   top: 0;
 }
 .crown {
@@ -175,13 +175,12 @@ h2 {
   }
 }
 
-.letter-tile.highlighted {
-  animation: shimmer 2s infinite;
+.btn:disabled {
+  opacity: 0.25;
 }
 
-// Styles for new buttons
-.de-emphasized {
-  opacity: 0.6;
+.letter-tile.highlighted {
+  animation: shimmer 2s infinite;
 }
 
 .button-content {
