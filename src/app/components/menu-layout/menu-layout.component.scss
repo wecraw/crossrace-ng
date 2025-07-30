@@ -10,14 +10,6 @@ $grid-cell-size: 36px;
   opacity: 0.4; //controls opacity of grid background
 }
 
-.grid-fade-wrapper {
-  position: absolute;
-  z-index: -1000;
-  left: 50%;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
-}
-
 .letter-bank {
   top: 50px;
 }

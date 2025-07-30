@@ -49,8 +49,11 @@
 @if (isGridReady) {
   <div
     #gridWrapper
-    class="slide-in-fwd-center grid-wrapper noselect"
-    [ngClass]="{ notouch: !timerRunning }"
+    class="grid-wrapper noselect"
+    [ngClass]="{
+      notouch: !timerRunning,
+      'counting-down': isCountingDown && !countdownEnded,
+    }"
   >
     <div class="fade-out-edges m-lr-auto">
       <div
