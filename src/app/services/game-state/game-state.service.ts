@@ -1,24 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Player } from '../../interfaces/player';
-
-export interface GameState {
-  gameCode: string | null;
-  localPlayerId: string | null;
-  players: Player[];
-  isHost: boolean;
-  isInGame: boolean;
-  debugForceWin?: boolean; // For testing purposes
-  gameSeed: number | null;
-  gameMode: 'versus' | 'daily' | 'practice' | null;
-  lastWinnerId: string | null;
-  // Add win state for handling disconnected wins
-  pendingWin: {
-    playerId: string;
-    condensedGrid: string[][];
-    timestamp: number;
-  } | null;
-}
+import { GameState } from '../../interfaces/game-state';
 
 const initialState: GameState = {
   gameCode: null,
@@ -28,7 +10,6 @@ const initialState: GameState = {
   isInGame: false,
   gameSeed: null,
   gameMode: null,
-  lastWinnerId: null,
   pendingWin: null,
 };
 

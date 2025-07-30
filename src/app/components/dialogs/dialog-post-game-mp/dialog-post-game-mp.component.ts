@@ -22,10 +22,8 @@ import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { Player } from '../../../interfaces/player';
 import { LeaderboardComponent } from '../../leaderboard/leaderboard.component';
-import {
-  GameState,
-  GameStateService,
-} from '../../../services/game-state/game-state.service';
+import { GameStateService } from '../../../services/game-state/game-state.service';
+import { GameState } from '../../../interfaces/game-state';
 import { WebSocketService } from '../../../services/websocket/websocket.service';
 
 interface Word {
@@ -350,7 +348,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     // 1. Trigger local effects immediately.
     // Find local player from the gameState to get their color.
     const localPlayer = this.gameState.players.find(
-      (p) => p.id === this.gameState.localPlayerId,
+      (p: Player) => p.id === this.gameState.localPlayerId,
     );
     // Fallback to random color if player not found (should not happen).
     const color = localPlayer ? localPlayer.playerColor : this.getRandomColor();

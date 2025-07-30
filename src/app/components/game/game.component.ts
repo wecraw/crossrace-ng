@@ -31,10 +31,8 @@ import { WebSocketService } from '../../services/websocket/websocket.service';
 import { Subject, Subscription, takeUntil } from 'rxjs';
 import * as confetti from 'canvas-confetti';
 import { ActivatedRoute, Router } from '@angular/router';
-import {
-  GameState,
-  GameStateService,
-} from '../../services/game-state/game-state.service';
+import { GameStateService } from '../../services/game-state/game-state.service';
+import { GameState } from '../../interfaces/game-state';
 import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
 import { GameSeedService } from '../../services/game-seed/game-seed.service';
 import { DialogPostGameMp } from '../dialogs/dialog-post-game-mp/dialog-post-game-mp.component';
@@ -381,7 +379,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.isWinner = data.winner === this.gameState.localPlayerId;
     this.gameStateService.updateGameState({
       players: data.players,
-      lastWinnerId: data.winner,
     });
     this.gameStateService.clearPendingWin();
 
@@ -426,7 +423,6 @@ export class GameComponent implements OnInit, OnDestroy {
           this.gameStateService.updateGameState({
             gameSeed: message.gameSeed,
             isInGame: true,
-            lastWinnerId: null, // Clear the winner from the previous game.
           });
 
           // Reset the component's state for the new game without reloading.
@@ -447,18 +443,18 @@ export class GameComponent implements OnInit, OnDestroy {
                   p.isHost && p.id === this.gameState.localPlayerId,
               ) != null,
           });
-
-          // If we were disconnected and rejoined, we might need to sync our game state
-          // The server should maintain the game state, but we can request updates if needed
-          this.handlePlayerListUpdate(message.players);
         }
         break;
 
-      case 'gameState':
+      case 'syncGameState':
         // Handle full game state sync after reconnection
-        if (message.gameState && this.gameState.gameMode === 'versus') {
+        if (this.gameState.gameMode === 'versus') {
           console.log('Received game state sync after reconnection');
-          this.syncGameStateAfterReconnection(message.gameState);
+          this.syncGameState(
+            message.time,
+            message.isGameEnded,
+            message.gameEndData,
+          );
         }
         break;
 
@@ -497,47 +493,28 @@ export class GameComponent implements OnInit, OnDestroy {
     this.formedWords = [];
   }
 
-  private handlePlayerListUpdate(players: Player[]): void {
-    // Check if any players reconnected and update UI accordingly
-    const reconnectedPlayers = players.filter(
-      (p) =>
-        p.id !== this.gameState.localPlayerId &&
-        !p.disconnected &&
-        this.gameState.players?.find((existingP) => existingP.id === p.id)
-          ?.disconnected,
+  private syncGameState(
+    serverTime: number,
+    gameEnded: boolean,
+    gameEndData: any,
+  ): void {
+    console.log(
+      'Syncing game state on connection:',
+      serverTime,
+      gameEnded,
+      gameEndData,
     );
 
-    if (reconnectedPlayers.length > 0) {
-      console.log(
-        'Players reconnected:',
-        reconnectedPlayers.map((p) => p.displayName),
-      );
-    }
-  }
-
-  private syncGameStateAfterReconnection(serverGameState: any): void {
-    // This method would handle syncing local game state with server state
-    // after a reconnection. The exact implementation depends on what
-    // game state the server maintains and sends back.
-
-    // For example, the server might send:
-    // - Current game time/timer state
-    // - Whether the game is still active
-    // - Any other relevant game state
-
-    console.log('Syncing game state after reconnection:', serverGameState);
-
-    if (serverGameState.isGameActive !== undefined) {
-      this.isGameStarted = serverGameState.isGameActive;
-    }
+    this.isGameStarted = gameEnded;
 
     if (
-      serverGameState.currentGameTime !== undefined &&
+      serverTime !== undefined &&
       this.timerComponent &&
-      serverGameState.isGameActive
+      !gameEnded &&
+      this.isGameStarted
     ) {
       // Sync timer with server time
-      const serverGameTime = serverGameState.currentGameTime;
+      const serverGameTime = serverTime;
       console.log(
         `Syncing local timer to server time: ${serverGameTime} seconds`,
       );
@@ -558,9 +535,9 @@ export class GameComponent implements OnInit, OnDestroy {
     }
 
     // Check if the game ended while we were disconnected
-    if (serverGameState.gameEnded && serverGameState.gameEndData) {
+    if (gameEnded && gameEndData) {
       console.log('Game ended while disconnected, showing end game dialog');
-      this.handleVersusGameOver(serverGameState.gameEndData);
+      this.handleVersusGameOver(gameEndData);
     }
   }
 
@@ -664,12 +641,11 @@ export class GameComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  private async announceWinAsync(): Promise<void> {
+  private async announceWinAsync(debug?: boolean): Promise<void> {
     try {
       await this.webSocketService.announceWin(
         this.gameState.localPlayerId!,
-        // this.condensedGrid,
-        this.mockWin.grid,
+        debug ? this.mockWin.grid : this.condensedGrid,
       );
     } catch (error) {
       console.error('Error announcing win:', error);
@@ -709,7 +685,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.stopTimer();
 
     if (this.gameState.gameMode === 'versus') {
-      this.announceWinAsync();
+      this.announceWinAsync(true);
     } else {
       if (this.gameState.gameMode === 'daily') {
         this.updateDailyLocalStorage();

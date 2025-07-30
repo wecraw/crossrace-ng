@@ -9,9 +9,9 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { WebSocketService } from '../../services/websocket/websocket.service';
-import { Subject, take, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
@@ -19,16 +19,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { Dialog } from '../dialogs/dialog/dialog.component';
-import {
-  GameState,
-  GameStateService,
-} from '../../services/game-state/game-state.service';
+import { GameStateService } from '../../services/game-state/game-state.service';
 import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
 import { PlayerCardComponent } from '../player-card/player-card.component';
 import { Player } from '../../interfaces/player';
 import { DialogData } from '../../interfaces/dialog-data';
 import { LoadingService } from '../../services/loading/loading.service';
 import { LOBBY_GAME_START_COUNTDOWN_DURATION } from '../../constants/game-constants';
+import { GameState } from '../../interfaces/game-state';
 
 @Component({
   selector: 'app-lobby',
@@ -66,7 +64,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private webSocketService: WebSocketService,
     private gameStateService: GameStateService,
     private router: Router,
-    private route: ActivatedRoute,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
@@ -171,18 +168,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
         const connected = state.players.filter((p) => !p.disconnected);
         this.selfPlayer = connected.find((p) => this.isPlayerSelf(p));
         this.otherPlayers = connected.filter((p) => !this.isPlayerSelf(p));
-        this.cdr.detectChanges();
-      });
 
-    // On a fresh load/reload of the lobby, explicitly request the player list.
-    this.gameStateService
-      .getGameState()
-      .pipe(take(1))
-      .subscribe((state) => {
-        if (state.gameCode) {
-          console.log('Component initialized, fetching initial player list...');
-          this.webSocketService.getPlayers(state.gameCode);
-        }
+        console.log('Lobby received updated game state:', state);
+        this.cdr.detectChanges();
       });
 
     this.webSocketService

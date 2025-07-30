@@ -76,7 +76,7 @@
           [disabled]="isNextGameCountdown || isStartingGame"
         >
           <span class="button-content">
-            {{ isStartingGame ? "Starting" : "Start next game" }}
+            {{ isStartingGame ? "Starting" : "Start game" }}
             @if (isNextGameCountdown || isStartingGame) {
               <div class="spinner"></div>
             }

@@ -192,7 +192,7 @@ export class WebSocketService implements OnDestroy {
       );
       try {
         // First, await the acknowledgment that we have successfully rejoined the game.
-        await this.joinGame(gameCode, localPlayerId, true);
+        await this.joinGame(gameCode, localPlayerId);
 
         // After successfully rejoining, check for any pending win that needs to be sent
         if (this.gameStateService.hasPendingWin()) {
@@ -264,6 +264,7 @@ export class WebSocketService implements OnDestroy {
       // Tell the GameStateService to update the player ID
       this.gameStateService.updateGameState({
         localPlayerId: response.playerId,
+        players: response.players,
       });
     }
     return response;
@@ -272,7 +273,6 @@ export class WebSocketService implements OnDestroy {
   async joinGame(
     gameCode: string,
     playerId?: string | null,
-    isRejoin?: boolean,
   ): Promise<JoinGameResponse> {
     // Get the playerId from GameStateService if not provided.
     const finalPlayerId =
@@ -283,32 +283,31 @@ export class WebSocketService implements OnDestroy {
       playerId: finalPlayerId,
     });
 
+    console.log('Join game response:', response);
+
     if (response.success && response.playerId) {
       // Tell the GameStateService to update the player ID
       this.gameStateService.updateGameState({
         localPlayerId: response.playerId,
+        players: response.players,
+        isHost: response.players.some(
+          (p) => p.isHost && p.id === response.playerId,
+        ),
+        gameSeed: response.gameSeed,
+        gameMode: 'versus',
+        currentGameTime: response.currentGameTime,
+        isInGame: response.isGameActive,
       });
 
-      // Handle game state synchronization data if rejoin
-      if (isRejoin) {
-        this.messageSubject.next({
-          type: 'gameState',
-          gameState: {
-            state: response.gameState,
-            currentGameTime: response.currentGameTime,
-            isGameActive: response.isGameActive,
-            gameEnded: response.gameEnded,
-            gameEndData: response.gameEndData,
-          },
-        });
-        this.getPlayers(response.gameCode);
-      }
+      // Handle game state sync
+      this.messageSubject.next({
+        type: 'syncGameState',
+        time: response.currentGameTime,
+        isGameEnded: response.gameEnded,
+        gameEndData: response.gameEndData,
+      });
     }
     return response;
-  }
-
-  getPlayers(gameCode: string): void {
-    this.socket.emit('getPlayers', { gameCode });
   }
 
   updatePlayer(gameCode: string, playerId: string, updates: any): Promise<any> {

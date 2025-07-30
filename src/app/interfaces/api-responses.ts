@@ -1,3 +1,5 @@
+import { Player } from './player';
+
 // This is the base shape for all responses that use the callback/ack pattern.
 export interface AckResponse {
   success: boolean;
@@ -12,6 +14,7 @@ export interface CreateGameResponse extends AckResponse {
   displayName: string;
   playerColor: string;
   playerEmoji: string;
+  players: Player[];
 }
 
 // The specific shape for the 'join' event's response
@@ -21,6 +24,8 @@ export interface JoinGameResponse extends AckResponse {
   displayName: string;
   playerColor: string;
   playerEmoji: string;
+  players: Player[];
+  gameSeed: number;
   // Properties for handling games that ended while disconnected
   gameEnded?: boolean;
   gameEndData?: {
