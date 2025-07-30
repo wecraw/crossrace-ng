@@ -565,12 +565,25 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   refreshPuzzle() {
+    // Collect all letters from the grid and add them back to the bank.
+    // This must be done BEFORE the grid is re-initialized.
+    for (const row of this.grid) {
+      for (const cell of row) {
+        if (cell.length > 0) {
+          // Using push with spread operator to handle if a cell accidentally has more than one letter
+          this.bankLetters.push(...cell);
+        }
+      }
+    }
+
+    // Now that all letters are safe in the bank, reset the grid and other state.
     this.initializeGrid();
     this.initializeValidLetterIndices();
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
     this.updateFormedWords();
     this.isGameStarted = true;
-    this.setLettersFromPuzzle();
+
+    // Shuffle the now complete letter bank.
     this.shuffleLetters();
   }
 
