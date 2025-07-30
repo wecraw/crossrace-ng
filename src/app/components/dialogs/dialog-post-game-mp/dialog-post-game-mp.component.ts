@@ -274,8 +274,8 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       id: newId,
       row,
       col,
-      randX: Math.random() * 800 - 400,
-      randY: Math.random() * -100 - 150,
+      randX: Math.random() * 600 - 300,
+      randY: Math.random() * -50 - 75,
       color: color,
     });
     this.cdr.detectChanges();
