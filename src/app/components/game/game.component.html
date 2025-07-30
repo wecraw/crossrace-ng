@@ -8,16 +8,13 @@
     [cdkDropListData]="bankLetters"
     [cdkDropListConnectedTo]="gridCellIds"
     (cdkDropListDropped)="drop($event)"
-    >
+  >
     @for (letter of bankLetters; track $index) {
       @if (
-        isGameStarted || gameState.gameMode === 'versus' || isCountingDown
-        ) {
-        <div
-          class="tile-wrapper"
-          [ngClass]="getFlipInClass($index)"
-          cdkDrag
-          >
+        bankLettersVisible &&
+        (isGameStarted || gameState.gameMode === "versus" || isCountingDown)
+      ) {
+        <div class="tile-wrapper" [ngClass]="getFlipInClass($index)" cdkDrag>
           <div class="letter m-lr-auto">
             {{ letter }}
           </div>
@@ -30,15 +27,15 @@
   <div
     class="countdown m-lr-auto"
     [ngClass]="{ 'puff-out-center': countdownEnded }"
-    >
+  >
     <div class="spinner-container flip-in-hor-bottom-12">
       <span class="loader"></span>
       <span
         class="countdown-number"
-      [ngClass]="{
-        'pulsate-fwd-intense': isPulsating,
-      }"
-        >
+        [ngClass]="{
+          'pulsate-fwd-intense': isPulsating,
+        }"
+      >
         @if (countdown > 0) {
           {{ countdown }}
         } @else {
@@ -54,7 +51,7 @@
     #gridWrapper
     class="slide-in-fwd-center grid-wrapper noselect"
     [ngClass]="{ notouch: !timerRunning }"
-    >
+  >
     <div class="fade-out-edges m-lr-auto">
       <div
         #gridContainer
@@ -62,14 +59,14 @@
         [cdkDragFreeDragPosition]="dragPosition"
         cdkDrag
         cdkDragBoundary=".grid-boundary"
-        >
+      >
         @for (row of grid; track $index; let i = $index) {
           <div class="grid-row noselect">
             @for (cell of row; track $index; let j = $index) {
               <div
-              [ngClass]="{
-                'valid-letter pulsate-fwd': validLetterIndices[i][j],
-              }"
+                [ngClass]="{
+                  'valid-letter pulsate-fwd': validLetterIndices[i][j],
+                }"
                 class="grid-cell noselect"
                 cdkDropList
                 [id]="'cell-' + i + '-' + j"
@@ -79,13 +76,13 @@
                 (cdkDropListEntered)="entered($event)"
                 (cdkDropListExited)="exited($event)"
                 (cdkDropListDropped)="drop($event)"
-                >
+              >
                 @for (letter of cell; track letter) {
                   <div
                     class="letter-tile"
                     cdkDrag
                     (cdkDragStarted)="dragStarted($event)"
-                    >
+                  >
                     {{ letter }}
                   </div>
                 }
@@ -103,10 +100,10 @@
       [startTime]="timerStartTime"
       [isRunning]="timerRunning"
       (timeChanged)="onTimeChanged($event)"
-      >
+    >
     </app-timer>
     <i class="material-icons refresh noselect" (click)="refreshPuzzle()"
       >refresh</i
-      >
-    </div>
-  }
+    >
+  </div>
+}

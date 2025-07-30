@@ -123,6 +123,7 @@ export class GameComponent implements OnInit, OnDestroy {
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
   timerStartTime: number = 0;
+  bankLettersVisible = false;
 
   constructor(
     private renderer2: Renderer2,
@@ -367,6 +368,15 @@ export class GameComponent implements OnInit, OnDestroy {
 
     this.setLettersFromPuzzle();
 
+    // Force re-render of letter bank to replay animation
+    this.ngZone.runOutsideAngular(() => {
+      setTimeout(() => {
+        this.ngZone.run(() => {
+          this.bankLettersVisible = true;
+        });
+      });
+    });
+
     setTimeout(() => {
       this.startCountdown(() => {
         this.startPuzzle();
@@ -491,6 +501,9 @@ export class GameComponent implements OnInit, OnDestroy {
     // Clear game data that isn't reset by the countdown sequence
     this.condensedGrid = [];
     this.formedWords = [];
+
+    // Hide bank letters to force re-render with animation
+    this.bankLettersVisible = false;
   }
 
   private syncGameState(
@@ -505,13 +518,14 @@ export class GameComponent implements OnInit, OnDestroy {
       gameEndData,
     );
 
-    this.isGameStarted = gameEnded;
+    // If the game has NOT ended, it IS started/active.
+    // If the game HAS ended, it is NOT started/active.
+    this.isGameStarted = !gameEnded;
 
     if (
       serverTime !== undefined &&
       this.timerComponent &&
-      !gameEnded &&
-      this.isGameStarted
+      !gameEnded // Game is active, so sync the timer
     ) {
       // Sync timer with server time
       const serverGameTime = serverTime;
@@ -970,7 +984,10 @@ export class GameComponent implements OnInit, OnDestroy {
             if (this.gameState.gameMode === 'daily')
               this.router.navigate(['/practice']);
             if (this.gameState.gameMode === 'practice') {
-              this.gameSeed = this.getRandomPuzzleSeed();
+              this.gameStateService.updateGameState({
+                gameSeed: this.getRandomPuzzleSeed(),
+              });
+              this.resetForNewGame();
               this.startAfterCountDown();
             }
           }
