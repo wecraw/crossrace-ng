@@ -139,15 +139,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Hide loading service if it's showing "Game starting!"
-    // This should never happen, but just in case.
-    if (
-      this.loadingService.isLoading() &&
-      this.loadingService.loadingMessage() === 'Game starting!'
-    ) {
-      this.loadingService.hide();
-    }
-
     const modeFromRoute = this.route.snapshot.data['gameMode'] as
       | 'daily'
       | 'practice'
@@ -355,6 +346,8 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   startAfterCountDown() {
+    // The "Game starting!" overlay is now handled before this function is called.
+    // We can proceed directly to the "3..2..1.." countdown.
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
@@ -422,20 +415,21 @@ export class GameComponent implements OnInit, OnDestroy {
             this.dialogCloseSubscription.unsubscribe();
             this.dialogCloseSubscription = null;
           }
-          // Show loading message, similar to the lobby.
-          await this.loadingService.showForDuration({
-            message: 'Game starting!',
-            duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
-          });
 
-          this.closeDialog(); // Now it's safe to close the post-game dialog.
+          this.closeDialog();
 
           this.gameStateService.updateGameState({
             gameSeed: message.gameSeed,
             isInGame: true,
           });
 
-          // Reset the component's state for the new game without reloading.
+          // Show "Game starting!" for 2 seconds, and wait for it to finish.
+          await this.loadingService.showAndHide({
+            message: 'Game starting!',
+            duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
+          });
+
+          // Only after the message is gone, reset the game state and start the "3..2..1.." countdown.
           this.resetForNewGame();
           this.startAfterCountDown();
         }

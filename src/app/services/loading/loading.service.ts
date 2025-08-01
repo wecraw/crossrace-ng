@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/services/loading/loading.service.ts
 import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -60,10 +61,10 @@ export class LoadingService {
   }
 
   /**
-   * Shows the loading overlay for a fixed duration.
-   * Does not need to be manually hidden.
+   * Shows the loading overlay for a fixed duration, and returns a promise
+   * that resolves when the overlay is hidden. The caller should `await` this.
    */
-  async showForDuration(options: {
+  async showAndHide(options: {
     message?: string;
     duration: number;
     inGame?: boolean;
@@ -71,15 +72,14 @@ export class LoadingService {
     const showTimeForThisCall = Date.now();
     this.show({ message: options.message, inGame: options.inGame });
 
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Only hide if another `show()` hasn't been called in the meantime.
-        if (this.showTime === showTimeForThisCall) {
-          this.hide();
-        }
-        resolve();
-      }, options.duration);
-    });
+    await new Promise((resolve) => setTimeout(resolve, options.duration));
+
+    // After waiting, only hide if another `show()` call hasn't been
+    // made in the meantime. This prevents us from incorrectly hiding a
+    // different, newer loading message (e.g., "Reconnecting...").
+    if (this.showTime === showTimeForThisCall) {
+      this.hide();
+    }
   }
 
   /**

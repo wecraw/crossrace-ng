@@ -179,7 +179,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       .subscribe((message) => this.handleMessage(message));
   }
 
-  private async handleMessage(message: any) {
+  private async handleMessage(message: any): Promise<void> {
     console.log('Lobby received message:', message.type, message);
     switch (message.type) {
       case 'playerList':
@@ -199,11 +199,13 @@ export class LobbyComponent implements OnInit, OnDestroy {
           gameMode: 'versus',
         });
 
-        await this.loadingService.showForDuration({
+        // Show "Game starting!" for 2 seconds, and wait for it to finish.
+        await this.loadingService.showAndHide({
           message: 'Game starting!',
           duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
         });
 
+        // Only navigate AFTER the message has been shown and hidden.
         this.router.navigate(['/versus']);
         break;
 
