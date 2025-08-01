@@ -1,0 +1,99 @@
+// crossrace-ng/src/app/components/game-board/game-board.component.scss
+@use "variables" as *;
+@use "mixins" as *;
+
+$grid-size: 24;
+$cell-size: 32px;
+$grid-total-size: $grid-size * $cell-size;
+
+.grid-wrapper {
+  position: relative;
+  width: 100vw;
+  max-width: 370px;
+  height: 380px;
+  max-height: 380px;
+  overflow: hidden;
+  margin: 0 auto;
+  margin-top: $spacing-m;
+  border-radius: $border-radius-l;
+  touch-action: none; // Prevent default touch actions like scrolling
+  transition: opacity 0.3s ease-in-out;
+}
+
+.fade-out-edges {
+  @include fade-out-edges;
+}
+
+.grid-container {
+  display: flex;
+  flex-direction: column;
+  width: $grid-total-size;
+  height: $grid-total-size;
+  position: absolute;
+  background-color: $grid-bg-color;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.grid-row {
+  display: flex;
+}
+
+.grid-cell {
+  width: $cell-size;
+  height: $cell-size;
+  border: 1px solid $grid-cell-border-color;
+  background-color: $grid-bg-color;
+  box-sizing: border-box;
+  transition: background-color 0.2s;
+  position: relative; // Needed for ::before pseudo-element
+
+  &.drop-list-highlight {
+    background-color: $highlight-color;
+  }
+
+  &.valid-letter::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid $success-green-light;
+    border-radius: 4px;
+    pointer-events: none; // Make sure it doesn't interfere with drag/drop
+  }
+}
+
+.letter-tile {
+  width: $cell-size - 2px; // Account for border
+  height: $cell-size - 2px; // Account for border
+  background-color: $letter-tile-bg;
+  border-radius: $border-radius-s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow:
+    0 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0 8px 10px 1px rgba(0, 0, 0, 0.14),
+    0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}

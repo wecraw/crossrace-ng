@@ -1,0 +1,49 @@
+<!-- // crossrace-ng/src/app/components/game-board/game-board.component.html -->
+<div
+  #gridWrapper
+  class="grid-wrapper noselect"
+  [ngClass]="{
+    notouch: isDisabled,
+  }"
+>
+  <div class="fade-out-edges m-lr-auto">
+    <div
+      #gridContainer
+      class="grid-container"
+      [cdkDragFreeDragPosition]="dragPosition"
+      cdkDrag
+      cdkDragBoundary=".grid-boundary"
+    >
+      @for (row of grid; track $index; let i = $index) {
+        <div class="grid-row noselect">
+          @for (cell of row; track $index; let j = $index) {
+            <div
+              [ngClass]="{
+                'valid-letter pulsate-fwd': validLetterIndices[i][j],
+              }"
+              class="grid-cell noselect"
+              cdkDropList
+              [id]="'cell-' + i + '-' + j"
+              [cdkDropListData]="cell"
+              [cdkDropListConnectedTo]="allDropListIds"
+              [cdkDropListEnterPredicate]="canEnter"
+              (cdkDropListEntered)="entered($event)"
+              (cdkDropListExited)="exited($event)"
+              (cdkDropListDropped)="onDrop($event)"
+            >
+              @for (letter of cell; track letter) {
+                <div
+                  class="letter-tile"
+                  cdkDrag
+                  (cdkDragStarted)="onDragStarted($event)"
+                >
+                  {{ letter }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
