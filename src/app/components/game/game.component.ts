@@ -13,14 +13,10 @@ import {
   CdkDragDrop,
   CdkDrag,
   CdkDropList,
-  transferArrayItem,
-  moveItemInArray,
   CdkDragStart,
   CdkDragEnter,
   CdkDragExit,
 } from '@angular/cdk/drag-drop';
-import { PUZZLES } from './puzzles';
-import { VALID_WORDS } from './valid-words';
 import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
 import { DialogPostGame } from '../dialogs/dialog-post-game/dialog-post-game.component';
@@ -48,14 +44,8 @@ import {
   LOBBY_GAME_START_COUNTDOWN_DURATION,
 } from '../../constants/game-constants';
 import { LoadingService } from '../../services/loading/loading.service';
-
-interface ValidatedWord {
-  word: string;
-  isValid: boolean;
-  startI: number;
-  startJ: number;
-  direction: 'horizontal' | 'vertical';
-}
+import { GameLogicService } from '../../services/game-logic/game-logic.service';
+import { PUZZLES } from './puzzles';
 
 @Component({
   selector: 'app-game',
@@ -77,25 +67,22 @@ export class GameComponent implements OnInit, OnDestroy {
   private touchMoveListener!: (e: TouchEvent) => void;
   private webSocketService = inject(WebSocketService);
 
-  // Add this subject for proper subscription management
   private readonly destroy$ = new Subject<void>();
   private dialogCloseSubscription: Subscription | null = null;
 
+  // Local state for the template, synced from GameLogicService
   bankLetters: string[] = [];
   grid: string[][][] = [];
   validLetterIndices: boolean[][] = [];
+
+  // Component-specific state
   condensedGrid: string[][] = [];
-  condensedGridDisplaySize: number = 10;
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
-  formedWords: ValidatedWord[] = [];
-  validWords: Set<string>;
   countdown: number = 3;
   gameSeed: number | null = null;
 
   // Grid DOM settings
-  GRID_SIZE: number = 24;
-  CONDENSED_SIZE: number = 12;
   dragPosition = DRAG_POSITION_INIT;
 
   // Timer
@@ -134,9 +121,8 @@ export class GameComponent implements OnInit, OnDestroy {
     private ngZone: NgZone,
     private gameSeedService: GameSeedService,
     private loadingService: LoadingService,
-  ) {
-    this.validWords = new Set(VALID_WORDS);
-  }
+    private gameLogicService: GameLogicService,
+  ) {}
 
   ngOnInit(): void {
     const modeFromRoute = this.route.snapshot.data['gameMode'] as
@@ -144,15 +130,10 @@ export class GameComponent implements OnInit, OnDestroy {
       | 'practice'
       | 'versus';
 
-    // Only set the gameMode from the route if it's a
-    // single-player mode. For 'versus', we trust that the LobbyComponent and
-    // the inGameGuard have already prepared the state correctly.
     if (modeFromRoute === 'daily' || modeFromRoute === 'practice') {
       this.gameStateService.updateGameState({ gameMode: modeFromRoute });
     }
 
-    // Failsafe: At this point, the gameMode should be set in the state, regardless
-    // of how we got here.
     if (!this.gameStateService.getCurrentState().gameMode) {
       console.error(
         'FATAL: GameComponent loaded without a valid gameMode. Redirecting.',
@@ -161,13 +142,8 @@ export class GameComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Generate grid IDs
     this.generateGridCellIds();
-
-    // Setup all subscriptions with proper cleanup
     this.setupSubscriptions();
-
-    // Initialize the game based on the state
     this.initializeGame();
   }
 
@@ -187,7 +163,6 @@ export class GameComponent implements OnInit, OnDestroy {
           !this.waitingForRestart
         ) {
           this.forceWin();
-          // Reset the flag
           this.gameStateService.updateGameState({ debugForceWin: false });
         }
       });
@@ -197,28 +172,49 @@ export class GameComponent implements OnInit, OnDestroy {
       .getMessages()
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => this.handleWebSocketMessage(message));
+
+    // Subscribe to game logic service state
+    this.gameLogicService.grid$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((grid) => {
+        this.grid = grid;
+      });
+
+    this.gameLogicService.bankLetters$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((letters) => {
+        this.bankLetters = letters;
+      });
+
+    this.gameLogicService.validLetterIndices$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((indices) => {
+        this.validLetterIndices = indices;
+      });
+
+    // Subscribe to win events from the game logic service
+    this.gameLogicService.winSubject
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((condensedGrid) => {
+        this.handleWin(condensedGrid);
+      });
   }
 
   private initializeGame(): void {
-    // This switch statement is now reliable for all cases.
     switch (this.gameState.gameMode) {
       case 'versus':
-        // This path is taken when coming from the lobby.
         this.startAfterCountDown();
         break;
 
       case 'daily':
-        // This path is taken when navigating to /daily.
         this.initializeDaily();
         break;
 
       case 'practice':
-        // This path is taken when navigating to /practice.
         this.initializePractice();
         break;
 
       default:
-        // This case should now be unreachable due to the failsafe in ngOnInit.
         console.error('FATAL: initializeGame called with an invalid gameMode.');
         this.router.navigate(['/']);
         break;
@@ -229,21 +225,18 @@ export class GameComponent implements OnInit, OnDestroy {
     const dailySeed = this.gameSeedService.getDailySeed();
     const storageSeed = localStorage.getItem('dailySeed');
 
-    // Check if it's the same daily challenge
     if (storageSeed && +storageSeed === dailySeed) {
       if (this.finishedDaily()) {
-        // Daily already completed, show post-game dialog
         const finalTime = localStorage.getItem('finalTime');
         const finalGrid = localStorage.getItem('finalGrid');
 
-        // Set the timer to the final time for some eye candy
         const currentTime = localStorage.getItem('dailyCurrentTime');
         if (currentTime) {
           this.timerStartTime = +currentTime;
         }
 
         if (finalTime && finalGrid) {
-          this.isGridReady = true; // Prevent getting stuck on a loading state
+          this.isGridReady = true;
           this.openDialog({
             time: finalTime,
             grid: JSON.parse(finalGrid),
@@ -253,10 +246,8 @@ export class GameComponent implements OnInit, OnDestroy {
             shareLink: this.generateShareLink(),
           });
         }
-        // Do not start the game
         return;
       } else {
-        // This is a daily game in progress, resume it.
         const currentTime = localStorage.getItem('dailyCurrentTime');
         if (currentTime) {
           this.timerStartTime = +currentTime;
@@ -281,32 +272,24 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   prepareGrid() {
-    // Simulate some preparation time
     setTimeout(() => {
       this.isGridReady = true;
       this.setupTouchEventHandling();
-
-      // Perform any necessary grid setup here
     }, 0);
   }
 
   ngOnDestroy(): void {
-    // Clean up all subscriptions
     this.destroy$.next();
     this.destroy$.complete();
 
-    // Clean up dialog subscription
     if (this.dialogCloseSubscription) {
       this.dialogCloseSubscription.unsubscribe();
     }
 
-    // Clear any pending win when leaving the game component
     if (this.gameState.gameMode === 'versus') {
       this.gameStateService.clearPendingWin();
     }
 
-    // It's good practice to only clear the 'in-game' part of the state here,
-    // not the whole gameSeed, as the lobby might need it.
     this.gameStateService.updateGameState({
       isInGame: false,
     });
@@ -341,27 +324,22 @@ export class GameComponent implements OnInit, OnDestroy {
             }, COUNTDOWN_FADEOUT_DELAY); //wait for the final fade out animation to finish
           }
         });
-      }, COUNTDOWN_INTERVAL); //countdown interval
+      }, COUNTDOWN_INTERVAL);
     });
   }
 
   startAfterCountDown() {
-    // The "Game starting!" overlay is now handled before this function is called.
-    // We can proceed directly to the "3..2..1.." countdown.
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
-    this.initializeGrid(); // Sets up empty grid array
-    this.initializeValidLetterIndices();
 
     if (this.gameState.gameSeed === null) {
       console.error('Cannot start puzzle, game seed is null!');
       return;
     }
 
-    this.setLettersFromPuzzle();
+    this.gameLogicService.initializeGame(this.gameState.gameSeed);
 
-    // Force re-render of letter bank to replay animation
     this.ngZone.runOutsideAngular(() => {
       setTimeout(() => {
         this.ngZone.run(() => {
@@ -407,7 +385,6 @@ export class GameComponent implements OnInit, OnDestroy {
         break;
 
       case 'gameStarted':
-        // This is received when the host starts a new game from the post-game dialog.
         if (this.isGameOver) {
           // Unsubscribe from the dialog's afterClosed event to prevent
           // the navigation logic from firing when we programmatically close it.
@@ -436,7 +413,7 @@ export class GameComponent implements OnInit, OnDestroy {
         break;
 
       case 'playerList':
-        // Handle player state updates during gameplay (e.g., after reconnection)
+        // Handle player state updates during gameplay (e.g., after external join/reconnection)
         if (this.gameState.gameMode === 'versus') {
           console.log('Updating player list during gameplay');
           this.gameStateService.updateGameState({
@@ -451,9 +428,8 @@ export class GameComponent implements OnInit, OnDestroy {
         break;
 
       case 'syncGameState':
-        // Handle full game state sync after reconnection
         if (this.gameState.gameMode === 'versus') {
-          console.log('Received game state sync after reconnection');
+          console.log('Received game state sync after local reconnection');
           this.syncGameState(
             message.time,
             message.isGameEnded,
@@ -474,7 +450,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private resetForNewGame(): void {
-    // Reset game state flags
     this.isGameOver = false;
     this.isWinner = false;
     this.isGameStarted = false;
@@ -484,7 +459,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.isPulsating = true;
     this.isCountingDown = false;
 
-    // Reset timer state
     this.timerRunning = false;
     this.timerStartTime = 0;
     this.currentTimeString = '0:00';
@@ -492,11 +466,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.timerComponent.resetTimer();
     }
 
-    // Clear game data that isn't reset by the countdown sequence
     this.condensedGrid = [];
-    this.formedWords = [];
-
-    // Hide bank letters to force re-render with animation
     this.bankLettersVisible = false;
   }
 
@@ -512,8 +482,6 @@ export class GameComponent implements OnInit, OnDestroy {
       gameEndData,
     );
 
-    // If the game has NOT ended, it IS started/active.
-    // If the game HAS ended, it is NOT started/active.
     this.isGameStarted = !gameEnded;
 
     if (
@@ -521,28 +489,20 @@ export class GameComponent implements OnInit, OnDestroy {
       this.timerComponent &&
       !gameEnded // Game is active, so sync the timer
     ) {
-      // Sync timer with server time
       const serverGameTime = serverTime;
       console.log(
         `Syncing local timer to server time: ${serverGameTime} seconds`,
       );
 
-      // Set the timer component's start time to match the server
       this.timerStartTime = serverGameTime;
-
-      // Set the timer to the server time using the public method
       this.timerComponent.setTimer(serverGameTime);
-
-      // Update the display
       this.onTimeChanged(serverGameTime);
 
-      // Ensure the timer is running if the game is active
       if (this.isGameStarted) {
         this.startTimer();
       }
     }
 
-    // Check if the game ended while we were disconnected
     if (gameEnded && gameEndData) {
       console.log('Game ended while disconnected, showing end game dialog');
       this.handleVersusGameOver(gameEndData);
@@ -551,94 +511,20 @@ export class GameComponent implements OnInit, OnDestroy {
 
   startPuzzle() {
     this.startTimer();
-    this.initializeGrid();
-    this.initializeValidLetterIndices();
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
-    this.updateFormedWords();
     this.isGameStarted = true;
   }
 
   refreshPuzzle() {
-    // Collect all letters from the grid and add them back to the bank.
-    // This must be done BEFORE the grid is re-initialized.
-    for (const row of this.grid) {
-      for (const cell of row) {
-        if (cell.length > 0) {
-          // Using push with spread operator to handle if a cell accidentally has more than one letter
-          this.bankLetters.push(...cell);
-        }
-      }
-    }
-
-    // Now that all letters are safe in the bank, reset the grid and other state.
-    this.initializeGrid();
-    this.initializeValidLetterIndices();
-    this.allDropListIds = ['letter-bank', ...this.gridCellIds];
-    this.updateFormedWords();
-    this.isGameStarted = true;
-
-    // Shuffle the now complete letter bank.
-    this.shuffleLetters();
+    this.gameLogicService.refreshPuzzle();
   }
 
-  setLettersFromPuzzle() {
-    // *** CHANGE: Always get the seed from the GameState ***
-    if (this.gameState.gameSeed !== null) {
-      this.bankLetters = [...PUZZLES[this.gameState.gameSeed].letters];
-    } else {
-      console.error('Cannot set letters, game seed is missing from state!');
-    }
-  }
-
-  shuffleLetters() {
-    for (let i = this.bankLetters.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.bankLetters[i], this.bankLetters[j]] = [
-        this.bankLetters[j],
-        this.bankLetters[i],
-      ];
-    }
-  }
-
-  resetPuzzle() {
-    this.startPuzzle();
-  }
-
-  // Validators===========================================================
-  checkWin(): boolean {
-    // Check if all letters from the bank are used
-    if (this.bankLetters.length > 0) {
-      return false;
-    }
-
-    // Check for exactly 12 instances of true within validLetterIndices
-    let trueCount = 0;
-    for (let i = 0; i < this.GRID_SIZE; i++) {
-      for (let j = 0; j < this.GRID_SIZE; j++) {
-        if (this.validLetterIndices[i][j]) {
-          trueCount++;
-        }
-      }
-    }
-    if (trueCount !== 12) {
-      return false;
-    }
-
-    // Check if all words are interconnected
-    if (!this.areWordsInterconnected()) {
-      return false;
-    }
-
-    // Check if all formed words are valid
-    if (!this.allWordsAreValid()) {
-      return false;
-    }
-
-    // If all conditions are met, it's a win
-    this.createCondensedGrid();
+  private handleWin(condensedGrid: string[][]): void {
+    this.condensedGrid = condensedGrid;
     this.stopTimer();
+    this.renderConfetti();
+
     if (this.gameState.gameMode === 'versus') {
-      // Handle async win announcement
       this.announceWinAsync();
     } else {
       if (this.gameState.gameMode === 'daily') {
@@ -658,8 +544,6 @@ export class GameComponent implements OnInit, OnDestroy {
       this.isGameStarted = false;
       this.waitingForRestart = true;
     }
-    this.renderConfetti();
-    return true;
   }
 
   private async announceWinAsync(debug?: boolean): Promise<void> {
@@ -670,8 +554,6 @@ export class GameComponent implements OnInit, OnDestroy {
       );
     } catch (error) {
       console.error('Error announcing win:', error);
-      // The error handling is already done in the WebSocketService
-      // The win will be stored and retransmitted on reconnection
     }
   }
 
@@ -696,13 +578,9 @@ export class GameComponent implements OnInit, OnDestroy {
     return window.location.origin;
   }
 
-  private allWordsAreValid(): boolean {
-    return this.formedWords.every((word) => word.isValid);
-  }
-
   forceWin() {
     this.renderConfetti();
-    this.createCondensedGrid();
+    this.condensedGrid = this.mockWin.grid; // Use mock grid for force win
     this.stopTimer();
 
     if (this.gameState.gameMode === 'versus') {
@@ -727,191 +605,8 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Helper function to check if all words are interconnected
-  private areWordsInterconnected(): boolean {
-    let visited = Array(this.GRID_SIZE)
-      .fill(null)
-      .map(() => Array(this.GRID_SIZE).fill(false));
-    let startI = -1,
-      startJ = -1;
-
-    // Find the first true cell in validLetterIndices
-    outerLoop: for (let i = 0; i < this.GRID_SIZE; i++) {
-      for (let j = 0; j < this.GRID_SIZE; j++) {
-        if (this.validLetterIndices[i][j]) {
-          startI = i;
-          startJ = j;
-          break outerLoop;
-        }
-      }
-    }
-
-    if (startI === -1 || startJ === -1) {
-      return false; // No valid letters found
-    }
-
-    // Perform DFS from the first true cell
-    this.dfs(startI, startJ, visited);
-
-    // Check if all true cells in validLetterIndices were visited
-    for (let i = 0; i < this.GRID_SIZE; i++) {
-      for (let j = 0; j < this.GRID_SIZE; j++) {
-        if (this.validLetterIndices[i][j] && !visited[i][j]) {
-          return false; // Found a true cell that wasn't visited
-        }
-      }
-    }
-
-    return true;
-  }
-
   anyTilePlaced() {
     return this.bankLetters.length < 12;
-  }
-
-  // Depth-First Search helper function
-  private dfs(i: number, j: number, visited: boolean[][]) {
-    if (
-      i < 0 ||
-      i >= this.GRID_SIZE ||
-      j < 0 ||
-      j >= this.GRID_SIZE ||
-      !this.validLetterIndices[i][j] ||
-      visited[i][j]
-    ) {
-      return;
-    }
-
-    visited[i][j] = true;
-
-    // Check all adjacent cells
-    this.dfs(i - 1, j, visited);
-    this.dfs(i + 1, j, visited);
-    this.dfs(i, j - 1, visited);
-    this.dfs(i, j + 1, visited);
-  }
-  resetValidLetterIndices() {
-    for (let i = 0; i < this.GRID_SIZE; i++) {
-      for (let j = 0; j < this.GRID_SIZE; j++) {
-        this.validLetterIndices[i][j] = false;
-      }
-    }
-  }
-
-  updateFormedWords() {
-    this.formedWords = [];
-    this.resetValidLetterIndices();
-
-    // First pass: Identify all words
-    this.identifyWords();
-
-    // Second pass: Validate words and update indices
-    this.validateWords();
-
-    // Third pass: Invalidate letters of invalid words
-    this.invalidateLettersOfInvalidWords();
-
-    this.checkWin();
-  }
-
-  identifyWords() {
-    this.identifyHorizontalWords();
-    this.identifyVerticalWords();
-  }
-
-  identifyHorizontalWords() {
-    for (let i = 0; i < this.GRID_SIZE; i++) {
-      let word = '';
-      let startJ = 0;
-      for (let j = 0; j < this.GRID_SIZE; j++) {
-        if (!this.isEmpty(this.grid[i][j])) {
-          word += this.grid[i][j][0];
-        } else {
-          this.addWordToList(word, i, startJ, 'horizontal');
-          word = '';
-          startJ = j + 1;
-        }
-      }
-      this.addWordToList(word, i, startJ, 'horizontal');
-    }
-  }
-
-  identifyVerticalWords() {
-    for (let j = 0; j < this.GRID_SIZE; j++) {
-      let word = '';
-      let startI = 0;
-      for (let i = 0; i < this.GRID_SIZE; i++) {
-        if (!this.isEmpty(this.grid[i][j])) {
-          word += this.grid[i][j][0];
-        } else {
-          this.addWordToList(word, startI, j, 'vertical');
-          word = '';
-          startI = i + 1;
-        }
-      }
-      this.addWordToList(word, startI, j, 'vertical');
-    }
-  }
-
-  addWordToList(
-    word: string,
-    startI: number,
-    startJ: number,
-    direction: 'horizontal' | 'vertical',
-  ) {
-    if (word.length >= 2) {
-      this.formedWords.push({
-        word,
-        isValid: word.length >= 3 && this.validWords.has(word.toLowerCase()),
-        startI,
-        startJ,
-        direction,
-      });
-    }
-  }
-
-  validateWords() {
-    // Reset all indices to false
-    this.resetValidLetterIndices();
-
-    // Mark valid words
-    for (const wordInfo of this.formedWords) {
-      if (wordInfo.isValid) {
-        this.markWordLetters(wordInfo, true);
-      }
-    }
-  }
-  invalidateLettersOfInvalidWords() {
-    for (const wordInfo of this.formedWords) {
-      if (!wordInfo.isValid) {
-        this.markWordLetters(wordInfo, false);
-      }
-    }
-  }
-  markWordLetters(wordInfo: ValidatedWord, isValid: boolean) {
-    const { startI, startJ, direction, word } = wordInfo;
-    for (let k = 0; k < word.length; k++) {
-      if (direction === 'horizontal') {
-        this.validLetterIndices[startI][startJ + k] = isValid;
-      } else {
-        this.validLetterIndices[startI + k][startJ] = isValid;
-      }
-    }
-  }
-
-  markInvalidLetters(
-    startI: number,
-    startJ: number,
-    direction: 'horizontal' | 'vertical',
-    length: number,
-  ) {
-    for (let k = 0; k < length; k++) {
-      if (direction === 'horizontal') {
-        this.validLetterIndices[startI][startJ + k] = false;
-      } else {
-        this.validLetterIndices[startI + k][startJ] = false;
-      }
-    }
   }
 
   // Timer===============================================================
@@ -948,8 +643,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   openDialog(data: any) {
-    // Unsubscribe from any previous dialog subscription to prevent memory leaks
-    // and unexpected navigation.
     if (this.dialogCloseSubscription) {
       this.dialogCloseSubscription.unsubscribe();
       this.dialogCloseSubscription = null;
@@ -972,17 +665,16 @@ export class GameComponent implements OnInit, OnDestroy {
     this.dialogCloseSubscription = dialogRef
       .afterClosed()
       .subscribe((result) => {
-        // This logic will now only run when the user manually interacts with the
+        // This logic only runs when the user manually interacts with the
         // dialog (e.g., clicks "Quit" or "Back to Lobby"), not when a new game
         // is started via WebSockets.
         if (!result) {
-          // User closed dialog without action
+          // User closed dialog without action (ie clicked outside) todo: remove this in favor of a close button
           if (this.gameState.gameMode === 'versus') {
             this.router.navigate(['/join/' + this.gameState.gameCode]);
           } else {
             this.router.navigate(['/']);
           }
-          // Clear pending wins when navigating away
           this.gameStateService.clearPendingWin();
         } else {
           if (result.event === 'confirm') {
@@ -999,7 +691,6 @@ export class GameComponent implements OnInit, OnDestroy {
             }
           }
           if (result.event === 'quit') {
-            // Clear pending wins when quitting
             this.gameStateService.clearPendingWin();
             this.router.navigate(['/']);
           }
@@ -1054,7 +745,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   private removeTouchEventHandling() {
-    if (this.touchMoveListener) {
+    if (this.touchMoveListener && this.gridContainer) {
       this.gridContainer.nativeElement.removeEventListener(
         'touchmove',
         this.touchMoveListener,
@@ -1062,50 +753,26 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  isEmpty(cell: string[]) {
-    return cell.length === 0;
-  }
-
   dragStarted(event: CdkDragStart) {
     const [i, j] = this.getCellCoordinates(event.source.dropContainer.id);
     if (i !== -1 && j !== -1) {
-      // Only handle drag start from grid cells, not the letter bank
-      const letter = this.grid[i][j].pop();
-      this.updateFormedWords(); // Revalidate words
-      if (letter) {
-        this.grid[i][j].push(letter); // Restore the letter
-      }
+      this.gameLogicService.handleDragStartedFromGrid(i, j);
     }
-  }
-
-  initializeGrid() {
-    if (window.innerWidth < 390) {
-      //init grid for iphone SE and other small devices
-      this.dragPosition = { x: -254, y: -247 };
-    } else {
-      this.dragPosition = { x: -246, y: -246 };
-    }
-    this.grid = Array(this.GRID_SIZE)
-      .fill(null)
-      .map(() =>
-        Array(this.GRID_SIZE)
-          .fill(null)
-          .map(() => []),
-      );
-  }
-
-  initializeValidLetterIndices() {
-    this.validLetterIndices = Array(this.GRID_SIZE)
-      .fill(null)
-      .map(() => Array(this.GRID_SIZE).fill(false));
   }
 
   generateGridCellIds() {
+    const GRID_SIZE = 24; // Keep local constant for ID generation
     this.gridCellIds = [];
-    for (let i = 0; i < this.GRID_SIZE; i++) {
-      for (let j = 0; j < this.GRID_SIZE; j++) {
+    for (let i = 0; i < GRID_SIZE; i++) {
+      for (let j = 0; j < GRID_SIZE; j++) {
         this.gridCellIds.push(`cell-${i}-${j}`);
       }
+    }
+    // Set initial drag position after IDs are generated
+    if (window.innerWidth < 390) {
+      this.dragPosition = { x: -254, y: -247 };
+    } else {
+      this.dragPosition = { x: -246, y: -246 };
     }
   }
 
@@ -1118,7 +785,7 @@ export class GameComponent implements OnInit, OnDestroy {
   canEnter = (drag: CdkDrag, drop: CdkDropList) => {
     if (drop.id === 'letter-bank') return true;
     const [i, j] = this.getCellCoordinates(drop.id);
-    return this.isEmpty(this.grid[i][j]);
+    return this.gameLogicService.canDropInCell(i, j);
   };
 
   entered(event: CdkDragEnter) {
@@ -1134,32 +801,14 @@ export class GameComponent implements OnInit, OnDestroy {
   drop(event: CdkDragDrop<string[]>) {
     const dropList = event.container.element.nativeElement;
     dropList.classList.remove('drop-list-highlight');
-
-    if (event.previousContainer === event.container) {
-      moveItemInArray(
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex,
-      );
-    } else {
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex,
-      );
-    }
-
-    this.updateFormedWords();
+    this.gameLogicService.handleDrop(event);
   }
   renderConfetti() {
     const canvas = this.renderer2.createElement('canvas');
 
-    // Set canvas dimensions to match the window size
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Set canvas style to position it correctly
     this.renderer2.setStyle(canvas, 'position', 'fixed');
     this.renderer2.setStyle(canvas, 'top', '0');
     this.renderer2.setStyle(canvas, 'left', '0');
@@ -1168,7 +817,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.renderer2.appendChild(this.elementRef.nativeElement, canvas);
 
     const myConfetti = confetti.create(canvas, {
-      resize: true, // will fit all screen sizes
+      resize: true,
     });
 
     myConfetti({
@@ -1187,56 +836,9 @@ export class GameComponent implements OnInit, OnDestroy {
       origin: { y: 0.5, x: 1 },
     });
 
-    // Add event listener to resize canvas when window is resized
     window.addEventListener('resize', () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     });
-  }
-
-  createCondensedGrid(): void {
-    let minRow = this.GRID_SIZE;
-    let minCol = this.GRID_SIZE;
-    let maxRow = 0;
-    let maxCol = 0;
-
-    // Find the boundaries of the valid letters
-    for (let i = 0; i < this.GRID_SIZE; i++) {
-      for (let j = 0; j < this.GRID_SIZE; j++) {
-        if (this.validLetterIndices[i][j]) {
-          minRow = Math.min(minRow, i);
-          minCol = Math.min(minCol, j);
-          maxRow = Math.max(maxRow, i);
-          maxCol = Math.max(maxCol, j);
-        }
-      }
-    }
-
-    // Calculate the size of the used area
-    const usedRows = maxRow - minRow + 1;
-    const usedCols = maxCol - minCol + 1;
-
-    // Calculate padding to center the grid
-    const paddingTop = Math.floor((this.CONDENSED_SIZE - usedRows) / 2);
-    const paddingLeft = Math.floor((this.CONDENSED_SIZE - usedCols) / 2);
-
-    // Create the condensed grid with the fixed size
-    this.condensedGrid = Array(this.CONDENSED_SIZE)
-      .fill(null)
-      .map(() => Array(this.CONDENSED_SIZE).fill(''));
-
-    // Fill the condensed grid with letters from valid positions, with padding
-    for (let i = minRow; i <= maxRow; i++) {
-      for (let j = minCol; j <= maxCol; j++) {
-        if (this.validLetterIndices[i][j]) {
-          //subtracting one here so that it slightly aligns top left rather than bottom right
-          const newRow = paddingTop + (i - minRow) - 1;
-          const newCol = paddingLeft + (j - minCol) - 1;
-          if (this.grid[i][j] && this.grid[i][j].length > 0) {
-            this.condensedGrid[newRow][newCol] = this.grid[i][j][0];
-          }
-        }
-      }
-    }
   }
 }
