@@ -605,10 +605,6 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  anyTilePlaced() {
-    return this.bankLetters.length < 12;
-  }
-
   // Timer===============================================================
 
   startTimer() {
