@@ -1,3 +1,4 @@
+<!-- crossrace-ng/src/app/components/game/game.component.html -->
 <div class="container game-container noselect">
   <div
     id="letter-bank"
@@ -7,7 +8,7 @@
     cdkDropListOrientation="mixed"
     [cdkDropListData]="bankLetters"
     [cdkDropListConnectedTo]="gridCellIds"
-    (cdkDropListDropped)="drop($event)"
+    (cdkDropListDropped)="onDrop($event)"
   >
     @for (letter of bankLetters; track $index) {
       @if (
@@ -47,55 +48,17 @@
 }
 
 @if (isGridReady) {
-  <div
-    #gridWrapper
-    class="grid-wrapper noselect"
-    [ngClass]="{
-      notouch: !timerRunning,
-      'counting-down': isCountingDown && !countdownEnded,
-    }"
+  <app-game-board
+    [grid]="(gameLogicService.grid$ | async)!"
+    [validLetterIndices]="(gameLogicService.validLetterIndices$ | async)!"
+    [allDropListIds]="allDropListIds"
+    [dragPosition]="dragPosition"
+    [isDisabled]="!timerRunning"
+    [isCountingDown]="isCountingDown && !countdownEnded"
+    (dropped)="onBoardDrop($event)"
+    (dragStarted)="onBoardDragStarted($event)"
   >
-    <div class="fade-out-edges m-lr-auto">
-      <div
-        #gridContainer
-        class="grid-container"
-        [cdkDragFreeDragPosition]="dragPosition"
-        cdkDrag
-        cdkDragBoundary=".grid-boundary"
-      >
-        @for (row of grid; track $index; let i = $index) {
-          <div class="grid-row noselect">
-            @for (cell of row; track $index; let j = $index) {
-              <div
-                [ngClass]="{
-                  'valid-letter pulsate-fwd': validLetterIndices[i][j],
-                }"
-                class="grid-cell noselect"
-                cdkDropList
-                [id]="'cell-' + i + '-' + j"
-                [cdkDropListData]="cell"
-                [cdkDropListConnectedTo]="allDropListIds"
-                [cdkDropListEnterPredicate]="canEnter"
-                (cdkDropListEntered)="entered($event)"
-                (cdkDropListExited)="exited($event)"
-                (cdkDropListDropped)="drop($event)"
-              >
-                @for (letter of cell; track letter) {
-                  <div
-                    class="letter-tile"
-                    cdkDrag
-                    (cdkDragStarted)="dragStarted($event)"
-                  >
-                    {{ letter }}
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        }
-      </div>
-    </div>
-  </div>
+  </app-game-board>
 }
 @if (isGridReady) {
   <div class="lower-menu fade-in m-lr-auto">

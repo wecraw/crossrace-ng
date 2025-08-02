@@ -1,0 +1,121 @@
+// crossrace-ng/src/app/components/game-board/game-board.component.scss
+@use "variables" as *;
+@use "mixins" as *;
+
+// CDK Drag and Drop Global Styles
+// These are needed here because this component's view is encapsulated.
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow:
+    0 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0 8px 10px 1px rgba(0, 0, 0, 0.14),
+    0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}
+
+.cdk-drag-animating {
+  transition: transform 150ms cubic-bezier(0, 0, 0.2, 1);
+}
+// End of CDK Styles
+
+$grid-cell-size: 36px;
+
+.grid-wrapper {
+  margin: 200px auto 0;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+  &.counting-down {
+    opacity: 0.4 !important; //controls opacity of grid background
+  }
+}
+
+.fade-out-edges {
+  padding-top: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  @include fade-out-edges;
+}
+
+.grid-container {
+  &.valid-letter {
+    .letter-tile {
+      background-color: $success-green !important;
+    }
+  }
+}
+
+.grid-row {
+  display: flex;
+}
+
+.grid-cell {
+  background-color: $white;
+
+  &.valid-letter {
+    .letter-tile {
+      background-color: $success-green !important;
+    }
+  }
+}
+
+.letter-tile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: $grid-cell-size;
+  min-height: $grid-cell-size;
+  background-color: $primary-color;
+  cursor: move;
+}
+
+//hover state for drag and drop
+.drop-list-highlight {
+  background-color: $light-gray;
+  transition: background-color 0.3s ease;
+}
+
+.pulsate-fwd {
+  -webkit-animation: pulsate-fwd 0.3s ease-in-out both;
+  animation: pulsate-fwd 0.3s ease-in-out both;
+}
+
+@-webkit-keyframes pulsate-fwd {
+  0% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+  50% {
+    -webkit-transform: scale(1.1);
+    transform: scale(1.1);
+  }
+  100% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+}
+@keyframes pulsate-fwd {
+  0% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+  50% {
+    -webkit-transform: scale(1.1);
+    transform: scale(1.1);
+  }
+  100% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+}
+
+.notouch {
+  pointer-events: none;
+}

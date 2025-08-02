@@ -1,19 +1,9 @@
+// crossrace-ng/src/app/components/game/game.component.scss
 @use "variables" as *;
 @use "mixins" as *;
 
-$grid-cell-size: 36px;
-
 .tile-wrapper {
   cursor: move;
-}
-
-.grid-wrapper {
-  margin: 200px auto 0;
-  opacity: 1;
-  transition: opacity 0.3s ease-in-out;
-  &.counting-down {
-    opacity: 0.4 !important; //controls opacity of grid background
-  }
 }
 
 .letter-bank {
@@ -55,47 +45,9 @@ $grid-cell-size: 36px;
   }
 }
 
-.grid-container {
-  &.valid-letter {
-    .letter-tile {
-      background-color: $success-green !important;
-    }
-  }
-}
-
-.grid-cell {
-  background-color: $white;
-
-  &.valid-letter {
-    .letter-tile {
-      background-color: $success-green !important;
-    }
-  }
-}
-
-.letter-tile {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: $grid-cell-size;
-  min-height: $grid-cell-size;
-  background-color: $primary-color;
-  cursor: move;
-}
-
 .grid-boundary {
   height: 1000px;
   width: 1000px;
-}
-
-.fade-out-edges {
-  padding-top: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  @include fade-out-edges;
 }
 
 .btn-outline-secondary {
@@ -105,12 +57,6 @@ $grid-cell-size: 36px;
     color: $gray-text;
     background-color: $light-gray-hover;
   }
-}
-
-//hover state for drag and drop
-.drop-list-highlight {
-  background-color: $light-gray;
-  transition: background-color 0.3s ease;
 }
 
 .play-again {
@@ -182,10 +128,6 @@ $grid-cell-size: 36px;
   }
 }
 
-.notouch {
-  pointer-events: none;
-}
-
 .fade-out {
   -webkit-animation: fade-out 0.6s cubic-bezier(0.39, 0.575, 0.565, 1) both;
   animation: fade-out 0.6s cubic-bezier(0.39, 0.575, 0.565, 1) both;
@@ -227,40 +169,6 @@ $grid-cell-size: 36px;
   }
   100% {
     opacity: 1;
-  }
-}
-
-.pulsate-fwd {
-  -webkit-animation: pulsate-fwd 0.3s ease-in-out both;
-  animation: pulsate-fwd 0.3s ease-in-out both;
-}
-
-@-webkit-keyframes pulsate-fwd {
-  0% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
-  }
-  50% {
-    -webkit-transform: scale(1.1);
-    transform: scale(1.1);
-  }
-  100% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
-  }
-}
-@keyframes pulsate-fwd {
-  0% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
-  }
-  50% {
-    -webkit-transform: scale(1.1);
-    transform: scale(1.1);
-  }
-  100% {
-    -webkit-transform: scale(1);
-    transform: scale(1);
   }
 }
 

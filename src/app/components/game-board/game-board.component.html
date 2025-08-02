@@ -1,9 +1,10 @@
-<!-- // crossrace-ng/src/app/components/game-board/game-board.component.html -->
+<!-- crossrace-ng/src/app/components/game-board/game-board.component.html -->
 <div
   #gridWrapper
   class="grid-wrapper noselect"
   [ngClass]="{
     notouch: isDisabled,
+    'counting-down': isCountingDown,
   }"
 >
   <div class="fade-out-edges m-lr-auto">

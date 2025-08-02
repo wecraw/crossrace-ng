@@ -14,14 +14,13 @@ import {
   CdkDrag,
   CdkDropList,
   CdkDragStart,
-  CdkDragEnter,
-  CdkDragExit,
 } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { TimerComponent } from '../timer/timer.component';
 import { DialogPostGame } from '../dialogs/dialog-post-game/dialog-post-game.component';
 import { MOCK_WIN } from '../../mock/mock-winner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { GameBoardComponent } from '../game-board/game-board.component';
 
 import { WebSocketService } from '../../services/websocket/websocket.service';
 import { Subject, Subscription, takeUntil } from 'rxjs';
@@ -55,16 +54,14 @@ import { PUZZLES } from './puzzles';
     CommonModule,
     TimerComponent,
     MatDialogModule,
+    GameBoardComponent,
   ],
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit, OnDestroy {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;
-  @ViewChild('gridWrapper') gridWrapper!: ElementRef;
-  @ViewChild('gridContainer') gridContainer!: ElementRef;
 
-  private touchMoveListener!: (e: TouchEvent) => void;
   private webSocketService = inject(WebSocketService);
 
   private readonly destroy$ = new Subject<void>();
@@ -121,7 +118,7 @@ export class GameComponent implements OnInit, OnDestroy {
     private ngZone: NgZone,
     private gameSeedService: GameSeedService,
     private loadingService: LoadingService,
-    private gameLogicService: GameLogicService,
+    public gameLogicService: GameLogicService,
   ) {}
 
   ngOnInit(): void {
@@ -274,7 +271,6 @@ export class GameComponent implements OnInit, OnDestroy {
   prepareGrid() {
     setTimeout(() => {
       this.isGridReady = true;
-      this.setupTouchEventHandling();
     }, 0);
   }
 
@@ -293,7 +289,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameStateService.updateGameState({
       isInGame: false,
     });
-    this.removeTouchEventHandling();
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
     }
@@ -698,36 +693,6 @@ export class GameComponent implements OnInit, OnDestroy {
     this.dialog.closeAll();
   }
 
-  private setupTouchEventHandling() {
-    //if the grid isn't ready yet, abort and try again in 100ms
-    if (!this.gridWrapper || !this.gridContainer) {
-      setTimeout(() => {
-        this.setupTouchEventHandling();
-      }, 100);
-      return;
-    }
-    const wrapper = this.gridWrapper.nativeElement;
-    const container = this.gridContainer.nativeElement;
-
-    this.touchMoveListener = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      const wrapperRect = wrapper.getBoundingClientRect();
-
-      if (
-        touch.clientX < wrapperRect.left ||
-        touch.clientX > wrapperRect.right ||
-        touch.clientY < wrapperRect.top ||
-        touch.clientY > wrapperRect.bottom
-      ) {
-        e.preventDefault();
-      }
-    };
-
-    container.addEventListener('touchmove', this.touchMoveListener, {
-      passive: false,
-    });
-  }
-
   openTutorialDialog(data: any) {
     const dialogRef = this.dialog.open(DialogTutorial, {
       data: data,
@@ -740,16 +705,7 @@ export class GameComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  private removeTouchEventHandling() {
-    if (this.touchMoveListener && this.gridContainer) {
-      this.gridContainer.nativeElement.removeEventListener(
-        'touchmove',
-        this.touchMoveListener,
-      );
-    }
-  }
-
-  dragStarted(event: CdkDragStart) {
+  onBoardDragStarted(event: CdkDragStart) {
     const [i, j] = this.getCellCoordinates(event.source.dropContainer.id);
     if (i !== -1 && j !== -1) {
       this.gameLogicService.handleDragStartedFromGrid(i, j);
@@ -778,27 +734,14 @@ export class GameComponent implements OnInit, OnDestroy {
     return [i, j];
   }
 
-  canEnter = (drag: CdkDrag, drop: CdkDropList) => {
-    if (drop.id === 'letter-bank') return true;
-    const [i, j] = this.getCellCoordinates(drop.id);
-    return this.gameLogicService.canDropInCell(i, j);
-  };
-
-  entered(event: CdkDragEnter) {
-    const dropList = event.container.element.nativeElement;
-    dropList.classList.add('drop-list-highlight');
-  }
-
-  exited(event: CdkDragExit) {
-    const dropList = event.container.element.nativeElement;
-    dropList.classList.remove('drop-list-highlight');
-  }
-
-  drop(event: CdkDragDrop<string[]>) {
-    const dropList = event.container.element.nativeElement;
-    dropList.classList.remove('drop-list-highlight');
+  onDrop(event: CdkDragDrop<string[]>) {
     this.gameLogicService.handleDrop(event);
   }
+
+  onBoardDrop(event: CdkDragDrop<string[]>) {
+    this.gameLogicService.handleDrop(event);
+  }
+
   renderConfetti() {
     const canvas = this.renderer2.createElement('canvas');
 

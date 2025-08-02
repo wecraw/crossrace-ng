@@ -10,7 +10,6 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import {
   CdkDrag,
   CdkDragDrop,
@@ -20,7 +19,7 @@ import {
   CdkDropList,
   DragDropModule,
 } from '@angular/cdk/drag-drop';
-import { GameLogicService } from '../../services/game-logic/game-logic.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-game-board',
@@ -36,6 +35,7 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
   @Input() allDropListIds: string[] = [];
   @Input() dragPosition: { x: number; y: number } = { x: 0, y: 0 };
   @Input() isDisabled: boolean = false;
+  @Input() isCountingDown: boolean = false;
 
   @Output() dropped = new EventEmitter<CdkDragDrop<string[]>>();
   @Output() dragStarted = new EventEmitter<CdkDragStart>();
@@ -45,8 +45,6 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 
   private touchMoveListener!: (e: TouchEvent) => void;
 
-  constructor(private gameLogicService: GameLogicService) {}
-
   ngAfterViewInit(): void {
     this.setupTouchEventHandling();
   }
@@ -55,7 +53,41 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
     this.removeTouchEventHandling();
   }
 
-  private setupTouchEventHandling() {
+  private isEmpty(cell: string[] | undefined): boolean {
+    return !cell || cell.length === 0;
+  }
+
+  private getCellCoordinates(id: string): [number, number] {
+    const [_, i, j] = id.split('-').map(Number);
+    return [i, j];
+  }
+
+  canEnter = (drag: CdkDrag, drop: CdkDropList): boolean => {
+    const [i, j] = this.getCellCoordinates(drop.id);
+    return this.isEmpty(this.grid[i]?.[j]);
+  };
+
+  entered(event: CdkDragEnter): void {
+    const dropList = event.container.element.nativeElement;
+    dropList.classList.add('drop-list-highlight');
+  }
+
+  exited(event: CdkDragExit): void {
+    const dropList = event.container.element.nativeElement;
+    dropList.classList.remove('drop-list-highlight');
+  }
+
+  onDrop(event: CdkDragDrop<string[]>): void {
+    const dropList = event.container.element.nativeElement;
+    dropList.classList.remove('drop-list-highlight');
+    this.dropped.emit(event);
+  }
+
+  onDragStarted(event: CdkDragStart): void {
+    this.dragStarted.emit(event);
+  }
+
+  private setupTouchEventHandling(): void {
     if (!this.gridWrapper || !this.gridContainer) {
       setTimeout(() => this.setupTouchEventHandling(), 100);
       return;
@@ -82,46 +114,12 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private removeTouchEventHandling() {
+  private removeTouchEventHandling(): void {
     if (this.touchMoveListener && this.gridContainer) {
       this.gridContainer.nativeElement.removeEventListener(
         'touchmove',
         this.touchMoveListener,
       );
     }
-  }
-
-  // Event Handlers
-  onDragStarted(event: CdkDragStart): void {
-    this.dragStarted.emit(event);
-  }
-
-  onDrop(event: CdkDragDrop<string[]>): void {
-    const dropList = event.container.element.nativeElement;
-    dropList.classList.remove('drop-list-highlight');
-    this.dropped.emit(event);
-  }
-
-  // Drag and Drop Predicates & Events
-  canEnter = (drag: CdkDrag, drop: CdkDropList): boolean => {
-    if (drop.id === 'letter-bank') return true;
-    const [i, j] = this.getCellCoordinates(drop.id);
-    return this.gameLogicService.canDropInCell(i, j);
-  };
-
-  entered(event: CdkDragEnter): void {
-    const dropList = event.container.element.nativeElement;
-    dropList.classList.add('drop-list-highlight');
-  }
-
-  exited(event: CdkDragExit): void {
-    const dropList = event.container.element.nativeElement;
-    dropList.classList.remove('drop-list-highlight');
-  }
-
-  private getCellCoordinates(id: string): [number, number] {
-    if (id === 'letter-bank') return [-1, -1];
-    const [_, i, j] = id.split('-').map(Number);
-    return [i, j];
   }
 }

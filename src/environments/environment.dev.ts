@@ -6,10 +6,10 @@ export const environment: Environment = {
 
   version: {
     number: '0.10.1',
-    buildNumber: 1754029809,
-    buildDate: '2025-08-01T06:30:09.983Z',
-    gitHash: '3095a6b',
+    buildNumber: 1754111868,
+    buildDate: '2025-08-02T05:17:48.018Z',
+    gitHash: 'ad81f1d',
     gitBranch: 'game-cleanup',
-    displayVersion: '0.10.1.1754029809 (dev)'
+    displayVersion: '0.10.1.1754111868 (dev)'
   }
 };
