@@ -1,5 +1,6 @@
 // crossrace-ng/src/app/components/game/game.component.ts
 import {
+  AfterViewInit,
   Component,
   ElementRef,
   inject,
@@ -29,7 +30,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameStateService } from '../../services/game-state/game-state.service';
 import { GameState } from '../../interfaces/game-state';
 import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
-import { GameSeedService } from '../../services/game-seed/game-seed.service';
 import { DialogPostGameMp } from '../dialogs/dialog-post-game-mp/dialog-post-game-mp.component';
 import { Player } from '../../interfaces/player';
 import {
@@ -45,9 +45,11 @@ import {
 import { LoadingService } from '../../services/loading/loading.service';
 import { GameLogicService } from '../../services/game-logic/game-logic.service';
 import { PUZZLES } from './puzzles';
+import { GameResolverData } from '../../resolvers/game.resolver';
 
 @Component({
   selector: 'app-game',
+  standalone: true,
   imports: [
     CdkDropList,
     CdkDrag,
@@ -59,7 +61,7 @@ import { PUZZLES } from './puzzles';
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
 })
-export class GameComponent implements OnInit, OnDestroy {
+export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;
 
   private webSocketService = inject(WebSocketService);
@@ -77,7 +79,6 @@ export class GameComponent implements OnInit, OnDestroy {
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
   countdown: number = 3;
-  gameSeed: number | null = null;
 
   // Grid DOM settings
   dragPosition = DRAG_POSITION_INIT;
@@ -116,32 +117,35 @@ export class GameComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private ngZone: NgZone,
-    private gameSeedService: GameSeedService,
     private loadingService: LoadingService,
     public gameLogicService: GameLogicService,
   ) {}
 
   ngOnInit(): void {
-    const modeFromRoute = this.route.snapshot.data['gameMode'] as
-      | 'daily'
-      | 'practice'
-      | 'versus';
-
-    if (modeFromRoute === 'daily' || modeFromRoute === 'practice') {
-      this.gameStateService.updateGameState({ gameMode: modeFromRoute });
-    }
-
-    if (!this.gameStateService.getCurrentState().gameMode) {
-      console.error(
-        'FATAL: GameComponent loaded without a valid gameMode. Redirecting.',
-      );
-      this.router.navigate(['/']);
-      return;
-    }
-
     this.generateGridCellIds();
     this.setupSubscriptions();
-    this.initializeGame();
+
+    const resolvedData = this.route.snapshot.data[
+      'gameData'
+    ] as GameResolverData;
+    const gameMode = this.route.snapshot.data['gameMode'];
+
+    if (resolvedData) {
+      // Practice or Daily mode: data is pre-fetched by the resolver.
+      this.timerStartTime = resolvedData.startTime;
+      this.gameLogicService.initializeGame(resolvedData.gameSeed);
+      this.startAfterCountDown();
+    } else if (gameMode === 'versus') {
+      // Versus mode: game seed is received via websocket and is already in GameState.
+      // The `inGameGuard` ensures we have the necessary state.
+      this.startAfterCountDown();
+    } else {
+      // This case covers when the resolver cancels navigation (e.g., for a finished daily).
+      // The component might still be constructed briefly before navigation is fully cancelled.
+      console.log(
+        'Game component initialized without required data. Navigation likely cancelled by resolver.',
+      );
+    }
   }
 
   private setupSubscriptions(): void {
@@ -195,73 +199,6 @@ export class GameComponent implements OnInit, OnDestroy {
       .subscribe((condensedGrid) => {
         this.handleWin(condensedGrid);
       });
-  }
-
-  private initializeGame(): void {
-    switch (this.gameState.gameMode) {
-      case 'versus':
-        this.startAfterCountDown();
-        break;
-
-      case 'daily':
-        this.initializeDaily();
-        break;
-
-      case 'practice':
-        this.initializePractice();
-        break;
-
-      default:
-        console.error('FATAL: initializeGame called with an invalid gameMode.');
-        this.router.navigate(['/']);
-        break;
-    }
-  }
-
-  private initializeDaily(): void {
-    const dailySeed = this.gameSeedService.getDailySeed();
-    const storageSeed = localStorage.getItem('dailySeed');
-
-    if (storageSeed && +storageSeed === dailySeed) {
-      if (this.finishedDaily()) {
-        const finalTime = localStorage.getItem('finalTime');
-        const finalGrid = localStorage.getItem('finalGrid');
-
-        const currentTime = localStorage.getItem('dailyCurrentTime');
-        if (currentTime) {
-          this.timerStartTime = +currentTime;
-        }
-
-        if (finalTime && finalGrid) {
-          this.isGridReady = true;
-          this.openDialog({
-            time: finalTime,
-            grid: JSON.parse(finalGrid),
-            winnerDisplayName: 'You',
-            daily: true,
-            singlePlayer: true,
-            shareLink: this.generateShareLink(),
-          });
-        }
-        return;
-      } else {
-        const currentTime = localStorage.getItem('dailyCurrentTime');
-        if (currentTime) {
-          this.timerStartTime = +currentTime;
-        }
-      }
-    }
-
-    this.gameStateService.updateGameState({ gameSeed: dailySeed });
-    this.startAfterCountDown();
-    return;
-  }
-
-  private initializePractice(): void {
-    this.gameStateService.updateGameState({
-      gameSeed: this.getRandomPuzzleSeed(),
-    });
-    this.startAfterCountDown();
   }
 
   ngAfterViewInit() {
@@ -328,12 +265,22 @@ export class GameComponent implements OnInit, OnDestroy {
     this.isCountingDown = true;
     this.waitingForRestart = false;
 
-    if (this.gameState.gameSeed === null) {
+    if (
+      this.gameState.gameSeed === null &&
+      this.gameState.gameMode !== 'versus'
+    ) {
       console.error('Cannot start puzzle, game seed is null!');
       return;
     }
 
-    this.gameLogicService.initializeGame(this.gameState.gameSeed);
+    // For single-player, gameLogicService is already initialized in ngOnInit
+    // For versus, we need to initialize it with the seed from the game state
+    if (
+      this.gameState.gameMode === 'versus' &&
+      this.gameState.gameSeed !== null
+    ) {
+      this.gameLogicService.initializeGame(this.gameState.gameSeed);
+    }
 
     this.ngZone.runOutsideAngular(() => {
       setTimeout(() => {
@@ -629,10 +576,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
   // DOM Helpers=========================================================
 
-  finishedDaily() {
-    return localStorage.getItem('finishedDaily') === 'true';
-  }
-
   openDialog(data: any) {
     if (this.dialogCloseSubscription) {
       this.dialogCloseSubscription.unsubscribe();
@@ -705,7 +648,7 @@ export class GameComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  onBoardDragStarted(event: CdkDragStart) {
+  onDragStarted(event: CdkDragStart) {
     const [i, j] = this.getCellCoordinates(event.source.dropContainer.id);
     if (i !== -1 && j !== -1) {
       this.gameLogicService.handleDragStartedFromGrid(i, j);
@@ -734,11 +677,7 @@ export class GameComponent implements OnInit, OnDestroy {
     return [i, j];
   }
 
-  onDrop(event: CdkDragDrop<string[]>) {
-    this.gameLogicService.handleDrop(event);
-  }
-
-  onBoardDrop(event: CdkDragDrop<string[]>) {
+  drop(event: CdkDragDrop<string[]>) {
     this.gameLogicService.handleDrop(event);
   }
 

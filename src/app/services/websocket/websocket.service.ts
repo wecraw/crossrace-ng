@@ -226,7 +226,7 @@ export class WebSocketService implements OnDestroy {
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           this.socket.off('connect', resolve);
-          reject('Connection timeout while waiting to emit event.');
+          reject('Connection timeout (1)');
         }, 15000);
         this.socket.once('connect', () => {
           clearTimeout(timeout);

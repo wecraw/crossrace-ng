@@ -8,7 +8,7 @@
     cdkDropListOrientation="mixed"
     [cdkDropListData]="bankLetters"
     [cdkDropListConnectedTo]="gridCellIds"
-    (cdkDropListDropped)="onDrop($event)"
+    (cdkDropListDropped)="drop($event)"
   >
     @for (letter of bankLetters; track $index) {
       @if (
@@ -55,8 +55,8 @@
     [dragPosition]="dragPosition"
     [isDisabled]="!timerRunning"
     [isCountingDown]="isCountingDown && !countdownEnded"
-    (dropped)="onBoardDrop($event)"
-    (dragStarted)="onBoardDragStarted($event)"
+    (dropped)="drop($event)"
+    (dragStarted)="onDragStarted($event)"
   >
   </app-game-board>
 }
