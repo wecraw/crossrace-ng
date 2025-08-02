@@ -58,7 +58,6 @@ export class GameLogicService {
    */
   public initializeGame(seed: number): void {
     this.setLettersFromPuzzle(seed);
-    this.shuffleLetters();
     this.initializeGrid();
     this.initializeValidLetterIndices();
     this.updateFormedWords(); // Initial validation (empty board)
