@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/lobby/lobby.component.ts
 import {
   Component,
   OnInit,
@@ -103,9 +104,18 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
 
-    // If we are not in a game, it means the user is leaving the lobby (e.g. back button).
-    // In this case, we should disconnect them from the server and clear the game state.
-    if (!this.gameState.isInGame) {
+    const currentState = this.gameStateService.getCurrentState();
+
+    // If we are not in a game (i.e., we're in the lobby) and the user is navigating
+    // away to a route that isn't a single-player game, we assume they are leaving
+    // the multiplayer flow. In this case, disconnect from the server and clear the
+    // multiplayer state to prevent issues. This avoids a race condition where this
+    // OnDestroy hook clears state that the next route's resolver has just set up.
+    if (
+      !currentState.isInGame &&
+      currentState.gameMode !== 'daily' &&
+      currentState.gameMode !== 'practice'
+    ) {
       this.webSocketService.disconnect();
       this.gameStateService.clearGameState();
     }
