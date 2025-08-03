@@ -1,5 +1,5 @@
-<!-- // crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.html -->
 <div class="wrapper">
+  <i class="fa-solid fa-xmark close-icon" (click)="quit()"></i>
   <div class="d-flex flex-column h-100">
     <div class="row m-lr-auto" style="margin-bottom: 5px">
       <div class="player-card">
@@ -59,37 +59,18 @@
       </div>
     </div>
 
+    <div class="countdown-timer">
+      Next game starts in: {{ countdownDisplay }}
+    </div>
+
     <div class="action-buttons d-flex">
       <button
-        class="btn btn-outline-secondary quit"
-        (click)="quit()"
-        [disabled]="isNextGameCountdown || isStartingGame"
+        class="btn btn-success ready-button"
+        (click)="readyUp()"
+        [disabled]="isLocalPlayerReady"
       >
-        Quit
+        {{ readyButtonText }}
       </button>
-
-      <!-- Host Button -->
-      @if (isHost) {
-        <button
-          class="btn btn-primary start-button"
-          (click)="startNextGame()"
-          [disabled]="isNextGameCountdown || isStartingGame"
-        >
-          <span class="button-content">
-            {{ isStartingGame ? "Starting" : "Start game" }}
-            @if (isNextGameCountdown || isStartingGame) {
-              <div class="spinner"></div>
-            }
-          </span>
-        </button>
-      }
-
-      <!-- Non-Host Button -->
-      @if (!isHost) {
-        <button class="btn btn-primary start-button" disabled>
-          Waiting for host
-        </button>
-      }
     </div>
   </div>
 </div>

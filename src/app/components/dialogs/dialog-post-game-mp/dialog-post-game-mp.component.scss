@@ -1,8 +1,22 @@
-// crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.scss
 @use "variables" as *;
 @use "mixins" as *;
 
 $grid-cell-size: 32px;
+
+.close-icon {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  cursor: pointer;
+  font-size: 24px;
+  color: $gray-icon;
+  z-index: 10;
+  padding: $spacing-xs;
+
+  &:hover {
+    color: $dark-gray;
+  }
+}
 
 .player-card {
   display: flex;
@@ -92,23 +106,25 @@ h2 {
   right: -185px;
 }
 
+.countdown-timer {
+  width: 100%;
+  text-align: center;
+  font-size: $font-size-l;
+  font-weight: 500;
+  color: $gray-text;
+  margin-bottom: $spacing-xs;
+}
+
 .action-buttons {
   align-self: flex-end;
   margin-top: auto;
   width: 100%;
 
-  button {
-    min-width: 75px;
+  .ready-button {
+    width: 100%;
+    min-height: 48px;
+    font-size: $font-size-xl;
   }
-
-  .start-button {
-    min-width: 180px;
-    transition: opacity 300ms ease-in-out;
-  }
-}
-
-.quit {
-  margin-right: auto;
 }
 
 .fade-out-edges {
@@ -183,7 +199,7 @@ h2 {
 }
 
 .btn:disabled {
-  opacity: 0.25;
+  opacity: 0.65;
 }
 
 .letter-tile.highlighted {

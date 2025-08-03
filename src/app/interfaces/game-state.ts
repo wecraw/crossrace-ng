@@ -11,6 +11,7 @@ export interface GameState {
   gameMode: 'versus' | 'daily' | 'practice' | null;
   // Add win state for handling disconnected wins
   currentGameTime?: number; // Current game time for synchronization
+  lastGameEndTimestamp?: Date | null; // Timestamp of the last game end for countdown to next game
   pendingWin: {
     playerId: string;
     condensedGrid: string[][];

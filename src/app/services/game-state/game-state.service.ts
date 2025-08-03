@@ -11,6 +11,7 @@ const initialState: GameState = {
   gameSeed: null,
   gameMode: null,
   pendingWin: null,
+  lastGameEndTimestamp: null,
 };
 
 const PLAYER_ID_STORAGE_KEY = 'crossrace_player_id';

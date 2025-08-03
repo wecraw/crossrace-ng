@@ -156,6 +156,12 @@ export class WebSocketService implements OnDestroy {
     });
 
     this.socket.on('message', (data: { type: string; [key: string]: any }) => {
+      // Update game state with the last game end timestamp when a game ends
+      if (data.type === 'gameEnded' && data['lastGameEndTimestamp']) {
+        this.gameStateService.updateGameState({
+          lastGameEndTimestamp: data['lastGameEndTimestamp'],
+        });
+      }
       this.messageSubject.next(data);
 
       // Clear pending wins when the game ends
@@ -300,6 +306,7 @@ export class WebSocketService implements OnDestroy {
         gameMode: 'versus',
         currentGameTime: response.currentGameTime,
         isInGame: response.isGameActive,
+        lastGameEndTimestamp: response.lastGameEndTimestamp,
       });
 
       // Handle game state sync
@@ -319,6 +326,14 @@ export class WebSocketService implements OnDestroy {
 
   startGame(gameCode: string): void {
     this.socket.emit('startGame', { gameCode });
+  }
+
+  playerReady(gameCode: string): Promise<any> {
+    const playerId = this.gameStateService.getCurrentState().localPlayerId;
+    if (!playerId) {
+      return Promise.reject('Cannot ready up: local player ID not found.');
+    }
+    return this.emitWithAck('playerReady', { gameCode, playerId });
   }
 
   sendPostGameCellClick(gameCode: string, row: number, col: number): void {

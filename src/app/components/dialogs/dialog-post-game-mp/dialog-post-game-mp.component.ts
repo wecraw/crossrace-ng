@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.ts
 import {
   Component,
   inject,
@@ -53,11 +52,13 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   isCopied: boolean = false;
   currentView: 'chessGrid' | 'leaderboard' = 'chessGrid';
 
-  // New properties for next game logic
+  // Game state and ready-up logic
   gameState!: GameState;
-  isHost: boolean = false;
-  isStartingGame: boolean = false;
-  isNextGameCountdown: boolean = true;
+  isLocalPlayerReady = false;
+  readyPlayersCount = 0;
+  totalPlayersCount = 0;
+  countdownDisplay: string = '30s';
+  private countdownInterval: any;
   private readonly destroy$ = new Subject<void>();
 
   // Word highlighting properties
@@ -73,7 +74,6 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
 
   // Property for exclamation animation
   exclamationCell: { row: number; col: number } | null = null;
-  // Property for exclamation animations
   exclamations: {
     id: number;
     row: number;
@@ -116,35 +116,38 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
 
     this.words = this.parseWordsFromGrid(this.data.grid);
 
-    // Subscribe to game state to react to host changes
+    // Subscribe to game state to react to player changes
     this.gameStateService
       .getGameState()
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
-        console.log('Game state updated:', state);
         this.gameState = state;
-        this.isHost = state.isHost;
-        this.cdr.detectChanges(); // Update UI if host status changes
+        if (state.players) {
+          this.updateReadyCounts(state.players);
+        }
+        // If the timestamp is already in the state when the dialog opens, start the timer
+        if (state.lastGameEndTimestamp && !this.countdownInterval) {
+          this.startCountdownTimer(state.lastGameEndTimestamp);
+        }
+        this.cdr.detectChanges();
       });
 
-    // Subscribe to WebSocket messages for cell clicks
+    // Subscribe to WebSocket messages
     this.webSocketService
       .getMessages()
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => {
         if (message.type === 'postGameCellClicked') {
-          // Trigger the exclamation animation with the sender's color
           this.triggerExclamation(message.row, message.col, message.color);
-          // Trigger the word highlighting and pulsation animation
           this.highlightWordAt(message.row, message.col);
         }
+        if (message.type === 'gameEnded' && message.lastGameEndTimestamp) {
+          this.startCountdownTimer(message.lastGameEndTimestamp);
+        }
+        if (message.type === 'playerList') {
+          this.updateReadyCounts(message.players);
+        }
       });
-
-    // 5-second countdown before host can start the next game
-    setTimeout(() => {
-      this.isNextGameCountdown = false;
-      this.cdr.detectChanges();
-    }, 5000);
   }
 
   ngOnDestroy() {
@@ -152,6 +155,9 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     this.destroy$.complete();
     if (this.exclamationTimeout) {
       clearTimeout(this.exclamationTimeout);
+    }
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
     }
   }
 
@@ -166,14 +172,58 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   }
 
   quit() {
+    this.webSocketService.disconnect();
     this.dialogRef.close({ event: 'quit' });
   }
 
-  startNextGame(): void {
-    if (this.isHost && this.gameState.gameCode) {
-      this.isStartingGame = true;
-      this.webSocketService.startGame(this.gameState.gameCode);
+  readyUp(): void {
+    if (this.gameState.gameCode) {
+      this.isLocalPlayerReady = true; // Optimistic update
+      this.webSocketService.playerReady(this.gameState.gameCode);
     }
+  }
+
+  get readyButtonText(): string {
+    if (this.isLocalPlayerReady) {
+      return 'Ready!';
+    }
+    return `Ready Up (${this.readyPlayersCount}/${this.totalPlayersCount})`;
+  }
+
+  private updateReadyCounts(players: Player[]): void {
+    const connectedPlayers = players.filter((p) => !p.disconnected);
+    this.totalPlayersCount = connectedPlayers.length;
+    this.readyPlayersCount = connectedPlayers.filter((p) => p.ready).length;
+
+    const self = players.find((p) => p.id === this.gameState.localPlayerId);
+    if (self) {
+      this.isLocalPlayerReady = !!self.ready;
+    }
+    this.cdr.detectChanges();
+  }
+
+  private startCountdownTimer(timestamp: string | Date): void {
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+
+    const AUTO_START_SECONDS = 30;
+    const serverEndTime = new Date(timestamp).getTime();
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - serverEndTime) / 1000);
+      const remaining = AUTO_START_SECONDS - elapsedSeconds;
+
+      if (remaining <= 0) {
+        this.countdownDisplay = '0s';
+        if (this.countdownInterval) clearInterval(this.countdownInterval);
+      } else {
+        this.countdownDisplay = `${remaining}s`;
+      }
+      this.cdr.detectChanges();
+    };
+
+    updateCountdown(); // Run immediately
+    this.countdownInterval = setInterval(updateCountdown, 1000);
   }
 
   private parseWordsFromGrid(grid: string[][]): Word[] {

@@ -41,4 +41,5 @@ export interface JoinGameResponse extends AckResponse {
   gameState?: string;
   currentGameTime?: number;
   isGameActive?: boolean;
+  lastGameEndTimestamp?: Date;
 }

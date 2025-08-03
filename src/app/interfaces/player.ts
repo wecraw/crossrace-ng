@@ -8,4 +8,5 @@ export interface Player {
   playerEmoji: string;
   winCount: number;
   disconnected?: boolean;
+  ready?: boolean;
 }

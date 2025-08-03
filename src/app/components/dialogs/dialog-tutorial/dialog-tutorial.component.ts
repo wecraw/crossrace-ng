@@ -61,21 +61,21 @@ const grids = [
 const descriptions = [
   'Race to use all 12 letters to form interconnected words!',
   "Words must be 3 letters or longer, 2 letter words don't count!",
-  'If you need more space, just drag the canvas around!',
+  'If you need more space, just drag the baord around!',
 ];
 
 const descriptionsVersus = [
   'Race to use all 12 letters to form interconnected words. The first player to finish wins!',
   "Words must be 3 letters or longer, 2 letter words don't count!",
-  'If you need more space, just drag the canvas around!',
+  'If you need more space, just drag the board around!',
 ];
 
 @Component({
-    selector: 'dialog',
-    templateUrl: 'dialog-tutorial.component.html',
-    styleUrls: ['./dialog-tutorial.component.scss'],
-    imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
-    changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'dialog',
+  templateUrl: 'dialog-tutorial.component.html',
+  styleUrls: ['./dialog-tutorial.component.scss'],
+  imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DialogTutorial implements OnInit, AfterViewInit {
   isAnimationFinished: boolean = false;
