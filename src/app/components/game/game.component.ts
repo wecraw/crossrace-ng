@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/game/game.component.ts
 import {
   AfterViewInit,
   Component,
@@ -109,6 +108,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   isGridReady: boolean = false;
   timerStartTime: number = 0;
   bankLettersVisible = false;
+  private initialServerTime: number | null = null;
 
   constructor(
     private renderer2: Renderer2,
@@ -260,10 +260,15 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  startAfterCountDown() {
+  startAfterCountDown(initialTime?: number) {
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
+
+    // Store the initial time if provided for the sync flow
+    if (initialTime !== undefined) {
+      this.initialServerTime = initialTime;
+    }
 
     if (
       this.gameState.gameSeed === null &&
@@ -328,29 +333,11 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
       case 'gameStarted':
         if (this.isGameOver) {
-          // Unsubscribe from the dialog's afterClosed event to prevent
-          // the navigation logic from firing when we programmatically close it.
-          if (this.dialogCloseSubscription) {
-            this.dialogCloseSubscription.unsubscribe();
-            this.dialogCloseSubscription = null;
-          }
-
-          this.closeDialog();
-
+          // Update the seed from the message, then start the round
           this.gameStateService.updateGameState({
             gameSeed: message.gameSeed,
-            isInGame: true,
           });
-
-          // Show "Game starting!" for 2 seconds, and wait for it to finish.
-          await this.loadingService.showAndHide({
-            message: 'Game starting!',
-            duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
-          });
-
-          // Only after the message is gone, reset the game state and start the "3..2..1.." countdown.
-          this.resetForNewGame();
-          this.startAfterCountDown();
+          await this.startNewRound();
         }
         break;
 
@@ -372,7 +359,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       case 'syncGameState':
         if (this.gameState.gameMode === 'versus') {
           console.log('Received game state sync after local reconnection');
-          this.syncGameState(
+          await this.syncGameState(
             message.time,
             message.isGameEnded,
             message.gameEndData,
@@ -389,6 +376,31 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
         break;
     }
+  }
+
+  private async startNewRound(initialTime?: number): Promise<void> {
+    // Unsubscribe from the dialog's afterClosed event to prevent
+    // the navigation logic from firing when we programmatically close it.
+    if (this.dialogCloseSubscription) {
+      this.dialogCloseSubscription.unsubscribe();
+      this.dialogCloseSubscription = null;
+    }
+
+    this.closeDialog();
+
+    this.gameStateService.updateGameState({
+      isInGame: true,
+    });
+
+    // Show "Game starting!" for 2 seconds, and wait for it to finish.
+    await this.loadingService.showAndHide({
+      message: 'Game starting!',
+      duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
+    });
+
+    // Only after the message is gone, reset the game state and start the "3..2..1.." countdown.
+    this.resetForNewGame();
+    this.startAfterCountDown(initialTime);
   }
 
   private resetForNewGame(): void {
@@ -410,13 +422,31 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.condensedGrid = [];
     this.bankLettersVisible = false;
+    this.initialServerTime = null;
   }
 
-  private syncGameState(
+  private syncTimer(serverTime: number): void {
+    if (serverTime === undefined || !this.timerComponent) return;
+
+    const serverGameTime = serverTime;
+    console.log(
+      `Syncing local timer to server time: ${serverGameTime} seconds`,
+    );
+
+    this.timerStartTime = serverGameTime;
+    this.timerComponent.setTimer(serverGameTime);
+    this.onTimeChanged(serverGameTime);
+
+    if (this.isGameStarted) {
+      this.startTimer();
+    }
+  }
+
+  private async syncGameState(
     serverTime: number,
     gameEnded: boolean,
     gameEndData: any,
-  ): void {
+  ): Promise<void> {
     console.log(
       'Syncing game state on connection:',
       serverTime,
@@ -424,34 +454,38 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       gameEndData,
     );
 
-    this.isGameStarted = !gameEnded;
-
-    if (
-      serverTime !== undefined &&
-      this.timerComponent &&
-      !gameEnded // Game is active, so sync the timer
-    ) {
-      const serverGameTime = serverTime;
+    // Case 1: Player was on post-game screen, but a new game has started.
+    if (this.isGameOver && !gameEnded) {
       console.log(
-        `Syncing local timer to server time: ${serverGameTime} seconds`,
+        'Reconnected to an active game from post-game screen. Starting new round.',
       );
-
-      this.timerStartTime = serverGameTime;
-      this.timerComponent.setTimer(serverGameTime);
-      this.onTimeChanged(serverGameTime);
-
-      if (this.isGameStarted) {
-        this.startTimer();
-      }
+      await this.startNewRound(serverTime); // Pass time to handle sync internally.
+      return; // The rest of the logic is handled within the start-up sequence.
     }
 
+    // Case 2: Player reconnected and found the game has now ended.
     if (gameEnded && gameEndData) {
       console.log('Game ended while disconnected, showing end game dialog');
       this.handleVersusGameOver(gameEndData);
+      return;
+    }
+
+    // Case 3: Player was already in-game and reconnected to the same active game.
+    this.isGameStarted = !gameEnded;
+    if (this.isGameStarted) {
+      this.syncTimer(serverTime);
     }
   }
 
   startPuzzle() {
+    // If we have a synced time from a reconnect, set it before starting.
+    if (this.initialServerTime !== null) {
+      console.log(`Setting timer to synced time: ${this.initialServerTime}s`);
+      this.timerComponent.setTimer(this.initialServerTime);
+      this.onTimeChanged(this.initialServerTime); // Manually update display string
+      this.initialServerTime = null; // Clear it so it's only used once
+    }
+
     this.startTimer();
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
     this.isGameStarted = true;
