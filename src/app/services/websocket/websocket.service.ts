@@ -261,10 +261,13 @@ export class WebSocketService implements OnDestroy {
   async createGame(): Promise<CreateGameResponse> {
     const response = await this.emitWithAck<CreateGameResponse>('create');
     if (response.success && response.playerId) {
-      // Tell the GameStateService to update the player ID
+      // Tell the GameStateService to update the player ID and host status
       this.gameStateService.updateGameState({
         localPlayerId: response.playerId,
         players: response.players,
+        isHost: response.players.some(
+          (p) => p.isHost && p.id === response.playerId,
+        ),
       });
     }
     return response;

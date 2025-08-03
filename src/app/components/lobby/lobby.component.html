@@ -78,7 +78,13 @@
         }"
       >
         <span class="button-content">
-          {{ isStartingGame ? "Starting" : "Start Game" }}
+          {{
+            isStartingGame
+              ? "Starting"
+              : connectedPlayers.length < 2
+                ? "Waiting for players"
+                : "Start Game"
+          }}
           @if (isStartingGame) {
             <div class="spinner"></div>
           }
