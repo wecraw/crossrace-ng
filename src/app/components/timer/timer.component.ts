@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/timer/timer.component.ts
 import {
   Component,
   OnDestroy,
@@ -35,7 +36,7 @@ import {
 })
 export class TimerComponent implements OnInit, OnDestroy, OnChanges {
   @Input() isRunning = false;
-  @Input() startTime: number = 0;
+  @Input() startTime: number = 0; // Used for setting initial time (e.g., on reconnect)
   @Output() timeChanged = new EventEmitter<number>();
   @Output() restart = new EventEmitter<String>();
 
@@ -44,7 +45,7 @@ export class TimerComponent implements OnInit, OnDestroy, OnChanges {
 
   get formattedTime(): string {
     const minutes = Math.floor(this.seconds / 60);
-    const remainingSeconds = this.seconds % 60;
+    const remainingSeconds = Math.round(this.seconds % 60);
     return `${minutes}:${this.padNumber(remainingSeconds)}`;
   }
 
@@ -59,6 +60,13 @@ export class TimerComponent implements OnInit, OnDestroy, OnChanges {
       } else {
         this.stopStopwatch();
       }
+    }
+    // Sync the timer if startTime is updated from the parent
+    if (
+      changes['startTime'] &&
+      changes['startTime'].currentValue !== this.seconds
+    ) {
+      this.setTimer(changes['startTime'].currentValue);
     }
   }
 
