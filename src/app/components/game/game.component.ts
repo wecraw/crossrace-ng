@@ -256,18 +256,14 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  startAfterCountDown() {
+  /**
+   * Triggers the full animation sequence before starting the game.
+   * If a `syncTime` is provided, it syncs the timer after animations instead of starting fresh.
+   */
+  startAfterCountDown(syncTime?: number) {
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
-
-    if (
-      this.gameState.gameSeed === null &&
-      this.gameState.gameMode !== 'versus'
-    ) {
-      console.error('Cannot start puzzle, game seed is null!');
-      return;
-    }
 
     if (
       this.gameState.gameMode === 'versus' &&
@@ -286,8 +282,28 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
     setTimeout(() => {
       this.startCountdown(() => {
-        this.startPuzzle();
+        // This is the completion handler for all animations.
         this.isCountingDown = false;
+
+        if (syncTime !== undefined) {
+          // This was a sync. The animations have just finished.
+          // The server time we received is now stale by the duration of these animations.
+          const animationDurationS =
+            (LOBBY_GAME_START_COUNTDOWN_DURATION +
+              COUNTDOWN_START_DELAY +
+              COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
+              COUNTDOWN_FADEOUT_DELAY) /
+            1000;
+
+          // The current server time is what we received plus how long we just animated.
+          const currentServerTime = syncTime + animationDurationS;
+
+          // Now sync the timer using this updated, more accurate server time.
+          this.syncTimer(currentServerTime);
+        } else {
+          // This was a fresh start, not a sync. Start the puzzle from zero.
+          this.startPuzzle();
+        }
       });
     }, COUNTDOWN_START_DELAY);
   }
@@ -365,7 +381,11 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private async startNewRound(): Promise<void> {
+  /**
+   * Resets the game state and starts a new round, including animations.
+   * If `initialServerTime` is provided, it's passed to the animation sequence for later syncing.
+   */
+  private async startNewRound(initialServerTime?: number): Promise<void> {
     if (this.dialogCloseSubscription) {
       this.dialogCloseSubscription.unsubscribe();
       this.dialogCloseSubscription = null;
@@ -379,7 +399,8 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     this.resetForNewGame();
-    this.startAfterCountDown();
+    // Pass the sync time to the countdown sequence
+    this.startAfterCountDown(initialServerTime);
   }
 
   private resetForNewGame(): void {
@@ -403,10 +424,17 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     this.bankLettersVisible = false;
   }
 
+  /**
+   * Calculates the correct gameplay time from the server's raw time and syncs the timer.
+   * This is only called for in-progress games.
+   */
   private syncTimer(serverTime: number): void {
     if (serverTime === undefined) return;
+    this.isGameStarted = true; // Mark game as started since we are syncing a timer
+    this.isCountingDown = false; // Ensure no animations are playing
 
-    // This is the total duration of animations from game creation to gameplay start.
+    // The server provides raw elapsed time. The client-side gameplay time is that
+    // value minus the total duration of the startup animations.
     const totalOffsetMs =
       LOBBY_GAME_START_COUNTDOWN_DURATION +
       COUNTDOWN_START_DELAY +
@@ -414,13 +442,11 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       COUNTDOWN_FADEOUT_DELAY;
     const animationOffsetS = totalOffsetMs / 1000;
 
-    // The gameplay time is the raw server time minus the animation delays.
     const gameplayTime = Math.max(0, serverTime - animationOffsetS);
     console.log(
       `Syncing timer. Server time: ${serverTime}s, Gameplay time: ${gameplayTime}s`,
     );
 
-    // Set the start time for the timer component and start it.
     this.timerStartTime = gameplayTime;
     this.onTimeChanged(gameplayTime); // Update display immediately
     this.startTimer();
@@ -438,34 +464,38 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       gameEndData,
     );
 
-    // Stop all animations if we're syncing.
-    this.isCountingDown = false;
+    this.isCountingDown = false; // Stop any existing countdowns immediately.
 
+    // Case 1: Player was on post-game, new game started. They need the full animation sequence.
     if (this.isGameOver && !gameEnded) {
-      console.log('Reconnected to an active game from post-game screen.');
-      await this.startNewRound(); // This will handle its own animations
-      this.syncTimer(serverTime); // Sync time after starting the new round process
+      console.log(
+        'Reconnected to an active game from post-game screen. Starting new round.',
+      );
+      await this.startNewRound(serverTime);
       return;
     }
 
+    // Case 2: Game ended while away. Show post-game dialog.
     if (gameEnded && gameEndData) {
       console.log('Game ended while disconnected, showing end game dialog');
       this.handleVersusGameOver(gameEndData);
       return;
     }
 
+    // Case 3: Player was in-game and reconnected. No animations needed. Sync immediately.
     this.isGameStarted = !gameEnded;
     if (this.isGameStarted) {
       this.syncTimer(serverTime);
     }
   }
 
+  /**
+   * Starts the puzzle for a fresh game (not a reconnect/sync).
+   */
   startPuzzle() {
     this.isGameStarted = true;
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
-    // This is called at the end of animations, so we simply start the timer.
-    // For a fresh game, `timerStartTime` is 0.
-    // For a resumed game, `timerStartTime` was set by the resolver.
+    this.timerStartTime = 0; // A fresh start is always from 0.
     this.startTimer();
   }
 

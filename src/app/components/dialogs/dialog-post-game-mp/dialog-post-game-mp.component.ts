@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.ts
 import {
   Component,
   inject,
@@ -24,6 +25,13 @@ import { LeaderboardComponent } from '../../leaderboard/leaderboard.component';
 import { GameStateService } from '../../../services/game-state/game-state.service';
 import { GameState } from '../../../interfaces/game-state';
 import { WebSocketService } from '../../../services/websocket/websocket.service';
+import {
+  COUNTDOWN_FADEOUT_DELAY,
+  COUNTDOWN_INITIAL_VALUE,
+  COUNTDOWN_INTERVAL,
+  COUNTDOWN_START_DELAY,
+  LOBBY_GAME_START_COUNTDOWN_DURATION,
+} from '../../../constants/game-constants';
 
 interface Word {
   text: string;
@@ -51,6 +59,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   isShareSupported: boolean = false;
   isCopied: boolean = false;
   currentView: 'chessGrid' | 'leaderboard' = 'chessGrid';
+  displayTime: string = '';
 
   // Game state and ready-up logic
   gameState!: GameState;
@@ -107,6 +116,8 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   readonly dialogRef = inject(MatDialogRef<DialogPostGameMp>);
 
   ngOnInit() {
+    this.adjustWinTime();
+
     const displayGridSize = 10;
     if (this.data.grid) {
       this.displayGrid = this.data.grid
@@ -148,6 +159,34 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
           this.updateReadyCounts(message.players);
         }
       });
+  }
+
+  private adjustWinTime(): void {
+    // For single-player games, the time is already correct.
+    if (this.data.singlePlayer) {
+      this.displayTime = this.data.time;
+      return;
+    }
+
+    // For multiplayer games, subtract the animation delay from the raw server time.
+    const totalOffsetMs =
+      LOBBY_GAME_START_COUNTDOWN_DURATION +
+      COUNTDOWN_START_DELAY +
+      COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
+      COUNTDOWN_FADEOUT_DELAY;
+    const animationOffsetS = totalOffsetMs / 1000;
+
+    // Parse the "M:SS" string from the server into seconds.
+    const timeParts = this.data.time.split(':').map(Number);
+    const totalSeconds = timeParts[0] * 60 + timeParts[1];
+
+    // Calculate the adjusted time from the player's perspective.
+    const adjustedSeconds = Math.max(0, totalSeconds - animationOffsetS);
+
+    // Format back into a "M:SS" string for display.
+    const minutes = Math.floor(adjustedSeconds / 60);
+    const seconds = Math.round(adjustedSeconds % 60);
+    this.displayTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
   ngOnDestroy() {

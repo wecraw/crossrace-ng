@@ -1,3 +1,4 @@
+<!-- crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.html -->
 <div class="wrapper">
   <i class="fa-solid fa-xmark close-icon" (click)="quit()"></i>
   <div class="d-flex flex-column h-100">
@@ -18,7 +19,7 @@
 
     <div class="content-container" [@slideContent]="currentView">
       <div class="time m-lr-auto">
-        {{ data.time }}
+        {{ displayTime }}
       </div>
       <div class="chess-grid m-lr-auto fade-out-edges">
         @for (row of displayGrid; track row; let i = $index) {
