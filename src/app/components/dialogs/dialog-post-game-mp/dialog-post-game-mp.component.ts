@@ -348,15 +348,6 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     return this.exclamations.filter((e) => e.row === row && e.col === col);
   }
 
-  private getRandomColor(): string {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-
   private triggerExclamation(row: number, col: number, color: string): void {
     const newId = this.nextExclamationId++;
     this.exclamations.push({
@@ -439,8 +430,8 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     const localPlayer = this.gameState.players.find(
       (p: Player) => p.id === this.gameState.localPlayerId,
     );
-    // Fallback to random color if player not found (should not happen).
-    const color = localPlayer ? localPlayer.playerColor : this.getRandomColor();
+    // Fallback to red if player not found (should not happen).
+    const color = localPlayer ? localPlayer.playerColor : '#B50000';
     this.triggerExclamation(row, col, color);
     this.highlightWordAt(row, col);
 
