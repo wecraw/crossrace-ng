@@ -46,57 +46,40 @@
       </div>
     </div>
   </div>
+}
 
-  <div class="player-card fade-in">
-    <div
-      [ngStyle]="{ 'background-color': player.playerColor }"
-      class="player-avatar"
-      style="cursor: pointer"
-      (click)="editEmoji()"
-    >
-      <div class="emoji noselect">{{ player.playerEmoji }}</div>
-    </div>
-    <div class="player-name">
-      @if (!editingName) {
-        <span>{{ player.displayName }}</span>
-        <i
-          (click)="editName()"
-          (blur)="submitName()"
-          class="fa-solid fa-pencil pencil"
-        ></i>
+<div class="player-card fade-in">
+  <div
+    [ngStyle]="{ 'background-color': player.playerColor }"
+    class="player-avatar"
+    [class.editable]="allowEdit"
+    (click)="allowEdit ? editEmoji() : null"
+  >
+    <div class="emoji noselect">{{ player.playerEmoji }}</div>
+    @if (!player.ready) {
+      <div class="ready-indicator" [ngClass]="{ ready: player.ready }">
+        <i class="fa-solid fa-check"></i>
+      </div>
+    }
+  </div>
+  <div class="player-name">
+    @if (allowEdit && editingName) {
+      <input
+        #nameInput
+        class="form-control"
+        [(ngModel)]="editingNameInput"
+        (keyup.enter)="submitName()"
+        (blur)="submitName()"
+        maxlength="14"
+      />
+    } @else {
+      <span>{{ player.displayName }}</span>
+      @if (allowEdit) {
+        <i (click)="editName()" class="fa-solid fa-pencil pencil"></i>
         <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
           (Host)
         </div>
       }
-      @if (editingName) {
-        <input
-          #nameInput
-          class="form-control"
-          [(ngModel)]="editingNameInput"
-          (keyup.enter)="submitName()"
-          (blur)="submitName()"
-          maxlength="14"
-        />
-      }
-    </div>
+    }
   </div>
-}
-
-@if (!allowEdit) {
-  <div class="player-card fade-in">
-    <div
-      [ngStyle]="{ 'background-color': player.playerColor }"
-      class="player-avatar"
-    >
-      <div class="emoji noselect">{{ player.playerEmoji }}</div>
-    </div>
-    <div class="player-name">
-      <span
-        >{{ player.displayName }}
-        <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
-          (Host)
-        </div></span
-      >
-    </div>
-  </div>
-}
+</div>

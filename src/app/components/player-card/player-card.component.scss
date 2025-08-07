@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/player-card/player-card.component.scss
 @use "variables" as *;
 
 .player-card {
@@ -33,6 +34,11 @@
   border-radius: 50%;
   background-color: $avatar-blue;
   box-shadow: inset 0 0 0 1px $black-transparent-10;
+  position: relative;
+
+  &.editable {
+    cursor: pointer;
+  }
 
   .emoji {
     font-size: 32px;
@@ -58,40 +64,6 @@
   height: 30px;
   line-height: 0;
   margin-top: 10px;
-}
-
-.shimmering-button {
-  --shimmer-color: #2d8653aa;
-  background-color: $success-green;
-  color: $white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    box-shadow:
-      0 0 3px #2d8653aa,
-      0 0 6px #2d8653aa,
-      0 0 10px #2d8653aa;
-  }
-  50% {
-    box-shadow:
-      0 0 5px #2d8653aa,
-      0 0 10px #2d8653aa,
-      0 0 15px #2d8653aa;
-  }
-  100% {
-    box-shadow:
-      0 0 3px #2d8653aa,
-      0 0 3px #2d8653aa,
-      0 0 10px #2d8653aa;
-  }
 }
 
 .crown {
@@ -163,6 +135,24 @@
   }
 }
 
+.ready-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: $success-green;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+
+  .fa-check {
+    font-size: 12px;
+    color: $white;
+  }
+}
+
 .color-picker {
   display: none;
   &.visible {
@@ -217,7 +207,6 @@
   justify-content: center;
   align-content: center;
   border: 1px solid $gray-border;
-  // border-bottom: none;
   border-top: 0;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
@@ -237,10 +226,6 @@
   position: relative;
   cursor: pointer;
   border-radius: 50%;
-
-  // &.selected {
-  //   border: 2px solid #2196f3;
-  // }
 }
 
 .emoji {
