@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/player-card/player-card.component.scss
 @use "variables" as *;
 
 .player-card {
@@ -192,11 +191,6 @@
   &:hover {
     transform: scale(1.1);
   }
-}
-
-.host-label {
-  font-size: 12px;
-  margin-top: -10px;
 }
 
 .emoji-grid {

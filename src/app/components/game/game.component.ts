@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/game/game.component.ts
 import {
   AfterViewInit,
   Component,
@@ -350,11 +349,6 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
           console.log('Updating player list during gameplay');
           this.gameStateService.updateGameState({
             players: message.players,
-            isHost:
-              message.players.find(
-                (p: Player) =>
-                  p.isHost && p.id === this.gameState.localPlayerId,
-              ) != null,
           });
         }
         break;

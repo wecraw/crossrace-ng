@@ -4,7 +4,6 @@ export interface GameState {
   gameCode: string | null;
   localPlayerId: string | null;
   players: Player[];
-  isHost: boolean;
   isInGame: boolean;
   debugForceWin?: boolean; // For testing purposes
   gameSeed: number | null;

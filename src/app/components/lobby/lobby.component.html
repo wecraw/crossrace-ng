@@ -65,46 +65,13 @@
 </div>
 
 @if (gameState.gameCode) {
-  <div class="button-row">
-    @if (gameState.isHost) {
-      <button
-        class="btn btn-lg btn-primary mt-4 flex-fixed small"
-        color="primary"
-        (click)="startGame()"
-        [disabled]="connectedPlayers.length < 2 || isStartingGame"
-        [ngClass]="{
-          'shimmering-start-button':
-            connectedPlayers.length > 1 && !isStartingGame,
-        }"
-      >
-        <span class="button-content">
-          {{
-            isStartingGame
-              ? "Starting"
-              : connectedPlayers.length < 2
-                ? "Waiting for players"
-                : "Start Game"
-          }}
-          @if (isStartingGame) {
-            <div class="spinner"></div>
-          }
-        </span>
-      </button>
-    }
-    @if (!gameState.isHost) {
-      <button
-        class="btn btn-lg btn-primary mt-4 flex-fixed small"
-        color="primary"
-        disabled
-      >
-        <span class="button-content"> Waiting for host </span>
-      </button>
-    }
+  <div class="action-buttons">
     <button
-      class="btn btn-lg btn-outline-secondary mt-4 flex-fixed small"
-      (click)="openTutorialDialog({ mode: 'versus' })"
+      class="btn btn-success ready-button shimmer"
+      (click)="readyUp()"
+      [disabled]="isLocalPlayerReady || connectedPlayers.length < 2"
     >
-      How to Play
+      {{ readyButtonText }}
     </button>
   </div>
 }

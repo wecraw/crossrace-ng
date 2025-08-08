@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/lobby/lobby.component.ts
 import {
   Component,
   OnInit,
@@ -6,7 +5,6 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   ViewChild,
-  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +19,6 @@ import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { Dialog } from '../dialogs/dialog/dialog.component';
 import { GameStateService } from '../../services/game-state/game-state.service';
-import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
 import { PlayerCardComponent } from '../player-card/player-card.component';
 import { Player } from '../../interfaces/player';
 import { DialogData } from '../../interfaces/dialog-data';
@@ -47,11 +44,9 @@ import { GameState } from '../../interfaces/game-state';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LobbyComponent implements OnInit, OnDestroy {
-  @ViewChild('nameInput') nameInputElement!: ElementRef;
   @ViewChild('copiedTooltip') copiedTooltip!: MatTooltip;
 
   gameState!: GameState;
-
   private readonly destroy$ = new Subject<void>();
 
   isShareSupported = false;
@@ -59,7 +54,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   selfPlayer: Player | undefined;
   otherPlayers: Player[] = [];
-  isStartingGame = false;
+
+  // Ready-up state
+  isLocalPlayerReady = false;
+  readyPlayersCount = 0;
+  totalPlayersCount = 0;
 
   constructor(
     private webSocketService: WebSocketService,
@@ -140,26 +139,38 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }
   }
 
-  getDisplayUrl(): string {
-    const gameShareUrl =
-      window.location.origin + '/join/' + this.gameState.gameCode;
-    const parsedUrl = new URL(gameShareUrl);
-    const hostname = parsedUrl.hostname.replace(/^www\./, '');
-    return `${hostname}${parsedUrl.pathname}`;
-  }
-
   isPlayerSelf(player: Player): boolean {
     return player.id === this.gameState.localPlayerId;
   }
 
-  startGame(): void {
-    if (this.gameState.isHost && this.gameState.gameCode) {
-      this.isStartingGame = true;
-      this.cdr.detectChanges();
-      this.webSocketService.startGame(this.gameState.gameCode);
-    } else {
-      console.error('Cannot start game: not host or no game code');
+  readyUp(): void {
+    if (this.gameState.gameCode) {
+      this.isLocalPlayerReady = true; // Optimistic update
+      this.readyPlayersCount++; // Optimistic update
+      this.webSocketService.playerReady(this.gameState.gameCode);
     }
+  }
+
+  get readyButtonText(): string {
+    if (this.connectedPlayers.length < 2) {
+      return `Waiting for players (${this.connectedPlayers.length}/2)`;
+    }
+    if (this.isLocalPlayerReady) {
+      return `Ready! (${this.readyPlayersCount}/${this.totalPlayersCount})`;
+    }
+    return `Ready Up (${this.readyPlayersCount}/${this.totalPlayersCount})`;
+  }
+
+  private updateReadyCounts(players: Player[]): void {
+    const connectedPlayers = players.filter((p) => !p.disconnected);
+    this.totalPlayersCount = connectedPlayers.length;
+    this.readyPlayersCount = connectedPlayers.filter((p) => p.ready).length;
+
+    const self = players.find((p) => p.id === this.gameState.localPlayerId);
+    if (self) {
+      this.isLocalPlayerReady = !!self.ready;
+    }
+    this.cdr.detectChanges();
   }
 
   private setupSubscriptions(): void {
@@ -169,7 +180,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       .subscribe((state) => {
         this.gameState = state;
         if (!this.gameState.gameCode) {
-          // A lobby should not exist without a game code.
           console.error('LobbyComponent loaded without a game code.');
           this.router.navigate(['/versus-menu']);
           return;
@@ -178,6 +188,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
         const connected = state.players.filter((p) => !p.disconnected);
         this.selfPlayer = connected.find((p) => this.isPlayerSelf(p));
         this.otherPlayers = connected.filter((p) => !this.isPlayerSelf(p));
+        this.updateReadyCounts(state.players);
 
         console.log('Lobby received updated game state:', state);
         this.cdr.detectChanges();
@@ -195,10 +206,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'playerList':
         this.gameStateService.updateGameState({
           players: message.players,
-          isHost:
-            message.players.find(
-              (p: Player) => p.isHost && p.id === this.gameState.localPlayerId,
-            ) != null,
         });
         break;
 
@@ -209,26 +216,20 @@ export class LobbyComponent implements OnInit, OnDestroy {
           gameMode: 'versus',
         });
 
-        // Show "Game starting!" for 2 seconds, and wait for it to finish.
         await this.loadingService.showAndHide({
           message: 'Game starting!',
           duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
         });
 
-        // Only navigate AFTER the message has been shown and hidden.
         this.router.navigate(['/versus']);
         break;
 
       case 'error':
-        this.isStartingGame = false;
         const errorMessage = message.message || '';
         console.error('Received server error:', errorMessage);
 
-        // Don't show a disruptive dialog for "start game" errors. The UI will
-        // update to show the new host when the player list is refreshed,
-        // which is better and sufficient feedback for the user.
         if (errorMessage.includes('Failed to start game')) {
-          return; // Silently ignore, do not show dialog or navigate.
+          return;
         }
 
         this.openDialog(
@@ -241,13 +242,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
         );
         break;
     }
-  }
-
-  openTutorialDialog(data: any) {
-    const dialogRef = this.dialog.open(DialogTutorial, {
-      data: data,
-      minWidth: 380,
-    });
   }
 
   closeDialog() {
@@ -269,7 +263,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      const dialogRef = this.dialog.open(Dialog, {
+      this.dialog.open(Dialog, {
         data: data,
         disableClose: true,
       });

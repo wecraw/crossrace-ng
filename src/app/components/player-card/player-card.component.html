@@ -56,8 +56,8 @@
     (click)="allowEdit ? editEmoji() : null"
   >
     <div class="emoji noselect">{{ player.playerEmoji }}</div>
-    @if (!player.ready) {
-      <div class="ready-indicator" [ngClass]="{ ready: player.ready }">
+    @if (player.ready) {
+      <div class="ready-indicator">
         <i class="fa-solid fa-check"></i>
       </div>
     }
@@ -76,9 +76,6 @@
       <span>{{ player.displayName }}</span>
       @if (allowEdit) {
         <i (click)="editName()" class="fa-solid fa-pencil pencil"></i>
-        <div class="host-label" [ngClass]="{ transparent: !player.isHost }">
-          (Host)
-        </div>
       }
     }
   </div>

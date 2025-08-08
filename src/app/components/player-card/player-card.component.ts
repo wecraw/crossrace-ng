@@ -32,7 +32,6 @@ export class PlayerCardComponent implements AfterViewChecked {
       this.emojiMartContainer &&
       !this.emojiMartContainer.nativeElement.contains(event.target)
     ) {
-      //TODO submit selections
       this.editingEmoji = false;
       this.clickOutsideEnabled = false;
     }

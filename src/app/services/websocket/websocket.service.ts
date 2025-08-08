@@ -95,10 +95,6 @@ export class WebSocketService implements OnDestroy {
       // then it's an unexpected event (server crash, network loss) and we should
       // immediately show the user we are trying to reconnect.
       if (reason !== 'io client disconnect') {
-        // Immediately clear host status from client
-        this.gameStateService.updateGameState({
-          isHost: false,
-        });
         this.connectionStatus.next('reconnecting');
         this.loadingService.show({
           message: 'Reconnecting',
@@ -267,13 +263,9 @@ export class WebSocketService implements OnDestroy {
   async createGame(): Promise<CreateGameResponse> {
     const response = await this.emitWithAck<CreateGameResponse>('create');
     if (response.success && response.playerId) {
-      // Tell the GameStateService to update the player ID and host status
       this.gameStateService.updateGameState({
         localPlayerId: response.playerId,
         players: response.players,
-        isHost: response.players.some(
-          (p) => p.isHost && p.id === response.playerId,
-        ),
       });
     }
     return response;
@@ -295,13 +287,9 @@ export class WebSocketService implements OnDestroy {
     console.log('Join game response:', response);
 
     if (response.success && response.playerId) {
-      // Tell the GameStateService to update the player ID
       this.gameStateService.updateGameState({
         localPlayerId: response.playerId,
         players: response.players,
-        isHost: response.players.some(
-          (p) => p.isHost && p.id === response.playerId,
-        ),
         gameSeed: response.gameSeed,
         gameMode: 'versus',
         currentGameTime: response.currentGameTime,
@@ -322,10 +310,6 @@ export class WebSocketService implements OnDestroy {
 
   updatePlayer(gameCode: string, playerId: string, updates: any): Promise<any> {
     return this.emitWithAck('updatePlayer', { gameCode, playerId, updates });
-  }
-
-  startGame(gameCode: string): void {
-    this.socket.emit('startGame', { gameCode });
   }
 
   playerReady(gameCode: string): Promise<any> {
@@ -390,10 +374,6 @@ export class WebSocketService implements OnDestroy {
       // need to manually show the loading spinner in this case because it's typically skipped for other clean disconnects
       // show this after a delay for debugging
       setTimeout(() => {
-        // Immediately clear host status from client
-        this.gameStateService.updateGameState({
-          isHost: false,
-        });
         this.loadingService.show({
           message: 'Reconnecting',
         });

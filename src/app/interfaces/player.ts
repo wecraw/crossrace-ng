@@ -2,7 +2,6 @@ export interface Player {
   id: string;
   connectionId?: string;
   displayName: string;
-  isHost?: boolean;
   inGame?: boolean;
   playerColor: string;
   playerEmoji: string;

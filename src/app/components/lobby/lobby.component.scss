@@ -37,37 +37,29 @@ hr {
   margin-bottom: 32px;
 }
 
-.shimmering-start-button {
-  --shimmer-color: #3f51b5aa;
-  background-color: $primary-color;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
+.shimmer {
+  --shimmer-color: #2d8653aa;
   animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
   0% {
     box-shadow:
-      0 0 5px #3f51b5aa,
-      0 0 10px #3f51b5aa,
-      0 0 15px #3f51b5aa;
+      0 0 5px #2d8653aa,
+      0 0 10px #2d8653aa,
+      0 0 15px #2d8653aa;
   }
   50% {
     box-shadow:
-      0 0 8px #3f51b5aa,
-      0 0 15px #3f51b5aa,
-      0 0 23px #3f51b5aa;
+      0 0 8px #2d8653aa,
+      0 0 15px #2d8653aa,
+      0 0 23px #2d8653aa;
   }
   100% {
     box-shadow:
-      0 0 5px #3f51b5aa,
-      0 0 10px #3f51b5aa,
-      0 0 15px #3f51b5aa;
+      0 0 5px #2d8653aa,
+      0 0 10px #2d8653aa,
+      0 0 15px #2d8653aa;
   }
 }
 
@@ -99,7 +91,6 @@ hr {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
   padding: 16px;
-  // overflow-y: auto;
   width: 100%;
   margin-bottom: 50px;
   box-sizing: border-box;
@@ -181,27 +172,28 @@ i {
 .container {
   overflow: hidden;
 }
-
-.small {
-  height: 40px;
-  line-height: 0;
-  font-size: 18px;
-  margin-left: 10px;
-  margin-right: 10px;
-}
-
-.button-row {
-  display: flex;
-  width: 100%;
+//TODO: fix this
+.action-buttons {
   position: absolute;
   bottom: 0;
-  justify-content: center;
-  margin-bottom: 15px;
-}
+  left: 0;
+  right: 0;
+  padding: $spacing-m;
+  padding-bottom: calc(
+    #{$spacing-m} + env(safe-area-inset-bottom)
+  ); // Add padding for iPhone home bar
 
-@media (min-width: 992px) {
-  .button-row {
-    top: 600px;
+  .ready-button {
+    width: 100%;
+    max-width: 400px; // Optional: constrain width on larger screens
+    margin: 0 auto;
+    min-height: 48px;
+    font-size: $font-size-xl;
+    display: block; // Ensures margin auto works
+  }
+
+  .btn:disabled {
+    opacity: 0.65;
   }
 }
 

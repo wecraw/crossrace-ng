@@ -6,7 +6,6 @@ const initialState: GameState = {
   gameCode: null,
   localPlayerId: null,
   players: [],
-  isHost: false,
   isInGame: false,
   gameSeed: null,
   gameMode: null,
