@@ -218,13 +218,14 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   readyUp(): void {
     if (this.gameState.gameCode) {
       this.isLocalPlayerReady = true; // Optimistic update
+      this.readyPlayersCount++; // Optimistic update
       this.webSocketService.playerReady(this.gameState.gameCode);
     }
   }
 
   get readyButtonText(): string {
     if (this.isLocalPlayerReady) {
-      return 'Ready!';
+      return `Ready! (${this.readyPlayersCount}/${this.totalPlayersCount})`;
     }
     return `Ready Up (${this.readyPlayersCount}/${this.totalPlayersCount})`;
   }
