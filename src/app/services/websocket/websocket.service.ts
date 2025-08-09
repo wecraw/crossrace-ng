@@ -84,17 +84,20 @@ export class WebSocketService implements OnDestroy {
   private setupSocketListeners(): void {
     // --- Socket.IO Event Listeners ---
 
-    this.socket.on('connect', () => {
+    this.socket.on('connect', async () => {
       console.log('Connected to server with socket ID:', this.socket!.id);
       this.connectionStatus.next('connected');
-      // Hide loading on successful connect/reconnect
+      this.clearReconnectionTimeout(); // Clear timeout on successful connection
+
+      // If we were in a game, attempt to rejoin.
+      // The rejoinGame function will handle not showing a new loading message.
+      await this.rejoinGame();
+
+      // Now that the rejoin attempt is complete, hide the "Reconnecting..." message.
       if (this.hideReconnectingMessage) {
         this.hideReconnectingMessage();
         this.hideReconnectingMessage = null;
       }
-      this.clearReconnectionTimeout(); // Clear timeout on successful connection
-      // If we were in a game, attempt to rejoin
-      this.rejoinGame();
     });
 
     this.socket.on('disconnect', (reason: string) => {
