@@ -4,7 +4,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { WebSocketService } from '../../services/websocket/websocket.service';
-import { LoadingService } from '../../services/loading/loading.service';
 import { Dialog } from '../dialogs/dialog/dialog.component';
 import { GameStateService } from '../../services/game-state/game-state.service';
 
