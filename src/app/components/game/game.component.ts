@@ -459,10 +459,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       gameEndData,
     );
 
-    this.isCountingDown = false; // Stop any existing countdowns immediately.
-
     // Case 1: Player was on post-game, new game started. They need the full animation sequence.
     if (this.isGameOver && !gameEnded) {
+      this.isCountingDown = false; // Stop any existing countdowns immediately.
+
       console.log(
         'Reconnected to an active game from post-game screen. Starting new round.',
       );
@@ -472,14 +472,25 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Case 2: Game ended while away. Show post-game dialog.
     if (gameEnded && gameEndData) {
+      this.isCountingDown = false; // Stop any existing countdowns immediately.
+
       console.log('Game ended while disconnected, showing end game dialog');
       this.handleVersusGameOver(gameEndData);
       return;
     }
 
     // Case 3: Player was in-game and reconnected. No animations needed. Sync immediately.
-    this.isGameStarted = !gameEnded;
-    if (this.isGameStarted) {
+    const totalAnimationDurationS =
+      (LOBBY_GAME_START_COUNTDOWN_DURATION +
+        COUNTDOWN_START_DELAY +
+        COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
+        COUNTDOWN_FADEOUT_DELAY) /
+      1000;
+
+    if (serverTime > totalAnimationDurationS) {
+      this.isCountingDown = false; // Stop any existing countdowns immediately.
+      this.isGameStarted = true;
+      console.log(serverTime, totalAnimationDurationS, this.isGameStarted);
       this.syncTimer(serverTime);
     }
   }

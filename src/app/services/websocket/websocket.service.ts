@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/services/websocket/websocket.service.ts
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -23,7 +22,7 @@ export class WebSocketService implements OnDestroy {
   private connectionStatus = new BehaviorSubject<string>('disconnected');
   private reconnectionTimeout: any = null;
   private readonly RECONNECTION_TIMEOUT_MS = 20000; // 20 seconds
-  private hideReconnectingMessage: (() => void) | null = null;
+  private hideReconnectingMessages: (() => void)[] = [];
 
   readonly dialog = inject(MatDialog);
   private loadingService = inject(LoadingService);
@@ -55,14 +54,16 @@ export class WebSocketService implements OnDestroy {
     this.disconnect();
   }
 
+  private hideAllReconnectingMessages(): void {
+    this.hideReconnectingMessages.forEach((hide) => hide());
+    this.hideReconnectingMessages = [];
+  }
+
   private startReconnectionTimeout(): void {
     this.clearReconnectionTimeout();
     this.reconnectionTimeout = setTimeout(() => {
       console.log('Reconnection timeout reached. Redirecting to home.');
-      if (this.hideReconnectingMessage) {
-        this.hideReconnectingMessage();
-        this.hideReconnectingMessage = null;
-      }
+      this.hideAllReconnectingMessages();
       this.connectionStatus.next('failed');
       this.gameStateService.clearGameState();
       this.router.navigate(['/disconnected']);
@@ -94,10 +95,7 @@ export class WebSocketService implements OnDestroy {
       await this.rejoinGame();
 
       // Now that the rejoin attempt is complete, hide the "Reconnecting..." message.
-      if (this.hideReconnectingMessage) {
-        this.hideReconnectingMessage();
-        this.hideReconnectingMessage = null;
-      }
+      this.hideAllReconnectingMessages();
     });
 
     this.socket.on('disconnect', (reason: string) => {
@@ -108,9 +106,10 @@ export class WebSocketService implements OnDestroy {
       // immediately show the user we are trying to reconnect.
       if (reason !== 'io client disconnect') {
         this.connectionStatus.next('reconnecting');
-        this.hideReconnectingMessage = this.loadingService.show({
+        const hide = this.loadingService.show({
           message: 'Reconnecting...',
         });
+        this.hideReconnectingMessages.push(hide);
         this.startReconnectionTimeout(); // Start timeout for reconnection
       } else {
         // This was a deliberate disconnect (e.g., user left the lobby or game).
@@ -125,10 +124,7 @@ export class WebSocketService implements OnDestroy {
 
       // We were kicked because a new tab took over.
       // 1. Stop any "reconnecting..." spinners.
-      if (this.hideReconnectingMessage) {
-        this.hideReconnectingMessage();
-        this.hideReconnectingMessage = null;
-      }
+      this.hideAllReconnectingMessages();
       this.connectionStatus.next('disconnected');
       this.clearReconnectionTimeout(); // Clear timeout for force disconnect
 
@@ -161,10 +157,7 @@ export class WebSocketService implements OnDestroy {
     this.socket.on('reconnect_failed', () => {
       console.error('Failed to reconnect to the server.');
       this.connectionStatus.next('failed');
-      if (this.hideReconnectingMessage) {
-        this.hideReconnectingMessage();
-        this.hideReconnectingMessage = null;
-      }
+      this.hideAllReconnectingMessages();
       this.clearReconnectionTimeout(); // Clear timeout when reconnection definitively fails
       this.router.navigate(['/disconnected']);
     });
@@ -303,7 +296,7 @@ export class WebSocketService implements OnDestroy {
     // Joining can be initiated by the user (show loader) or by a reconnect (loader already showing).
     // We only want to show our own "Joining game..." loader if the reconnect loader isn't already active.
     let hideLoader: (() => void) | null = null;
-    if (!this.hideReconnectingMessage) {
+    if (this.hideReconnectingMessages.length === 0) {
       hideLoader = this.loadingService.show({ message: 'Joining game...' });
     }
 
@@ -412,9 +405,10 @@ export class WebSocketService implements OnDestroy {
       // need to manually show the loading spinner in this case because it's typically skipped for other clean disconnects
       // show this after a delay for debugging
       setTimeout(() => {
-        this.hideReconnectingMessage = this.loadingService.show({
+        const hide = this.loadingService.show({
           message: 'Reconnecting...',
         });
+        this.hideReconnectingMessages.push(hide);
         this.startReconnectionTimeout(); // Start timeout for simulated reconnection
       }, 0);
       setTimeout(() => {
