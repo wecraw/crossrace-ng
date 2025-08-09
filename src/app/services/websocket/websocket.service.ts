@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/services/websocket/websocket.service.ts
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -22,6 +23,7 @@ export class WebSocketService implements OnDestroy {
   private connectionStatus = new BehaviorSubject<string>('disconnected');
   private reconnectionTimeout: any = null;
   private readonly RECONNECTION_TIMEOUT_MS = 20000; // 20 seconds
+  private hideReconnectingMessage: (() => void) | null = null;
 
   readonly dialog = inject(MatDialog);
   private loadingService = inject(LoadingService);
@@ -57,7 +59,10 @@ export class WebSocketService implements OnDestroy {
     this.clearReconnectionTimeout();
     this.reconnectionTimeout = setTimeout(() => {
       console.log('Reconnection timeout reached. Redirecting to home.');
-      this.loadingService.hide();
+      if (this.hideReconnectingMessage) {
+        this.hideReconnectingMessage();
+        this.hideReconnectingMessage = null;
+      }
       this.connectionStatus.next('failed');
       this.gameStateService.clearGameState();
       this.router.navigate(['/disconnected']);
@@ -82,7 +87,11 @@ export class WebSocketService implements OnDestroy {
     this.socket.on('connect', () => {
       console.log('Connected to server with socket ID:', this.socket!.id);
       this.connectionStatus.next('connected');
-      this.loadingService.hide(); // Hide loading on successful connect/reconnect
+      // Hide loading on successful connect/reconnect
+      if (this.hideReconnectingMessage) {
+        this.hideReconnectingMessage();
+        this.hideReconnectingMessage = null;
+      }
       this.clearReconnectionTimeout(); // Clear timeout on successful connection
       // If we were in a game, attempt to rejoin
       this.rejoinGame();
@@ -96,8 +105,8 @@ export class WebSocketService implements OnDestroy {
       // immediately show the user we are trying to reconnect.
       if (reason !== 'io client disconnect') {
         this.connectionStatus.next('reconnecting');
-        this.loadingService.show({
-          message: 'Reconnecting',
+        this.hideReconnectingMessage = this.loadingService.show({
+          message: 'Reconnecting...',
         });
         this.startReconnectionTimeout(); // Start timeout for reconnection
       } else {
@@ -113,7 +122,10 @@ export class WebSocketService implements OnDestroy {
 
       // We were kicked because a new tab took over.
       // 1. Stop any "reconnecting..." spinners.
-      this.loadingService.hide();
+      if (this.hideReconnectingMessage) {
+        this.hideReconnectingMessage();
+        this.hideReconnectingMessage = null;
+      }
       this.connectionStatus.next('disconnected');
       this.clearReconnectionTimeout(); // Clear timeout for force disconnect
 
@@ -146,7 +158,10 @@ export class WebSocketService implements OnDestroy {
     this.socket.on('reconnect_failed', () => {
       console.error('Failed to reconnect to the server.');
       this.connectionStatus.next('failed');
-      this.loadingService.hide();
+      if (this.hideReconnectingMessage) {
+        this.hideReconnectingMessage();
+        this.hideReconnectingMessage = null;
+      }
       this.clearReconnectionTimeout(); // Clear timeout when reconnection definitively fails
       this.router.navigate(['/disconnected']);
     });
@@ -261,51 +276,71 @@ export class WebSocketService implements OnDestroy {
   }
 
   async createGame(): Promise<CreateGameResponse> {
-    const response = await this.emitWithAck<CreateGameResponse>('create');
-    if (response.success && response.playerId) {
-      this.gameStateService.updateGameState({
-        localPlayerId: response.playerId,
-        players: response.players,
-      });
+    const hideLoader = this.loadingService.show({
+      message: 'Creating game...',
+    });
+    try {
+      const response = await this.emitWithAck<CreateGameResponse>('create');
+      if (response.success && response.playerId) {
+        this.gameStateService.updateGameState({
+          localPlayerId: response.playerId,
+          players: response.players,
+        });
+      }
+      return response;
+    } finally {
+      hideLoader();
     }
-    return response;
   }
 
   async joinGame(
     gameCode: string,
     playerId?: string | null,
   ): Promise<JoinGameResponse> {
-    // Get the playerId from GameStateService if not provided.
-    const finalPlayerId =
-      playerId || this.gameStateService.getCurrentState().localPlayerId;
-
-    const response = await this.emitWithAck<JoinGameResponse>('join', {
-      gameCode,
-      playerId: finalPlayerId,
-    });
-
-    console.log('Join game response:', response);
-
-    if (response.success && response.playerId) {
-      this.gameStateService.updateGameState({
-        localPlayerId: response.playerId,
-        players: response.players,
-        gameSeed: response.gameSeed,
-        gameMode: 'versus',
-        currentGameTime: response.currentGameTime,
-        isInGame: response.isGameActive,
-        lastGameEndTimestamp: response.lastGameEndTimestamp,
-      });
-
-      // Handle game state sync
-      this.messageSubject.next({
-        type: 'syncGameState',
-        time: response.currentGameTime,
-        isGameEnded: response.gameEnded,
-        gameEndData: response.gameEndData,
-      });
+    // Joining can be initiated by the user (show loader) or by a reconnect (loader already showing).
+    // We only want to show our own "Joining game..." loader if the reconnect loader isn't already active.
+    let hideLoader: (() => void) | null = null;
+    if (!this.hideReconnectingMessage) {
+      hideLoader = this.loadingService.show({ message: 'Joining game...' });
     }
-    return response;
+
+    try {
+      // Get the playerId from GameStateService if not provided.
+      const finalPlayerId =
+        playerId || this.gameStateService.getCurrentState().localPlayerId;
+
+      const response = await this.emitWithAck<JoinGameResponse>('join', {
+        gameCode,
+        playerId: finalPlayerId,
+      });
+
+      console.log('Join game response:', response);
+
+      if (response.success && response.playerId) {
+        this.gameStateService.updateGameState({
+          localPlayerId: response.playerId,
+          players: response.players,
+          gameSeed: response.gameSeed,
+          gameMode: 'versus',
+          currentGameTime: response.currentGameTime,
+          isInGame: response.isGameActive,
+          lastGameEndTimestamp: response.lastGameEndTimestamp,
+        });
+
+        // Handle game state sync
+        this.messageSubject.next({
+          type: 'syncGameState',
+          time: response.currentGameTime,
+          isGameEnded: response.gameEnded,
+          gameEndData: response.gameEndData,
+        });
+      }
+      return response;
+    } finally {
+      if (hideLoader) {
+        hideLoader();
+      }
+    }
   }
 
   updatePlayer(gameCode: string, playerId: string, updates: any): Promise<any> {
@@ -374,8 +409,8 @@ export class WebSocketService implements OnDestroy {
       // need to manually show the loading spinner in this case because it's typically skipped for other clean disconnects
       // show this after a delay for debugging
       setTimeout(() => {
-        this.loadingService.show({
-          message: 'Reconnecting',
+        this.hideReconnectingMessage = this.loadingService.show({
+          message: 'Reconnecting...',
         });
         this.startReconnectionTimeout(); // Start timeout for simulated reconnection
       }, 0);

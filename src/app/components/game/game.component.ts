@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/game/game.component.ts
 import {
   AfterViewInit,
   Component,

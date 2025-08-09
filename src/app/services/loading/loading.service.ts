@@ -1,29 +1,35 @@
-// crossrace-ng/src/app/services/loading/loading.service.ts
+// crossrace-ng/src/services/loading/loading.service.ts
 import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
+
+// Lower number = higher priority.
+const MessagePriorities: { [key: string]: number } = {
+  'Game starting!': 1,
+  'Creating game...': 5,
+  'Joining game...': 5,
+  'Reconnecting...': 10,
+};
+const DEFAULT_PRIORITY = 99;
+
+// Interface for tracking each active loading operation.
+interface ActiveOperation {
+  id: symbol;
+  message: string;
+  priority: number;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class LoadingService {
-  /**
-   * This duration should match the fade-in animation duration in the
-   * loading component. It ensures that the fade-in animation has time to
-   * complete before the component is hidden, even for very short loading
-   * operations.
-   */
-  private readonly MIN_DURATION_MS = 250;
+  // A private list of all currently active loading operations.
+  private activeOperations: ActiveOperation[] = [];
 
-  // A private writable signal to hold the loading state
-  private loading = signal<boolean>(false);
-  private message = signal<string | undefined>(undefined);
-  private inGame = signal<boolean>(false);
+  // Public, readonly signals for components to consume.
+  private readonly loading = signal<boolean>(false);
+  private readonly message = signal<string | undefined>(undefined);
+  private readonly inGame = signal<boolean>(false);
 
-  // Timestamp of when the loader was shown.
-  private showTime = 0;
-
-  // A public readonly signal to expose the state to components.
-  // Components can read this but cannot change it directly.
   public readonly isLoading = this.loading.asReadonly();
   public readonly loadingMessage = this.message.asReadonly();
   public readonly isInGame = this.inGame.asReadonly();
@@ -33,75 +39,90 @@ export class LoadingService {
   constructor() {}
 
   /**
-   * Checks if the current route is a versus route (/versus or /versus/:gameCode)
+   * Displays the loading spinner with a given message.
+   * This method implements a token-based system with message prioritization.
+   *
+   * @param options - The configuration for the message to show.
+   * @returns A `hide` function (a token) that must be called to end this specific loading operation.
    */
-  private isOnVersusRoute(): boolean {
-    const url = this.router.url;
-    return url === '/versus' || url.startsWith('/versus/');
+  show(options: { message: string }): () => void {
+    const id = Symbol('loading-operation');
+    const priority = MessagePriorities[options.message] ?? DEFAULT_PRIORITY;
+
+    this.activeOperations.push({
+      id,
+      message: options.message,
+      priority,
+    });
+
+    // If this is the first active operation, show the spinner.
+    if (this.activeOperations.length === 1) {
+      this.loading.set(true);
+    }
+
+    // Always re-evaluate which message should be displayed based on priority.
+    this.updateDisplayedMessage();
+
+    // Return the tokenized `hide` function.
+    return () => {
+      this.hide(id);
+    };
   }
 
   /**
-   * Shows the loading overlay.
-   */
-  show(options?: { message?: string; inGame?: boolean }): void {
-    this.showTime = Date.now();
-
-    const messageText = options?.message;
-    this.message.set(messageText);
-
-    const isReconnecting = messageText === 'Reconnecting';
-
-    // Is `inGame` explicitly true OR are we on the versus route?
-    const meetsInGameCriteria = options?.inGame || this.isOnVersusRoute();
-
-    const shouldBeInGame = isReconnecting && meetsInGameCriteria;
-
-    this.inGame.set(shouldBeInGame);
-    this.loading.set(true);
-  }
-
-  /**
-   * Shows the loading overlay for a fixed duration, and returns a promise
-   * that resolves when the overlay is hidden. The caller should `await` this.
+   * A convenience wrapper around `show` that automatically hides the spinner
+   * after a specified duration.
    */
   async showAndHide(options: {
-    message?: string;
+    message: string;
     duration: number;
-    inGame?: boolean;
   }): Promise<void> {
-    const showTimeForThisCall = Date.now();
-    this.show({ message: options.message, inGame: options.inGame });
-
+    const hide = this.show({ message: options.message });
     await new Promise((resolve) => setTimeout(resolve, options.duration));
-
-    // After waiting, only hide if another `show()` call hasn't been
-    // made in the meantime. This prevents us from incorrectly hiding a
-    // different, newer loading message (e.g., "Reconnecting...").
-    if (this.showTime === showTimeForThisCall) {
-      this.hide();
-    }
+    hide();
   }
 
   /**
-   * Hides the loading overlay, ensuring it's visible for at least the minimum duration.
+   * The private hide method, called by the token function.
+   * @param id - The unique symbol of the operation to remove.
    */
-  hide(): void {
-    const showTimeAtHide = this.showTime;
-    const elapsed = Date.now() - showTimeAtHide;
+  private hide(id: symbol): void {
+    this.activeOperations = this.activeOperations.filter((op) => op.id !== id);
 
-    if (elapsed >= this.MIN_DURATION_MS) {
+    if (this.activeOperations.length === 0) {
+      // If no operations are left, hide the spinner completely.
       this.loading.set(false);
       this.message.set(undefined);
       this.inGame.set(false);
     } else {
-      setTimeout(() => {
-        // Only hide if another `show()` hasn't been called in the meantime.
-        if (this.showTime === showTimeAtHide) {
-          this.loading.set(false);
-          this.message.set(undefined);
-          this.inGame.set(false);
-        }
-      }, this.MIN_DURATION_MS - elapsed);
+      // Otherwise, just re-evaluate which message to show.
+      this.updateDisplayedMessage();
     }
+  }
+
+  /**
+   * Updates the `message` and `inGame` signals based on the highest-priority
+   * active operation.
+   */
+  private updateDisplayedMessage(): void {
+    if (this.activeOperations.length === 0) {
+      this.message.set(undefined);
+      return;
+    }
+
+    // Sort to find the highest-priority message (lowest number).
+    const highestPriorityOp = this.activeOperations.sort(
+      (a, b) => a.priority - b.priority,
+    )[0];
+
+    this.message.set(highestPriorityOp.message);
+
+    const isReconnecting = highestPriorityOp.message === 'Reconnecting...';
+    this.inGame.set(isReconnecting && this.isOnVersusRoute());
+  }
+
+  private isOnVersusRoute(): boolean {
+    const url = this.router.url;
+    return url === '/versus' || url.startsWith('/versus/');
   }
 }

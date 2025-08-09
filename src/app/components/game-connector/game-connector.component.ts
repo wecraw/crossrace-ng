@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/game-connector/game-connector.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,7 +26,6 @@ export class GameConnectorComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private webSocketService = inject(WebSocketService);
-  private loadingService = inject(LoadingService);
   private dialog = inject(MatDialog);
   private gameStateService = inject(GameStateService);
 
@@ -41,7 +41,6 @@ export class GameConnectorComponent implements OnInit {
   }
 
   private async createNewGame(): Promise<void> {
-    this.loadingService.show({ message: 'Creating game...' });
     try {
       const response = await this.webSocketService.createGame();
 
@@ -52,13 +51,10 @@ export class GameConnectorComponent implements OnInit {
       this.router.navigate(['/lobby', response.gameCode], { replaceUrl: true });
     } catch (error) {
       this.handleConnectionError(error);
-    } finally {
-      this.loadingService.hide();
     }
   }
 
   private async joinExistingGame(gameCode: string): Promise<void> {
-    this.loadingService.show({ message: 'Joining game...' });
     try {
       // Verify the game exists
       await this.webSocketService.joinGame(gameCode);
@@ -67,8 +63,6 @@ export class GameConnectorComponent implements OnInit {
       this.router.navigate(['/lobby', gameCode], { replaceUrl: true });
     } catch (error) {
       this.handleConnectionError(error);
-    } finally {
-      this.loadingService.hide();
     }
   }
 
