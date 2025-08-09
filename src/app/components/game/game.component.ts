@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/game/game.component.ts
 import {
   AfterViewInit,
   Component,
@@ -366,12 +365,21 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
         break;
 
       case 'error':
+        // This specific error is handled by the post-game dialog to show a "waiting" message.
+        // The game component should ignore it and not navigate away.
+        if (
+          message.message?.includes(
+            'A multiplayer game requires at least 2 players',
+          )
+        ) {
+          return; // Do nothing, let the dialog handle it.
+        }
+
         console.error(
           'Received server error during gameplay:',
           message.message,
         );
         this.router.navigate(['/']);
-
         break;
     }
   }

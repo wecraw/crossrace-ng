@@ -1,4 +1,3 @@
-<!-- crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.html -->
 <div class="wrapper">
   <i class="fa-solid fa-xmark close-icon" (click)="quit()"></i>
   <div class="d-flex flex-column h-100">
@@ -61,7 +60,11 @@
     </div>
 
     <div class="countdown-timer">
-      Next game starts in: {{ countdownDisplay }}
+      @if (isWaitingForPlayers) {
+        Waiting for more players...
+      } @else {
+        Next game starts in: {{ countdownDisplay }}
+      }
     </div>
 
     <div class="action-buttons d-flex">

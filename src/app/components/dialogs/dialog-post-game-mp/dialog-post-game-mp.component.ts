@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.ts
 import {
   Component,
   inject,
@@ -67,6 +66,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   readyPlayersCount = 0;
   totalPlayersCount = 0;
   countdownDisplay: string = '30s';
+  isWaitingForPlayers = false;
   private countdownInterval: any;
   private readonly destroy$ = new Subject<void>();
 
@@ -158,6 +158,21 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
         if (message.type === 'playerList') {
           this.updateReadyCounts(message.players);
         }
+        if (
+          message.type === 'error' &&
+          message.message?.includes(
+            'A multiplayer game requires at least 2 players',
+          )
+        ) {
+          this.isWaitingForPlayers = true;
+          if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+          }
+          this.cdr.detectChanges();
+        }
+        if (message.type === 'gameStarted') {
+          this.isWaitingForPlayers = false;
+        }
       });
   }
 
@@ -244,6 +259,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
 
   private startCountdownTimer(timestamp: string | Date): void {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
+    this.isWaitingForPlayers = false; // Reset waiting state when a new countdown starts
 
     const AUTO_START_SECONDS = 30;
     const serverEndTime = new Date(timestamp).getTime();
