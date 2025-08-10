@@ -1,14 +1,15 @@
-// crossrace-ng/src/app/components/game-connector/game-connector.component.ts
-import { Component, OnInit, inject } from '@angular/core';
-
+import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
 import { WebSocketService } from '../../services/websocket/websocket.service';
-import { Dialog } from '../dialogs/dialog/dialog.component';
 import { GameStateService } from '../../services/game-state/game-state.service';
+import { Dialog } from '../dialogs/dialog/dialog.component';
+import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
 
 @Component({
   selector: 'app-game-connector',
+  standalone: true,
   imports: [MatDialogModule],
   template: ``,
   styles: [
@@ -28,8 +29,13 @@ export class GameConnectorComponent implements OnInit {
   private dialog = inject(MatDialog);
   private gameStateService = inject(GameStateService);
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.gameStateService.clearGameState();
+
+    const hasViewedTutorial = localStorage.getItem('hasViewedVersusTutorial');
+    if (hasViewedTutorial !== 'true') {
+      await this.showTutorial();
+    }
 
     const gameCode = this.route.snapshot.paramMap.get('gameCode');
     if (gameCode) {
@@ -37,6 +43,18 @@ export class GameConnectorComponent implements OnInit {
     } else {
       this.createNewGame();
     }
+  }
+
+  private async showTutorial(): Promise<void> {
+    const dialogRef = this.dialog.open(DialogTutorial, {
+      data: { isVersus: true }, // Pass context in case tutorial differs for versus
+      minWidth: 380,
+      disableClose: true, // User must complete/close tutorial to proceed
+    });
+
+    await firstValueFrom(dialogRef.afterClosed());
+
+    localStorage.setItem('hasViewedVersusTutorial', 'true');
   }
 
   private async createNewGame(): Promise<void> {

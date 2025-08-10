@@ -61,7 +61,7 @@ const grids = [
 const descriptions = [
   'Race to use all 12 letters to form interconnected words!',
   "Words must be 3 letters or longer, 2 letter words don't count!",
-  'If you need more space, just drag the baord around!',
+  'If you need more space, just drag the board around!',
 ];
 
 const descriptionsVersus = [
