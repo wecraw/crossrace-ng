@@ -281,7 +281,10 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
         // If the countdown is over, the game either started (and this dialog is gone)
         // or it failed to start (e.g., not enough players).
         // Therefore, if this dialog is still open, we must be in a waiting state.
-        this.isWaitingForPlayers = true;
+        // We only set this after a delay to prevent a flicker.
+        setTimeout(() => {
+          this.isWaitingForPlayers = true;
+        }, 1000);
       } else {
         this.countdownDisplay = `${remainingSeconds}s`;
         this.isWaitingForPlayers = false; // Countdown is active, so we are not in a waiting state.
