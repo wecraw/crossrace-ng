@@ -87,6 +87,7 @@ export class DialogTutorial implements OnInit, AfterViewInit {
   showTouch2: boolean = false;
   isAnimation2Finished: boolean = false;
   timeouts: any[] = [];
+  showCloseIcon: boolean = false;
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
@@ -106,6 +107,7 @@ export class DialogTutorial implements OnInit, AfterViewInit {
   activeGrid: string[][] = this.grids[0];
 
   ngOnInit() {
+    this.showCloseIcon = !this.dialogRef.disableClose;
     if (this.data.mode === 'versus') this.descriptions = descriptionsVersus;
     this.generateGrid();
   }
