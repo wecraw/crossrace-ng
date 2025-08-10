@@ -167,6 +167,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
           this.isWaitingForPlayers = true;
           if (this.countdownInterval) {
             clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
           }
           this.cdr.detectChanges();
         }
@@ -258,28 +259,43 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   }
 
   private startCountdownTimer(timestamp: string | Date): void {
-    if (this.countdownInterval) clearInterval(this.countdownInterval);
-    this.isWaitingForPlayers = false; // Reset waiting state when a new countdown starts
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
 
     const AUTO_START_SECONDS = 30;
     const serverEndTime = new Date(timestamp).getTime();
+    const autoStartTime = serverEndTime + AUTO_START_SECONDS * 1000;
 
     const updateCountdown = () => {
       const now = Date.now();
-      const elapsedSeconds = Math.floor((now - serverEndTime) / 1000);
-      const remaining = AUTO_START_SECONDS - elapsedSeconds;
+      const remainingSeconds = Math.round((autoStartTime - now) / 1000);
 
-      if (remaining <= 0) {
+      if (remainingSeconds <= 0) {
         this.countdownDisplay = '0s';
-        if (this.countdownInterval) clearInterval(this.countdownInterval);
+        if (this.countdownInterval) {
+          clearInterval(this.countdownInterval);
+          this.countdownInterval = null;
+        }
+        // If the countdown is over, the game either started (and this dialog is gone)
+        // or it failed to start (e.g., not enough players).
+        // Therefore, if this dialog is still open, we must be in a waiting state.
+        this.isWaitingForPlayers = true;
       } else {
-        this.countdownDisplay = `${remaining}s`;
+        this.countdownDisplay = `${remainingSeconds}s`;
+        this.isWaitingForPlayers = false; // Countdown is active, so we are not in a waiting state.
       }
       this.cdr.detectChanges();
     };
 
-    updateCountdown(); // Run immediately
-    this.countdownInterval = setInterval(updateCountdown, 1000);
+    updateCountdown(); // Run immediately to set initial state correctly
+
+    // Only set an interval if the auto-start time is still in the future.
+    // This prevents creating a useless interval for players reconnecting late.
+    if (Date.now() < autoStartTime) {
+      this.countdownInterval = setInterval(updateCountdown, 1000);
+    }
   }
 
   private parseWordsFromGrid(grid: string[][]): Word[] {

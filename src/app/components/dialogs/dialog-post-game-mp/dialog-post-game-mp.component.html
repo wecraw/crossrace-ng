@@ -61,7 +61,11 @@
 
     <div class="countdown-timer">
       @if (isWaitingForPlayers) {
-        Waiting for more players...
+        @if (totalPlayersCount < 2) {
+          Waiting for more players...
+        } @else {
+          Waiting for players to ready up...
+        }
       } @else {
         Next game starts in: {{ countdownDisplay }}
       }
