@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/lobby/lobby.component.ts
 import {
   Component,
   OnInit,
@@ -222,7 +221,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
           duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
         });
 
-        this.router.navigate(['/versus']);
+        this.router.navigate(['/versus', this.gameState.gameCode]);
         break;
 
       case 'error':

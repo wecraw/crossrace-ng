@@ -656,12 +656,11 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       .afterClosed()
       .subscribe((result) => {
         if (!result) {
-          if (this.gameState.gameMode === 'versus') {
-            this.router.navigate(['/join/' + this.gameState.gameCode]);
-          } else {
-            this.router.navigate(['/']);
-          }
+          // This case handles when the dialog is closed without an explicit action,
+          // for example, when a new multiplayer round starts and closes the dialog.
+          // In single player, it handles closing via Esc/backdrop click.
           this.gameStateService.clearPendingWin();
+          this.router.navigate(['/']);
         } else {
           if (result.event === 'confirm') {
             if (this.gameState.gameMode === 'versus')

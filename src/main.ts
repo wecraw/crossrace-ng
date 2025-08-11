@@ -1,4 +1,3 @@
-// crossrace-ng/src/main.ts
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { provideRouter, Routes } from '@angular/router';
@@ -41,7 +40,7 @@ const routes: Routes = [
     canActivate: [gameJoinGuard],
   },
   {
-    path: 'versus',
+    path: 'versus/:gameCode',
     component: GameComponent,
     canActivate: [inGameGuard],
     data: { gameMode: 'versus' },

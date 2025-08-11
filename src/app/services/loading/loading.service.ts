@@ -1,4 +1,3 @@
-// crossrace-ng/src/services/loading/loading.service.ts
 import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -123,6 +122,6 @@ export class LoadingService {
 
   private isOnVersusRoute(): boolean {
     const url = this.router.url;
-    return url === '/versus' || url.startsWith('/versus/');
+    return url.startsWith('/versus/');
   }
 }

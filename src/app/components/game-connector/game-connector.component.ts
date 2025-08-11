@@ -63,9 +63,11 @@ export class GameConnectorComponent implements OnInit {
 
       this.gameStateService.updateGameState({ gameCode: response.gameCode });
 
-      // Navigate to the lobby, replacing the '/versus/create' URL in history
+      // Navigate to the lobby, replacing the '/create' URL in history
       // so the user cannot navigate "back" to this connector component.
-      this.router.navigate(['/lobby', response.gameCode], { replaceUrl: true });
+      this.router.navigate(['/lobby', response.gameCode], {
+        replaceUrl: true,
+      });
     } catch (error) {
       this.handleConnectionError(error);
     }
@@ -73,11 +75,18 @@ export class GameConnectorComponent implements OnInit {
 
   private async joinExistingGame(gameCode: string): Promise<void> {
     try {
-      // Verify the game exists
-      await this.webSocketService.joinGame(gameCode);
+      // Verify the game exists and get its state
+      const response = await this.webSocketService.joinGame(gameCode);
       this.gameStateService.updateGameState({ gameCode: gameCode });
 
-      this.router.navigate(['/lobby', gameCode], { replaceUrl: true });
+      if (response.isGameActive) {
+        // If the game is already in progress, go straight to the game screen
+        // TODO: this should only happen if the player is returning to the game otherwise they should go to the lobby
+        this.router.navigate(['/versus', gameCode], { replaceUrl: true });
+      } else {
+        // Otherwise, go to the lobby
+        this.router.navigate(['/lobby', gameCode], { replaceUrl: true });
+      }
     } catch (error) {
       this.handleConnectionError(error);
     }
