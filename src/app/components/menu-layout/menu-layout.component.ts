@@ -12,7 +12,8 @@ import { ConfigService } from '../../services/config/config.service';
 export class MenuLayoutComponent implements OnInit {
   // Properties moved from MainMenuComponent
   grid: string[][] = [];
-  GRID_SIZE: number = 12;
+  GRID_WIDTH: number = 24;
+  GRID_HEIGHT: number = 12;
   version: string = '';
 
   private router = inject(Router);
@@ -34,8 +35,8 @@ export class MenuLayoutComponent implements OnInit {
    * Creates the 2D array for the decorative background grid.
    */
   initializeGrid(): void {
-    this.grid = Array(this.GRID_SIZE)
+    this.grid = Array(this.GRID_HEIGHT)
       .fill(null)
-      .map(() => Array(this.GRID_SIZE).fill(null));
+      .map(() => Array(this.GRID_WIDTH).fill(null));
   }
 }

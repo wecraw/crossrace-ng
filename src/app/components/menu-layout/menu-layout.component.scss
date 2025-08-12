@@ -7,11 +7,15 @@ $grid-cell-size: 36px;
 
 .grid-wrapper {
   margin: 175px auto 0;
-  opacity: 0.4; //controls opacity of grid background
+  // opacity: 0.4; //controls opacity of grid background
 }
 
 .letter-bank {
   top: 50px;
+}
+
+.grid-cell {
+  border: 1px solid $main-menu-grid-cell-border;
 }
 
 .game-container {

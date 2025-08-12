@@ -43,10 +43,11 @@
     The specific buttons from MainMenuComponent or VersusMenuComponent
     will be rendered here.
   -->
-<ng-content></ng-content>
 
 <div #gridWrapper class="grid-wrapper">
   <div class="fade-out-edges m-lr-auto">
+    <ng-content></ng-content>
+
     <div #gridContainer class="grid-container">
       @for (row of grid; track $index; let i = $index) {
         <div class="grid-row">
