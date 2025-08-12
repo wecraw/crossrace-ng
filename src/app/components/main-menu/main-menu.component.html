@@ -47,7 +47,11 @@
     <div class="main-menu main-menu-panel m-lr-auto">
       <div class="main-menu-buttons">
         <!-- PLAY Button -->
-        <div class="tile-button-wrapper m-auto" (click)="daily()">
+        <div
+          class="tile-button-wrapper m-auto"
+          (click)="daily()"
+          [attr.tabindex]="activeMenu === 'main' ? 0 : -1"
+        >
           <div class="tile-button-row noselect">
             <div class="tile-letter">P</div>
             <div class="tile-letter">L</div>
@@ -60,6 +64,7 @@
         <div
           class="tile-button-wrapper green m-auto"
           (click)="switchToVersus()"
+          [attr.tabindex]="activeMenu === 'main' ? 0 : -1"
         >
           <div class="tile-button-row noselect">
             <div class="tile-letter">V</div>
@@ -77,7 +82,11 @@
     <div class="main-menu versus-menu-panel m-lr-auto">
       <div class="main-menu-buttons versus-menu">
         <!-- HOST Button -->
-        <div class="tile-button-wrapper m-auto" (click)="createGame()">
+        <div
+          class="tile-button-wrapper m-auto"
+          (click)="createGame()"
+          [attr.tabindex]="activeMenu === 'versus' ? 0 : -1"
+        >
           <div class="tile-button-row noselect">
             <div class="tile-letter">H</div>
             <div class="tile-letter">O</div>
@@ -97,6 +106,7 @@
                 (input)="onInputChange($event)"
                 (keydown.enter)="joinGame()"
                 maxlength="4"
+                [attr.tabindex]="activeMenu === 'versus' ? 0 : -1"
               />
               @if (
                 joinGameForm.get("gameCode")!.invalid &&
@@ -111,6 +121,7 @@
               class="tile-button-wrapper green m-auto"
               [class.disabled]="!joinGameForm.valid"
               (click)="joinGame()"
+              [attr.tabindex]="activeMenu === 'versus' ? 0 : -1"
             >
               <div class="tile-button-row noselect">
                 <div class="tile-letter">J</div>

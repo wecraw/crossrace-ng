@@ -84,15 +84,6 @@ export class MainMenuComponent implements OnInit {
     this.activeMenu = 'main';
   }
 
-  // --- Methods from MenuLayoutComponent ---
-
-  /**
-   * Navigates to the home page when the logo is clicked.
-   */
-  navigateHome(): void {
-    this.router.navigate(['/']);
-  }
-
   /**
    * Creates the 2D array for the decorative background grid.
    */
