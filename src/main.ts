@@ -1,3 +1,4 @@
+// crossrace-ng/src/main.ts
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { provideRouter, Routes } from '@angular/router';
@@ -8,13 +9,17 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { MainMenuComponent } from './app/components/main-menu/main-menu.component';
 import { GameConnectorComponent } from './app/components/game-connector/game-connector.component';
 import { gameJoinGuard } from './app/guards/game-join.guard';
-import { VersusMenuComponent } from './app/components/versus-menu/versus-menu.component';
 import { inGameGuard } from './app/guards/in-game.guard';
 import { gameResolver } from './app/resolvers/game.resolver';
 
 const routes: Routes = [
   // Main Menu
-  { path: '', component: MainMenuComponent, pathMatch: 'full' },
+  {
+    path: '',
+    component: MainMenuComponent,
+    pathMatch: 'full',
+    data: { menu: 'main' },
+  },
 
   // Singleplayer
   {
@@ -31,7 +36,11 @@ const routes: Routes = [
   },
 
   // Versus
-  { path: 'versus-menu', component: VersusMenuComponent },
+  {
+    path: 'versus-menu',
+    component: MainMenuComponent,
+    data: { menu: 'versus' },
+  },
   { path: 'create', component: GameConnectorComponent },
   { path: 'join/:gameCode', component: GameConnectorComponent },
   {
@@ -48,7 +57,7 @@ const routes: Routes = [
   {
     path: 'disconnected',
     component: MainMenuComponent,
-    data: { disconnected: true },
+    data: { disconnected: true, menu: 'main' },
   },
 
   // 404

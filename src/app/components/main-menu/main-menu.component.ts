@@ -1,33 +1,94 @@
+// crossrace-ng/src/app/components/main-menu/main-menu.component.ts
 import { Component, inject, OnInit } from '@angular/core';
-
-import { Router } from '@angular/router';
-import { ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { GameSeedService } from '../../services/game-seed/game-seed.service';
+import { ConfigService } from '../../services/config/config.service';
 import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGame } from '../dialogs/dialog-post-game/dialog-post-game.component';
 import { Dialog } from '../dialogs/dialog/dialog.component';
-import { MenuLayoutComponent } from '../menu-layout/menu-layout.component';
 
 @Component({
-  selector: 'app-game',
-  imports: [MatDialogModule, MenuLayoutComponent],
+  selector: 'app-main-menu', // Changed from 'app-game' to avoid conflict
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, MatDialogModule],
   templateUrl: './main-menu.component.html',
   styleUrls: ['./main-menu.component.scss'],
 })
 export class MainMenuComponent implements OnInit {
-  // Dependencies are now much cleaner
+  // --- Properties from merged components ---
+  grid: string[][] = [];
+  GRID_WIDTH: number = 24;
+  GRID_HEIGHT: number = 12;
+  version: string = '';
+  joinGameForm!: FormGroup;
+
+  // --- Combined dependencies ---
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private gameSeedService = inject(GameSeedService);
+  private configService = inject(ConfigService);
+  private fb = inject(FormBuilder);
   readonly dialog = inject(MatDialog);
 
+  // --- State for conditional rendering ---
+  menuType: 'main' | 'versus' = 'main';
+
   ngOnInit(): void {
-    // Check if we were navigated here due to disconnection
+    // Logic from MenuLayoutComponent: Initialize background grid and version
+    this.version = this.configService.displayVersion;
+    this.initializeGrid();
+
+    // Determine which menu to show from route data
+    this.menuType = this.route.snapshot.data['menu'] || 'main';
+
+    // Logic from MainMenuComponent: Handle disconnected state
     if (this.route.snapshot.data['disconnected']) {
       this.openDisconnectedDialog();
     }
+
+    // Logic from VersusMenuComponent: Initialize join form if on versus menu
+    if (this.menuType === 'versus') {
+      this.joinGameForm = this.fb.group({
+        gameCode: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(4),
+            Validators.maxLength(4),
+            Validators.pattern('^[A-Za-z]{4}$'),
+          ],
+        ],
+      });
+    }
   }
+
+  // --- Methods from MenuLayoutComponent ---
+
+  /**
+   * Navigates to the home page when the logo is clicked.
+   */
+  navigateHome(): void {
+    this.router.navigate(['/']);
+  }
+
+  /**
+   * Creates the 2D array for the decorative background grid.
+   */
+  initializeGrid(): void {
+    this.grid = Array(this.GRID_HEIGHT)
+      .fill(null)
+      .map(() => Array(this.GRID_WIDTH).fill(null));
+  }
+
+  // --- Methods from MainMenuComponent ---
 
   /**
    * Opens a dialog to inform the user they were disconnected
@@ -78,7 +139,6 @@ export class MainMenuComponent implements OnInit {
     this.router.navigate(['/practice']);
   }
 
-  // Dialog-related methods can remain if they are used for general purposes like tutorials.
   closeDialog(): void {
     this.dialog.closeAll();
   }
@@ -102,5 +162,40 @@ export class MainMenuComponent implements OnInit {
         this.router.navigate(['/']);
       }
     });
+  }
+
+  // --- Methods from VersusMenuComponent ---
+
+  /**
+   * Navigates to the game connector to create a new game.
+   */
+  createGame(): void {
+    this.router.navigate(['/create']);
+  }
+
+  /**
+   * Validates the form and navigates to the game connector to join a game.
+   */
+  joinGame(): void {
+    if (this.joinGameForm.valid) {
+      const gameCode = this.joinGameForm.get('gameCode')?.value;
+      this.router.navigate(['/join', gameCode]);
+    } else {
+      console.log('Form is invalid');
+      this.joinGameForm.markAllAsTouched();
+    }
+  }
+
+  /**
+   * Sanitizes the input for the game code field.
+   * @param event The input event from the text field.
+   */
+  onInputChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    input.value = input.value
+      .toUpperCase()
+      .replace(/[^A-Z]/g, '')
+      .slice(0, 4);
+    this.joinGameForm.patchValue({ gameCode: input.value });
   }
 }

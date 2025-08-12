@@ -1,9 +1,65 @@
-// Contains styles specific to the main menu's buttons ("PLAY", "VERSUS").
-
+// crossrace-ng/src/app/components/main-menu/main-menu.component.scss
 @use "variables" as *;
 @use "mixins" as *;
 
-// General structure for the menu button area
+// --- Styles from menu-layout.component.scss ---
+$grid-cell-size: 36px;
+
+.grid-wrapper {
+  margin: 175px auto 0;
+}
+
+.letter-bank {
+  top: 50px;
+}
+
+.grid-cell {
+  border: 1px solid $main-menu-grid-cell-border;
+  height: 36px; // Added for consistency
+  width: 36px; // Added for consistency
+}
+
+.grid-row {
+  display: flex; // Added for consistency
+}
+
+.game-container {
+  margin-top: 20px;
+}
+
+.grid-container {
+  margin-left: -31px;
+  margin-top: -11px;
+}
+
+.fade-out-edges {
+  padding-top: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  @include fade-out-edges;
+}
+
+.logo-row-1 {
+  margin-left: 12px;
+}
+
+.logo-row-2 {
+  margin-left: 92px;
+}
+
+.version {
+  font-size: 10px;
+  color: $light-gray;
+  bottom: 5px;
+  position: absolute;
+  right: 10px;
+}
+
+// --- Styles from main-menu.component.scss and versus-menu.component.scss ---
+
 .main-menu {
   text-align: center;
   position: absolute;
@@ -23,7 +79,13 @@
   padding-bottom: 7px;
 }
 
-// Shared button styling (can be extracted to a shared partial later if desired)
+// Modifier class for versus menu layout
+.versus-menu {
+  margin-top: 63px;
+  padding-bottom: 5px;
+}
+
+// Shared button styling (merged from both files)
 .tile-button-wrapper {
   display: flex;
   flex-direction: column;
@@ -64,4 +126,35 @@
   &.green:hover .tile-letter {
     background-color: $success-green-hover;
   }
+
+  // From versus-menu.scss
+  &.disabled .tile-letter,
+  &.disabled:hover .tile-letter,
+  &.disabled.green:hover .tile-letter {
+    opacity: 0.5;
+  }
+
+  &.disabled {
+    pointer-events: none;
+  }
+}
+
+// Styles unique to the join form from versus-menu.scss
+.join-form-container {
+  border: 1px solid #aaa;
+  border-radius: 16px;
+  background-color: #eee;
+  padding: 20px;
+  width: fit-content;
+}
+
+.join-input {
+  max-width: 185px;
+  font-size: 20px;
+  text-align: center;
+  border: 1px solid $success-green;
+}
+
+input:focus::placeholder {
+  color: transparent;
 }
