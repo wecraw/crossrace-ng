@@ -7,6 +7,8 @@ $grid-cell-size: 36px;
 
 .grid-wrapper {
   margin: 175px auto 0;
+  position: relative;
+  overflow: hidden; /* This clips the content that slides off-screen */
 }
 
 .letter-bank {
@@ -30,6 +32,7 @@ $grid-cell-size: 36px;
 .grid-container {
   margin-left: -31px;
   margin-top: -11px;
+  transition: margin-left 0.5s ease-in-out; /* Animation for sliding with margin */
 }
 
 .fade-out-edges {
@@ -68,6 +71,27 @@ $grid-cell-size: 36px;
   height: 400px;
   display: flex;
   flex-direction: column;
+  transition: margin-left 0.5s ease-in-out; /* Animation for sliding with margin */
+  margin-left: 0; // Set initial margin
+}
+
+/* Positioning for the two menu panels */
+
+.versus-menu-panel {
+  margin-left: 100%; /* Position it off-screen to the right */
+}
+
+/* State-based animation using the class on grid-wrapper */
+.view--versus {
+  .main-menu-panel {
+    margin-left: -100%; /* Slide main menu out to the left */
+  }
+  .versus-menu-panel {
+    margin-left: 0; /* Slide versus menu into view */
+  }
+  .grid-container {
+    margin-left: -100%;
+  }
 }
 
 .main-menu-buttons {
@@ -83,6 +107,7 @@ $grid-cell-size: 36px;
 .versus-menu {
   margin-top: 63px;
   padding-bottom: 5px;
+  margin-left: 2px;
 }
 
 // Shared button styling (merged from both files)
@@ -157,4 +182,20 @@ $grid-cell-size: 36px;
 
 input:focus::placeholder {
   color: transparent;
+}
+
+/* Back button for the versus menu */
+.back-button {
+  position: absolute;
+  top: 85px;
+  left: 20px;
+  cursor: pointer;
+  color: #555;
+  font-size: 32px;
+  z-index: 10;
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 }

@@ -38,36 +38,50 @@ export class MainMenuComponent implements OnInit {
   private fb = inject(FormBuilder);
   readonly dialog = inject(MatDialog);
 
-  // --- State for conditional rendering ---
-  menuType: 'main' | 'versus' = 'main';
+  // --- State for conditional rendering and animation ---
+  activeMenu: 'main' | 'versus' = 'main';
 
   ngOnInit(): void {
     // Logic from MenuLayoutComponent: Initialize background grid and version
     this.version = this.configService.displayVersion;
     this.initializeGrid();
 
-    // Determine which menu to show from route data
-    this.menuType = this.route.snapshot.data['menu'] || 'main';
+    // Determine which menu to show from route data for initial load
+    this.activeMenu = this.route.snapshot.data['menu'] || 'main';
 
     // Logic from MainMenuComponent: Handle disconnected state
     if (this.route.snapshot.data['disconnected']) {
       this.openDisconnectedDialog();
     }
 
-    // Logic from VersusMenuComponent: Initialize join form if on versus menu
-    if (this.menuType === 'versus') {
-      this.joinGameForm = this.fb.group({
-        gameCode: [
-          '',
-          [
-            Validators.required,
-            Validators.minLength(4),
-            Validators.maxLength(4),
-            Validators.pattern('^[A-Za-z]{4}$'),
-          ],
+    // Always initialize the join form
+    this.joinGameForm = this.fb.group({
+      gameCode: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(4),
+          Validators.maxLength(4),
+          Validators.pattern('^[A-Za-z]{4}$'),
         ],
-      });
-    }
+      ],
+    });
+  }
+
+  // --- Methods for View Switching ---
+
+  /**
+   * Switches the view to the 'versus' menu, triggering the slide animation.
+   */
+  switchToVersus(): void {
+    this.activeMenu = 'versus';
+  }
+
+  /**
+   * Switches the view back to the 'main' menu, triggering the slide animation.
+   */
+  switchToMain(): void {
+    this.activeMenu = 'main';
   }
 
   // --- Methods from MenuLayoutComponent ---
@@ -123,13 +137,6 @@ export class MainMenuComponent implements OnInit {
       }
     }
     this.router.navigate(['/daily']);
-  }
-
-  /**
-   * Navigates to the dedicated versus menu component.
-   */
-  navigateToVersusMenu(): void {
-    this.router.navigate(['/versus-menu']);
   }
 
   /**

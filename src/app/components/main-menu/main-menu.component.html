@@ -3,7 +3,7 @@
   <div
     id="letter-bank"
     class="ab-center letter-bank m-lr-auto cursor-pointer"
-    (click)="navigateHome()"
+    (click)="switchToMain()"
   >
     <div class="row logo-row-1">
       <div class="tile-wrapper">
@@ -40,93 +40,91 @@
   </div>
 </div>
 
-<div #gridWrapper class="grid-wrapper">
+<!-- A class is added here to control the view state -->
+<div #gridWrapper class="grid-wrapper" [ngClass]="'view--' + activeMenu">
   <div class="fade-out-edges m-lr-auto">
-    <!-- Main Menu Content -->
-    @if (menuType === "main") {
-      <div class="main-menu m-lr-auto">
-        <div class="main-menu-buttons">
-          <!-- PLAY Button -->
-          <div class="tile-button-wrapper m-auto" (click)="daily()">
-            <div class="tile-button-row noselect">
-              <div class="tile-letter">P</div>
-              <div class="tile-letter">L</div>
-              <div class="tile-letter">A</div>
-              <div class="tile-letter">Y</div>
-            </div>
+    <!-- Main Menu Content (will slide out) -->
+    <div class="main-menu main-menu-panel m-lr-auto">
+      <div class="main-menu-buttons">
+        <!-- PLAY Button -->
+        <div class="tile-button-wrapper m-auto" (click)="daily()">
+          <div class="tile-button-row noselect">
+            <div class="tile-letter">P</div>
+            <div class="tile-letter">L</div>
+            <div class="tile-letter">A</div>
+            <div class="tile-letter">Y</div>
           </div>
+        </div>
 
-          <!-- VERSUS Button -->
-          <div
-            class="tile-button-wrapper green m-auto"
-            (click)="navigateToVersusMenu()"
-          >
-            <div class="tile-button-row noselect">
-              <div class="tile-letter">V</div>
-              <div class="tile-letter">E</div>
-              <div class="tile-letter">R</div>
-              <div class="tile-letter">S</div>
-              <div class="tile-letter">U</div>
-              <div class="tile-letter">S</div>
-            </div>
+        <!-- VERSUS Button -->
+        <div
+          class="tile-button-wrapper green m-auto"
+          (click)="switchToVersus()"
+        >
+          <div class="tile-button-row noselect">
+            <div class="tile-letter">V</div>
+            <div class="tile-letter">E</div>
+            <div class="tile-letter">R</div>
+            <div class="tile-letter">S</div>
+            <div class="tile-letter">U</div>
+            <div class="tile-letter">S</div>
           </div>
         </div>
       </div>
-    }
+    </div>
 
-    <!-- Versus Menu Content -->
-    @if (menuType === "versus") {
-      <div class="main-menu m-lr-auto">
-        <div class="main-menu-buttons versus-menu">
-          <!-- HOST Button -->
-          <div class="tile-button-wrapper m-auto" (click)="createGame()">
-            <div class="tile-button-row noselect">
-              <div class="tile-letter">H</div>
-              <div class="tile-letter">O</div>
-              <div class="tile-letter">S</div>
-              <div class="tile-letter">T</div>
-            </div>
+    <!-- Versus Menu Content (will slide in) -->
+    <div class="main-menu versus-menu-panel m-lr-auto">
+      <div class="main-menu-buttons versus-menu">
+        <!-- HOST Button -->
+        <div class="tile-button-wrapper m-auto" (click)="createGame()">
+          <div class="tile-button-row noselect">
+            <div class="tile-letter">H</div>
+            <div class="tile-letter">O</div>
+            <div class="tile-letter">S</div>
+            <div class="tile-letter">T</div>
           </div>
+        </div>
 
-          <!-- JOIN Form -->
-          <div class="join-form-container m-lr-auto">
-            <form [formGroup]="joinGameForm">
-              <div class="form-group">
-                <input
-                  class="form-control form-control-lg mx-auto mb-3 join-input"
-                  formControlName="gameCode"
-                  placeholder="Enter room code"
-                  (input)="onInputChange($event)"
-                  (keydown.enter)="joinGame()"
-                  maxlength="4"
-                />
-                @if (
-                  joinGameForm.get("gameCode")!.invalid &&
-                  joinGameForm.get("gameCode")!.touched
-                ) {
-                  <div class="invalid-feedback">
-                    Please input a valid room code
-                  </div>
-                }
-              </div>
-              <div
-                class="tile-button-wrapper green m-auto"
-                [class.disabled]="!joinGameForm.valid"
-                (click)="joinGame()"
-              >
-                <div class="tile-button-row noselect">
-                  <div class="tile-letter">J</div>
-                  <div class="tile-letter">O</div>
-                  <div class="tile-letter">I</div>
-                  <div class="tile-letter">N</div>
+        <!-- JOIN Form -->
+        <div class="join-form-container m-lr-auto">
+          <form [formGroup]="joinGameForm">
+            <div class="form-group">
+              <input
+                class="form-control form-control-lg mx-auto mb-3 join-input"
+                formControlName="gameCode"
+                placeholder="Enter room code"
+                (input)="onInputChange($event)"
+                (keydown.enter)="joinGame()"
+                maxlength="4"
+              />
+              @if (
+                joinGameForm.get("gameCode")!.invalid &&
+                joinGameForm.get("gameCode")!.touched
+              ) {
+                <div class="invalid-feedback">
+                  Please input a valid room code
                 </div>
+              }
+            </div>
+            <div
+              class="tile-button-wrapper green m-auto"
+              [class.disabled]="!joinGameForm.valid"
+              (click)="joinGame()"
+            >
+              <div class="tile-button-row noselect">
+                <div class="tile-letter">J</div>
+                <div class="tile-letter">O</div>
+                <div class="tile-letter">I</div>
+                <div class="tile-letter">N</div>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
-    }
+    </div>
 
+    <!-- The grid will slide in sync with the menus -->
     <div #gridContainer class="grid-container">
       @for (row of grid; track $index; let i = $index) {
         <div class="grid-row">
