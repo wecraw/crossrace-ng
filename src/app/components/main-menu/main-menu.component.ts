@@ -25,7 +25,7 @@ import { Dialog } from '../dialogs/dialog/dialog.component';
 export class MainMenuComponent implements OnInit {
   // --- Properties from merged components ---
   grid: string[][] = [];
-  GRID_WIDTH: number = 24;
+  GRID_WIDTH: number = 36;
   GRID_HEIGHT: number = 12;
   version: string = '';
   joinGameForm!: FormGroup;
