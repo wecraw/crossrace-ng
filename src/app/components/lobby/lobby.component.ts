@@ -244,10 +244,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }
   }
 
-  closeDialog() {
-    this.dialog.closeAll();
-  }
-
   openDialog(data: DialogData, disableClose: boolean) {
     if (!disableClose) {
       const dialogRef = this.dialog.open(Dialog, {

@@ -101,16 +101,17 @@ $grid-cell-size: 36px;
   margin-bottom: auto;
   gap: 20px;
   padding-bottom: 7px;
+  &.versus-menu-buttons {
+    padding-left: 2px; // nudge to align with grid
+  }
 }
 
-// Modifier class for versus menu layout
 .versus-menu {
   margin-top: 63px;
   padding-bottom: 5px;
-  margin-left: 2px;
+  margin-left: 4px;
 }
 
-// Shared button styling (merged from both files)
 .tile-button-wrapper {
   display: flex;
   flex-direction: column;

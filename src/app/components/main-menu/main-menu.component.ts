@@ -39,7 +39,7 @@ export class MainMenuComponent implements OnInit {
   readonly dialog = inject(MatDialog);
 
   // --- State for conditional rendering and animation ---
-  activeMenu: 'main' | 'versus' = 'main';
+  activeMenu: 'main' | 'versus' | 'create' | 'join' = 'main';
 
   ngOnInit(): void {
     // Logic from MenuLayoutComponent: Initialize background grid and version
@@ -82,6 +82,20 @@ export class MainMenuComponent implements OnInit {
    */
   switchToMain(): void {
     this.activeMenu = 'main';
+  }
+
+  /**
+   * Switches the view to the 'versus' menu, triggering the slide animation.
+   */
+  switchToCreate(): void {
+    this.activeMenu = 'create';
+  }
+
+  /**
+   * Switches the view to the 'versus' menu, triggering the slide animation.
+   */
+  switchToJoin(): void {
+    this.activeMenu = 'join';
   }
 
   /**
@@ -137,10 +151,6 @@ export class MainMenuComponent implements OnInit {
     this.router.navigate(['/practice']);
   }
 
-  closeDialog(): void {
-    this.dialog.closeAll();
-  }
-
   openTutorialDialog(data: any): void {
     this.dialog.open(DialogTutorial, {
       data: data,
@@ -161,8 +171,6 @@ export class MainMenuComponent implements OnInit {
       }
     });
   }
-
-  // --- Methods from VersusMenuComponent ---
 
   /**
    * Navigates to the game connector to create a new game.
