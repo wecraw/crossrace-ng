@@ -205,7 +205,8 @@ export class WebSocketService implements OnDestroy {
       );
       try {
         // First, await the acknowledgment that we have successfully rejoined the game.
-        await this.joinGame(gameCode, localPlayerId);
+        // For a rejoin, we don't pass a player name, only the game code and player ID.
+        await this.joinGame(gameCode, null, localPlayerId);
 
         // After successfully rejoining, check for any pending win that needs to be sent
         if (this.gameStateService.hasPendingWin()) {
@@ -271,12 +272,14 @@ export class WebSocketService implements OnDestroy {
     });
   }
 
-  async createGame(): Promise<CreateGameResponse> {
+  async createGame(playerName: string): Promise<CreateGameResponse> {
     const hideLoader = this.loadingService.show({
       message: 'Creating game...',
     });
     try {
-      const response = await this.emitWithAck<CreateGameResponse>('create');
+      const response = await this.emitWithAck<CreateGameResponse>('create', {
+        playerName,
+      });
       if (response.success && response.playerId) {
         this.gameStateService.updateGameState({
           localPlayerId: response.playerId,
@@ -291,6 +294,7 @@ export class WebSocketService implements OnDestroy {
 
   async joinGame(
     gameCode: string,
+    playerName?: string | null,
     playerId?: string | null,
   ): Promise<JoinGameResponse> {
     // Joining can be initiated by the user (show loader) or by a reconnect (loader already showing).
@@ -307,6 +311,7 @@ export class WebSocketService implements OnDestroy {
 
       const response = await this.emitWithAck<JoinGameResponse>('join', {
         gameCode,
+        playerName,
         playerId: finalPlayerId,
       });
 

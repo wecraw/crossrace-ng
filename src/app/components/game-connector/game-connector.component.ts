@@ -38,10 +38,17 @@ export class GameConnectorComponent implements OnInit {
     }
 
     const gameCode = this.route.snapshot.paramMap.get('gameCode');
+    const playerName = this.route.snapshot.queryParamMap.get('name');
+
+    if (!playerName) {
+      this.handleConnectionError('Player name is missing.');
+      return;
+    }
+
     if (gameCode) {
-      this.joinExistingGame(gameCode.toUpperCase());
+      this.joinExistingGame(gameCode.toUpperCase(), playerName);
     } else {
-      this.createNewGame();
+      this.createNewGame(playerName);
     }
   }
 
@@ -57,9 +64,9 @@ export class GameConnectorComponent implements OnInit {
     localStorage.setItem('hasViewedVersusTutorial', 'true');
   }
 
-  private async createNewGame(): Promise<void> {
+  private async createNewGame(playerName: string): Promise<void> {
     try {
-      const response = await this.webSocketService.createGame();
+      const response = await this.webSocketService.createGame(playerName);
 
       this.gameStateService.updateGameState({ gameCode: response.gameCode });
 
@@ -73,10 +80,16 @@ export class GameConnectorComponent implements OnInit {
     }
   }
 
-  private async joinExistingGame(gameCode: string): Promise<void> {
+  private async joinExistingGame(
+    gameCode: string,
+    playerName: string,
+  ): Promise<void> {
     try {
       // Verify the game exists and get its state
-      const response = await this.webSocketService.joinGame(gameCode);
+      const response = await this.webSocketService.joinGame(
+        gameCode,
+        playerName,
+      );
       this.gameStateService.updateGameState({ gameCode: gameCode });
 
       if (response.isGameActive) {
