@@ -40,7 +40,7 @@
             @if (selfPlayer) {
               <player-card
                 [player]="selfPlayer"
-                [allowEdit]="false"
+                [allowEdit]="true"
                 (onColorSelect)="updatePlayer({ playerColor: $event })"
                 (onEmojiSelect)="updatePlayer({ playerEmoji: $event })"
               ></player-card>
