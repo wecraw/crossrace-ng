@@ -35,6 +35,7 @@ export class MainMenuComponent implements OnInit {
   version: string = '';
   joinGameForm!: FormGroup;
   isHostMode = false;
+  private readonly playerNameKey = 'crossracePlayerName';
 
   @ViewChild('roomCodeInput') roomCodeInput!: ElementRef<HTMLInputElement>;
   @ViewChild('playerNameInput') playerNameInput!: ElementRef<HTMLInputElement>;
@@ -63,11 +64,14 @@ export class MainMenuComponent implements OnInit {
       this.openDisconnectedDialog();
     }
 
+    // Get saved player name
+    const savedPlayerName = localStorage.getItem(this.playerNameKey);
+
     // Always initialize the join form
     this.joinGameForm = this.fb.group({
       gameCode: [''],
       playerName: [
-        '',
+        savedPlayerName || '',
         [
           Validators.required,
           Validators.minLength(1),
@@ -250,6 +254,9 @@ export class MainMenuComponent implements OnInit {
    */
   submitJoinOrHost(): void {
     if (this.joinGameForm.valid) {
+      const playerName = this.joinGameForm.get('playerName')?.value;
+      localStorage.setItem(this.playerNameKey, playerName);
+
       if (this.isHostMode) {
         this.createGame();
       } else {
