@@ -75,6 +75,31 @@ export class MainMenuComponent implements OnInit {
         ],
       ],
     });
+
+    // Handle initial state if routed directly to join mode
+    if (this.activeMenu === 'join') {
+      const gameCodeFromRoute = this.route.snapshot.paramMap.get('gameCode');
+
+      // Setup the form for 'join' mode
+      this.isHostMode = false;
+      this.joinGameForm
+        .get('gameCode')
+        ?.setValidators([
+          Validators.required,
+          Validators.minLength(4),
+          Validators.maxLength(4),
+          Validators.pattern('^[A-Za-z]{4}$'),
+        ]);
+      this.joinGameForm.get('gameCode')?.updateValueAndValidity();
+
+      // If a game code is present in the URL, pre-fill it and focus name input
+      if (gameCodeFromRoute) {
+        this.joinGameForm.patchValue({
+          gameCode: gameCodeFromRoute.toUpperCase(),
+        });
+        setTimeout(() => this.playerNameInput?.nativeElement.focus(), 500);
+      }
+    }
   }
 
   // --- Methods for View Switching ---
@@ -215,7 +240,7 @@ export class MainMenuComponent implements OnInit {
   private joinGame(): void {
     const gameCode = this.joinGameForm.get('gameCode')?.value;
     const playerName = this.joinGameForm.get('playerName')?.value;
-    this.router.navigate(['/join', gameCode], {
+    this.router.navigate(['/connect/join', gameCode], {
       queryParams: { name: playerName },
     });
   }

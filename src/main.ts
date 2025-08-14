@@ -1,4 +1,3 @@
-// crossrace-ng/src/main.ts
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { provideRouter, Routes } from '@angular/router';
@@ -42,7 +41,15 @@ const routes: Routes = [
     data: { menu: 'versus' },
   },
   { path: 'create', component: GameConnectorComponent },
-  { path: 'join/:gameCode', component: GameConnectorComponent },
+  {
+    path: 'join/:gameCode',
+    component: MainMenuComponent,
+    data: { menu: 'join' },
+  },
+  {
+    path: 'connect/join/:gameCode',
+    component: GameConnectorComponent,
+  },
   {
     path: 'lobby/:gameCode',
     component: LobbyComponent,
