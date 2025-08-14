@@ -29,7 +29,7 @@
           [class.selected]="emoji === player.playerEmoji"
         >
           <!-- <span class="emoji">{{ emoji }}</span> -->
-          <img src="assets/bill.gif" />
+          <img src="assets/avatars/bill.png" />
 
           />
         </div>
@@ -58,7 +58,7 @@
     [class.editable]="allowEdit"
     (click)="allowEdit ? editEmoji() : null"
   >
-    <img src="assets/bill.gif" />
+    <img src="assets/avatars/bill.png" />
     @if (player.ready) {
       <div class="ready-indicator">
         <i class="fa-solid fa-check"></i>
