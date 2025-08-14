@@ -125,14 +125,6 @@
                 maxlength="4"
                 [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
               />
-              @if (
-                joinGameForm.get("gameCode")!.invalid &&
-                joinGameForm.get("gameCode")!.touched
-              ) {
-                <div class="invalid-feedback">
-                  Please input a valid room code
-                </div>
-              }
               <label class="join-form-label">Your name</label>
               <input
                 class="form-control form-control-sm mx-auto join-input"
@@ -141,12 +133,6 @@
                 maxlength="12"
                 [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
               />
-              @if (
-                joinGameForm.get("playerName")!.invalid &&
-                joinGameForm.get("playerName")!.touched
-              ) {
-                <div class="invalid-feedback">Please enter your name</div>
-              }
             </div>
             <div
               class="tile-button-wrapper green m-auto"
