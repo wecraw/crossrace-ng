@@ -161,6 +161,12 @@ $grid-cell-size: 36px;
     border-radius: 6px;
     font-size: 17px;
     transition: background-color 0.2s ease-in-out;
+    &.back-button {
+      background-color: $back-button-gray;
+      font-size: 28px;
+      padding-bottom: 6px;
+      padding-right: 2px;
+    }
   }
 
   &.green .tile-letter {
@@ -168,7 +174,7 @@ $grid-cell-size: 36px;
   }
 
   &:hover .tile-letter {
-    background-color: $primary-color-light;
+    background-color: $primary-color-hover;
   }
 
   &.green:hover .tile-letter {
@@ -230,18 +236,16 @@ input:focus::placeholder {
   color: transparent;
 }
 
-/* Back button for the versus menu */
-.back-button {
+.back-button-wrapper {
   position: absolute;
-  top: 85px;
-  left: 20px;
-  cursor: pointer;
-  color: #555;
-  font-size: 32px;
-  z-index: 10;
-  transition: transform 0.2s ease-in-out;
-
+  top: 171px;
+  left: 8px;
+  &.form {
+    left: 6px;
+  }
   &:hover {
-    transform: scale(1.1);
+    .tile-letter {
+      background-color: $back-button-gray-hover;
+    }
   }
 }

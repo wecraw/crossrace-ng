@@ -1,7 +1,8 @@
-@mixin fade-out-edges($mask-size: 20px) {
+@mixin fade-out-edges($mask-size: 10px) {
   overflow: hidden;
   --mask-size: #{$mask-size};
-  mask-image: linear-gradient(
+  mask-image:
+    linear-gradient(
       to right,
       transparent,
       black var(--mask-size),

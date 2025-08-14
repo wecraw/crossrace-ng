@@ -79,6 +79,15 @@
 
     <!-- Versus Menu Content (will slide) -->
     <div class="main-menu versus-menu-panel m-lr-auto">
+      <div class="back-button-wrapper tile-button-wrapper">
+        <div
+          class="tile-letter back-button"
+          (click)="switchToMain()"
+          [attr.tabindex]="activeMenu === 'versus' ? 0 : -1"
+        >
+          &lsaquo;
+        </div>
+      </div>
       <div class="main-menu-buttons versus-menu-buttons">
         <div
           class="tile-button-wrapper m-auto"
@@ -111,6 +120,15 @@
 
     <!-- Join/Host Menu Content (will slide) -->
     <div class="main-menu join-menu-panel m-lr-auto">
+      <div class="back-button-wrapper form tile-button-wrapper">
+        <div
+          class="tile-letter back-button"
+          (click)="switchToVersus()"
+          [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
+        >
+          &lsaquo;
+        </div>
+      </div>
       <div class="main-menu-buttons" style="margin-top: 106px !important">
         <div class="join-form-container">
           <form [formGroup]="joinGameForm">
