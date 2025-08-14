@@ -82,7 +82,7 @@
       <div class="main-menu-buttons versus-menu-buttons">
         <div
           class="tile-button-wrapper m-auto"
-          (click)="createGame()"
+          (click)="switchToHost()"
           [attr.tabindex]="activeMenu === 'versus' ? 0 : -1"
         >
           <div class="tile-button-row noselect">
@@ -109,27 +109,30 @@
       </div>
     </div>
 
-    <!-- Join Menu Content (will slide) -->
+    <!-- Join/Host Menu Content (will slide) -->
     <div class="main-menu join-menu-panel m-lr-auto">
       <div class="main-menu-buttons" style="margin-top: 106px !important">
         <div class="join-form-container">
           <form [formGroup]="joinGameForm">
             <div class="form-group">
-              <label class="join-form-label">Room code</label>
-              <input
-                #roomCodeInput
-                class="form-control form-control-sm mx-auto join-input"
-                formControlName="gameCode"
-                (input)="onInputChange($event)"
-                (keydown.enter)="joinGame()"
-                maxlength="4"
-                [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
-              />
+              @if (!isHostMode) {
+                <label class="join-form-label">Room code</label>
+                <input
+                  #roomCodeInput
+                  class="form-control form-control-sm mx-auto join-input"
+                  formControlName="gameCode"
+                  (input)="onInputChange($event)"
+                  (keydown.enter)="submitJoinOrHost()"
+                  maxlength="4"
+                  [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
+                />
+              }
               <label class="join-form-label">Your name</label>
               <input
+                #playerNameInput
                 class="form-control form-control-sm mx-auto join-input"
                 formControlName="playerName"
-                (keydown.enter)="joinGame()"
+                (keydown.enter)="submitJoinOrHost()"
                 maxlength="12"
                 [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
               />
@@ -137,7 +140,7 @@
             <div
               class="tile-button-wrapper green m-auto"
               [class.disabled]="!joinGameForm.valid"
-              (click)="joinGame()"
+              (click)="submitJoinOrHost()"
               [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
             >
               <div class="tile-button-row noselect play-button">

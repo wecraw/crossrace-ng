@@ -34,8 +34,10 @@ export class MainMenuComponent implements OnInit {
   GRID_HEIGHT: number = 12;
   version: string = '';
   joinGameForm!: FormGroup;
+  isHostMode = false;
 
   @ViewChild('roomCodeInput') roomCodeInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('playerNameInput') playerNameInput!: ElementRef<HTMLInputElement>;
 
   // --- Combined dependencies ---
   private router = inject(Router);
@@ -46,7 +48,7 @@ export class MainMenuComponent implements OnInit {
   readonly dialog = inject(MatDialog);
 
   // --- State for conditional rendering and animation ---
-  activeMenu: 'main' | 'versus' | 'create' | 'join' = 'main';
+  activeMenu: 'main' | 'versus' | 'join' = 'main';
 
   ngOnInit(): void {
     // Logic from MenuLayoutComponent: Initialize background grid and version
@@ -63,15 +65,7 @@ export class MainMenuComponent implements OnInit {
 
     // Always initialize the join form
     this.joinGameForm = this.fb.group({
-      gameCode: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(4),
-          Validators.maxLength(4),
-          Validators.pattern('^[A-Za-z]{4}$'),
-        ],
-      ],
+      gameCode: [''],
       playerName: [
         '',
         [
@@ -100,17 +94,34 @@ export class MainMenuComponent implements OnInit {
   }
 
   /**
-   * Switches the view to the 'versus' menu, triggering the slide animation.
+   * Switches to the form view in 'host' mode.
    */
-  switchToCreate(): void {
-    this.activeMenu = 'create';
+  switchToHost(): void {
+    this.isHostMode = true;
+    this.activeMenu = 'join'; // Reuse the join panel view/animation
+    this.joinGameForm.get('gameCode')?.clearValidators();
+    this.joinGameForm.get('gameCode')?.updateValueAndValidity();
+    setTimeout(() => {
+      // Focus name input for host mode
+      this.playerNameInput?.nativeElement.focus();
+    }, 500); // Match animation duration
   }
 
   /**
-   * Switches the view to the 'join' menu and focuses the input.
+   * Switches to the form view in 'join' mode and focuses the input.
    */
   switchToJoin(): void {
+    this.isHostMode = false;
     this.activeMenu = 'join';
+    this.joinGameForm
+      .get('gameCode')
+      ?.setValidators([
+        Validators.required,
+        Validators.minLength(4),
+        Validators.maxLength(4),
+        Validators.pattern('^[A-Za-z]{4}$'),
+      ]);
+    this.joinGameForm.get('gameCode')?.updateValueAndValidity();
     setTimeout(() => {
       this.roomCodeInput?.nativeElement.focus();
     }, 500); // Match animation duration
@@ -193,20 +204,32 @@ export class MainMenuComponent implements OnInit {
   /**
    * Navigates to the game connector to create a new game.
    */
-  createGame(): void {
-    this.router.navigate(['/create']);
+  private createGame(): void {
+    const playerName = this.joinGameForm.get('playerName')?.value;
+    this.router.navigate(['/create'], { queryParams: { name: playerName } });
   }
 
   /**
-   * Validates the form and navigates to the game connector to join a game.
+   * Navigates to the game connector to join a game.
    */
-  joinGame(): void {
+  private joinGame(): void {
+    const gameCode = this.joinGameForm.get('gameCode')?.value;
+    const playerName = this.joinGameForm.get('playerName')?.value;
+    this.router.navigate(['/join', gameCode], {
+      queryParams: { name: playerName },
+    });
+  }
+
+  /**
+   * Handles form submission for both joining and hosting.
+   */
+  submitJoinOrHost(): void {
     if (this.joinGameForm.valid) {
-      const gameCode = this.joinGameForm.get('gameCode')?.value;
-      const playerName = this.joinGameForm.get('playerName')?.value;
-      this.router.navigate(['/join', gameCode], {
-        queryParams: { name: playerName },
-      });
+      if (this.isHostMode) {
+        this.createGame();
+      } else {
+        this.joinGame();
+      }
     } else {
       console.log('Form is invalid');
       this.joinGameForm.markAllAsTouched();
