@@ -221,6 +221,9 @@ $grid-cell-size: 36px;
   // nudge to align with grid
   margin-top: 14px !important;
   margin-left: -2px !important;
+  &.host {
+    margin-top: 16px !important; // nudge to align with grid in host mode
+  }
 }
 
 input:focus::placeholder {
