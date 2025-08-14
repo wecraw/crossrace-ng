@@ -179,7 +179,7 @@ $grid-cell-size: 36px;
   &.disabled .tile-letter,
   &.disabled:hover .tile-letter,
   &.disabled.green:hover .tile-letter {
-    opacity: 0.5;
+    background-color: $disabled-green;
   }
 
   &.disabled {
@@ -187,19 +187,13 @@ $grid-cell-size: 36px;
   }
 }
 
-// Styles unique to the join form from versus-menu.scss
 .join-form-container {
-  border: 1px solid #aaa;
-  border-radius: 16px;
-  background-color: #eee;
-  padding: 20px;
-  width: fit-content;
+  margin-top: -25px;
 }
 
 .join-form-label {
   font-size: 16px;
   font-weight: bold;
-  margin-bottom: 5px;
   text-align: left;
   width: 100%;
   padding-left: 10px;
@@ -219,9 +213,14 @@ $grid-cell-size: 36px;
   max-width: 185px;
   font-size: 20px;
   border-radius: 8px;
-  // border: 1px solid $success-green;
+  margin-bottom: 10px;
   border: 1px solid $primary-color;
-  // background-color: #3f51b533;
+}
+
+.play-button {
+  // nudge to align with grid
+  margin-top: 14px !important;
+  margin-left: -2px !important;
 }
 
 input:focus::placeholder {

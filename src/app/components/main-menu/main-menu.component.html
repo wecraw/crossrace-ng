@@ -111,13 +111,13 @@
 
     <!-- Join Menu Content (will slide) -->
     <div class="main-menu join-menu-panel m-lr-auto">
-      <div class="main-menu-buttons">
+      <div class="main-menu-buttons" style="margin-top: 106px !important">
         <div class="join-form-container">
           <form [formGroup]="joinGameForm">
             <div class="form-group">
               <label class="join-form-label">Room code</label>
               <input
-                class="form-control form-control-sm mx-auto mb-3 join-input"
+                class="form-control form-control-sm mx-auto join-input"
                 formControlName="gameCode"
                 (input)="onInputChange($event)"
                 (keydown.enter)="joinGame()"
@@ -127,7 +127,7 @@
               <label class="join-form-label">Your name</label>
 
               <input
-                class="form-control form-control-sm mx-auto mb-3 join-input"
+                class="form-control form-control-sm mx-auto join-input"
                 formControlName="gameCode"
                 (input)="onInputChange($event)"
                 (keydown.enter)="joinGame()"
@@ -149,7 +149,7 @@
               (click)="joinGame()"
               [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
             >
-              <div class="tile-button-row noselect">
+              <div class="tile-button-row noselect play-button">
                 <div class="tile-letter">P</div>
                 <div class="tile-letter">L</div>
                 <div class="tile-letter">A</div>
