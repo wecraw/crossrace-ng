@@ -117,16 +117,7 @@
             <div class="form-group">
               <label class="join-form-label">Room code</label>
               <input
-                class="form-control form-control-sm mx-auto join-input"
-                formControlName="gameCode"
-                (input)="onInputChange($event)"
-                (keydown.enter)="joinGame()"
-                maxlength="4"
-                [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
-              />
-              <label class="join-form-label">Your name</label>
-
-              <input
+                #roomCodeInput
                 class="form-control form-control-sm mx-auto join-input"
                 formControlName="gameCode"
                 (input)="onInputChange($event)"
@@ -141,6 +132,20 @@
                 <div class="invalid-feedback">
                   Please input a valid room code
                 </div>
+              }
+              <label class="join-form-label">Your name</label>
+              <input
+                class="form-control form-control-sm mx-auto join-input"
+                formControlName="playerName"
+                (keydown.enter)="joinGame()"
+                maxlength="12"
+                [attr.tabindex]="activeMenu === 'join' ? 0 : -1"
+              />
+              @if (
+                joinGameForm.get("playerName")!.invalid &&
+                joinGameForm.get("playerName")!.touched
+              ) {
+                <div class="invalid-feedback">Please enter your name</div>
               }
             </div>
             <div

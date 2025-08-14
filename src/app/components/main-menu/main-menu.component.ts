@@ -1,5 +1,10 @@
-// crossrace-ng/src/app/components/main-menu/main-menu.component.ts
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -29,6 +34,8 @@ export class MainMenuComponent implements OnInit {
   GRID_HEIGHT: number = 12;
   version: string = '';
   joinGameForm!: FormGroup;
+
+  @ViewChild('roomCodeInput') roomCodeInput!: ElementRef<HTMLInputElement>;
 
   // --- Combined dependencies ---
   private router = inject(Router);
@@ -65,6 +72,14 @@ export class MainMenuComponent implements OnInit {
           Validators.pattern('^[A-Za-z]{4}$'),
         ],
       ],
+      playerName: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(1),
+          Validators.maxLength(12),
+        ],
+      ],
     });
   }
 
@@ -92,10 +107,13 @@ export class MainMenuComponent implements OnInit {
   }
 
   /**
-   * Switches the view to the 'versus' menu, triggering the slide animation.
+   * Switches the view to the 'join' menu and focuses the input.
    */
   switchToJoin(): void {
     this.activeMenu = 'join';
+    setTimeout(() => {
+      this.roomCodeInput?.nativeElement.focus();
+    }, 500); // Match animation duration
   }
 
   /**
@@ -185,7 +203,10 @@ export class MainMenuComponent implements OnInit {
   joinGame(): void {
     if (this.joinGameForm.valid) {
       const gameCode = this.joinGameForm.get('gameCode')?.value;
-      this.router.navigate(['/join', gameCode]);
+      const playerName = this.joinGameForm.get('playerName')?.value;
+      this.router.navigate(['/join', gameCode], {
+        queryParams: { name: playerName },
+      });
     } else {
       console.log('Form is invalid');
       this.joinGameForm.markAllAsTouched();
