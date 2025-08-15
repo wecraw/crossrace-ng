@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/game-board/game-board.component.ts
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -35,7 +34,6 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
   @Input() allDropListIds: string[] = [];
   @Input() dragPosition: { x: number; y: number } = { x: 0, y: 0 };
   @Input() isDisabled: boolean = false;
-  @Input() isCountingDown: boolean = false;
 
   @Output() dropped = new EventEmitter<CdkDragDrop<string[]>>();
   @Output() dragStarted = new EventEmitter<CdkDragStart>();

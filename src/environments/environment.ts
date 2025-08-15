@@ -6,10 +6,10 @@ export const environment: Environment = {
 
   version: {
     number: '0.10.2',
-    buildNumber: 1755295852,
-    buildDate: '2025-08-15T22:10:52.803Z',
-    gitHash: 'cf5f992',
+    buildNumber: 1755297508,
+    buildDate: '2025-08-15T22:38:28.675Z',
+    gitHash: 'da87889',
     gitBranch: 'dev',
-    displayVersion: '0.10.2.1755295852 (dev)'
+    displayVersion: '0.10.2.1755297508 (dev)'
   }
 };
