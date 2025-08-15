@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/resolvers/game.resolver.ts
 import { inject } from '@angular/core';
 import {
   ActivatedRouteSnapshot,
@@ -12,6 +13,7 @@ import { EMPTY, Observable, of, switchMap, tap } from 'rxjs';
 import { DialogPostGame } from '../components/dialogs/dialog-post-game/dialog-post-game.component';
 import { PUZZLES } from '../components/game/puzzles';
 import { DialogTutorial } from '../components/dialogs/dialog-tutorial/dialog-tutorial.component';
+import { Player } from '../interfaces/player';
 
 export interface GameResolverData {
   gameSeed: number;
@@ -76,11 +78,18 @@ export const gameResolver: ResolveFn<GameResolverData> = (
             const finalGrid = localStorage.getItem('finalGrid');
 
             if (finalTime && finalGrid) {
+              const winner: Player = {
+                id: 'local',
+                displayName: 'You',
+                colorId: 0,
+                avatarId: 1,
+                winCount: 0,
+              };
               const dialogRef = dialog.open(DialogPostGame, {
                 data: {
                   time: finalTime,
                   grid: JSON.parse(finalGrid),
-                  winnerDisplayName: 'You',
+                  winner: winner,
                   daily: true,
                   singlePlayer: true,
                   shareLink: generateShareLink(),

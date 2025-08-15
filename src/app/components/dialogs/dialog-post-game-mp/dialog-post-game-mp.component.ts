@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component.ts
 import {
   Component,
   inject,
@@ -151,7 +152,8 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => {
         if (message.type === 'postGameCellClicked') {
-          this.triggerExclamation(message.row, message.col, message.color);
+          const color = this.colorService.getColorById(message.colorId);
+          this.triggerExclamation(message.row, message.col, color);
           this.highlightWordAt(message.row, message.col);
         }
         if (message.type === 'gameEnded' && message.lastGameEndTimestamp) {

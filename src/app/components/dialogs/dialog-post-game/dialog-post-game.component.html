@@ -1,7 +1,8 @@
+<!-- crossrace-ng/src/app/components/dialogs/dialog-post-game/dialog-post-game.component.html -->
 <div class="wrapper">
   <div class="d-flex flex-column h-100">
     <div class="row">
-      <h1 class="m-lr-auto">{{ data.winnerDisplayName }} won!</h1>
+      <h1 class="m-lr-auto">{{ data.winner.displayName }} won!</h1>
       @if (!this.data.daily) {
         <h4 class="m-lr-auto">
           {{ data.time }}
@@ -20,7 +21,7 @@
             <div
               class="grid-cell noselect"
               [ngClass]="{ 'letter-tile': data.grid[i] && data.grid[i][j] }"
-              >
+            >
               @if (data.grid[i] && data.grid[i][j]) {
                 {{ data.grid[i][j] }}
               }
@@ -46,22 +47,22 @@
         (mouseenter)="$event.stopImmediatePropagation()"
         (mouseleave)="$event.stopImmediatePropagation()"
         (click)="challenge()"
-        >
+      >
         Share
         @if (isShareSupported) {
           <img
             style="width: 18px; margin-top: -3px"
             src="assets/share.svg"
             alt="Share icon"
-            />
+          />
         }
         @if (!isShareSupported) {
           <i
             style="margin-left: 5px"
-          [ngClass]="
-            isCopied ? 'fa-regular fa-circle-check' : 'fa-regular fa-copy'
-          "
-            >
+            [ngClass]="
+              isCopied ? 'fa-regular fa-circle-check' : 'fa-regular fa-copy'
+            "
+          >
           </i>
         }
       </button>

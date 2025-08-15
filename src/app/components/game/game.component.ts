@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/game/game.component.ts
 import {
   AfterViewInit,
   Component,
@@ -527,8 +528,15 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
         this.updateDailyLocalStorage();
       }
       setTimeout(() => {
+        const winner: Player = {
+          id: 'local',
+          displayName: 'You',
+          colorId: 0,
+          avatarId: 1,
+          winCount: 0,
+        };
         this.openDialog({
-          winnerDisplayName: 'You',
+          winner: winner,
           grid: this.condensedGrid,
           time: this.currentTimeString,
           singlePlayer: true,
@@ -586,8 +594,15 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
         this.updateDailyLocalStorage();
       }
       setTimeout(() => {
+        const winner: Player = {
+          id: 'local',
+          displayName: 'You',
+          colorId: 0,
+          avatarId: 1,
+          winCount: 0,
+        };
         this.openDialog({
-          winnerDisplayName: 'You',
+          winner: winner,
           grid: this.mockWin.grid,
           time: this.mockWin.time,
           singlePlayer: true,

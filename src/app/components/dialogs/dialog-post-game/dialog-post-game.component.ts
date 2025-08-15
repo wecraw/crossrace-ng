@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/dialogs/dialog-post-game/dialog-post-game.component.ts
 import {
   Component,
   inject,
@@ -16,6 +17,7 @@ import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { interval, Subscription } from 'rxjs';
+import { Player } from '../../../interfaces/player';
 
 @Component({
   selector: 'dialog',
@@ -41,7 +43,7 @@ export class DialogPostGame implements OnInit, OnDestroy {
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
-      winnerDisplayName: string;
+      winner: Player;
       grid: string[][];
       time: string;
       singlePlayer?: boolean;

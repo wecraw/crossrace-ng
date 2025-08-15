@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/interfaces/api-responses.ts
 import { Player } from './player';
 
 // This is the base shape for all responses that use the callback/ack pattern.
@@ -8,12 +9,8 @@ export interface AckResponse {
 
 // The specific shape for the 'create' event's response
 export interface CreateGameResponse extends AckResponse {
-  type: 'gameCreated';
   gameCode: string;
   playerId: string;
-  displayName: string;
-  playerColor: string;
-  playerEmoji: string;
   players: Player[];
 }
 
@@ -21,9 +18,6 @@ export interface CreateGameResponse extends AckResponse {
 export interface JoinGameResponse extends AckResponse {
   playerId: string;
   gameCode: string;
-  displayName: string;
-  playerColor: string;
-  playerEmoji: string;
   players: Player[];
   gameSeed: number;
   // Properties for handling games that ended while disconnected
