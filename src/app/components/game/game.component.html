@@ -1,4 +1,3 @@
-<!-- crossrace-ng/src/app/components/game/game.component.html -->
 <div class="container game-container noselect">
   <div
     id="letter-bank"
@@ -25,24 +24,24 @@
   </div>
 </div>
 @if (isCountingDown) {
-  <div
-    class="countdown m-lr-auto"
-    [ngClass]="{ 'puff-out-center': countdownEnded }"
-  >
-    <div class="spinner-container flip-in-hor-bottom-12">
-      <span class="loader"></span>
-      <span
-        class="countdown-number"
-        [ngClass]="{
-          'pulsate-fwd-intense': isPulsating,
-        }"
-      >
-        @if (countdown > 0) {
-          {{ countdown }}
-        } @else {
-          GO!
-        }
-      </span>
+  <div class="countdown-container" [ngClass]="{ 'fade-out': countdownEnded }">
+    <div class="countdown-mask"></div>
+    <div class="countdown m-lr-auto">
+      <div class="spinner-container flip-in-hor-bottom-12">
+        <span class="loader"></span>
+        <span
+          class="countdown-number"
+          [ngClass]="{
+            'pulsate-fwd-intense': isPulsating,
+          }"
+        >
+          @if (countdown > 0) {
+            {{ countdown }}
+          } @else {
+            GO!
+          }
+        </span>
+      </div>
     </div>
   </div>
 }
@@ -61,7 +60,7 @@
   </app-game-board>
 }
 @if (isGridReady) {
-  <div class="lower-menu fade-in m-lr-auto">
+  <div class="lower-menu m-lr-auto">
     <app-timer
       [startTime]="timerStartTime"
       [isRunning]="timerRunning"

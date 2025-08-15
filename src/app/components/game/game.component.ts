@@ -30,7 +30,6 @@ import { GameStateService } from '../../services/game-state/game-state.service';
 import { GameState } from '../../interfaces/game-state';
 import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
 import { DialogPostGameMp } from '../dialogs/dialog-post-game-mp/dialog-post-game-mp.component';
-import { Player } from '../../interfaces/player';
 import {
   COUNTDOWN_INITIAL_VALUE,
   COUNTDOWN_INTERVAL,
