@@ -1,27 +1,44 @@
-export const COLORS: string[] = [
-  '#e6194b',
-  '#3cb44b',
-  '#ffe119',
-  '#4363d8',
-  '#f58231',
-  '#911eb4',
-  '#46f0f0',
-  '#f032e6',
-  '#bcf60c',
-  '#fabebe',
-  '#008080',
-  '#e6beff',
-  '#9a6324',
-  '#fffac8',
-  '#800000',
-  '#aaffc3',
-  '#808000',
-  '#ffd8b1',
-  '#000075',
-  '#808080',
-  '#ffffff',
-  '#000000',
-  '#00FF7F',
-  '#8B008B',
-  '#DAA520',
+import { Color } from '../interfaces/color';
+
+export const COLORS: Color[] = [
+  {
+    id: 1,
+    hexCode: '#D7263D',
+    avatarColor: 'White',
+  },
+  {
+    id: 2,
+    hexCode: '#00539C',
+    avatarColor: 'White',
+  },
+  {
+    id: 3,
+    hexCode: '#228B22',
+    avatarColor: 'White',
+  },
+  {
+    id: 4,
+    hexCode: '#FFBF00',
+    avatarColor: 'Black',
+  },
+  {
+    id: 5,
+    hexCode: '#8A2BE2',
+    avatarColor: 'White',
+  },
+  {
+    id: 6,
+    hexCode: '#00A9A5',
+    avatarColor: 'White',
+  },
+  {
+    id: 7,
+    hexCode: '#F08A4B',
+    avatarColor: 'Black',
+  },
+  {
+    id: 8,
+    hexCode: '#FF3562',
+    avatarColor: 'White',
+  },
 ];

@@ -5,6 +5,7 @@ import { COLORS } from '../../constants/colors';
 import { Player } from '../../interfaces/player';
 import { ColorService } from '../../services/color/color.service';
 import { AvatarService } from '../../services/avatar/avatar.service';
+import { Color } from '../../interfaces/color';
 
 @Component({
   selector: 'player-card',
@@ -20,7 +21,7 @@ export class PlayerCardComponent {
   @Output() onColorChange: EventEmitter<number> = new EventEmitter<number>();
   @Output() onAvatarChange: EventEmitter<number> = new EventEmitter<number>();
 
-  colorGrid: string[] = COLORS;
+  colorGrid: Color[] = COLORS;
 
   constructor(
     public colorService: ColorService,

@@ -1,18 +1,19 @@
 import { Injectable } from '@angular/core';
 import { COLORS } from '../../constants/colors';
+import { Color } from '../../interfaces/color';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ColorService {
-  private allColors: string[] = COLORS;
+  private allColors: Color[] = COLORS;
 
-  getColors(): string[] {
+  getColors(): Color[] {
     return this.allColors;
   }
 
-  getColorById(id: number): string {
-    const color = this.allColors[id];
-    return color ? color : '#b50000';
+  getColorById(id: number): Color {
+    const color = this.allColors.find((color) => color.id === id);
+    return color ? color : COLORS[0];
   }
 }

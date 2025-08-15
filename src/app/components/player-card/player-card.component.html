@@ -1,7 +1,7 @@
 <div class="player-card fade-in">
   <div
     [ngStyle]="{
-      'background-color': colorService.getColorById(player.colorId),
+      'background-color': colorService.getColorById(player.colorId).hexCode,
     }"
     class="player-avatar"
     [class.editable]="allowEdit"
@@ -10,6 +10,9 @@
     <img
       class="avatar"
       [src]="avatarService.getAvatarUrlById(player.avatarId)"
+      [class.inverted]="
+        colorService.getColorById(player.colorId).avatarColor === 'White'
+      "
     />
     @if (player.ready) {
       <div class="ready-indicator">

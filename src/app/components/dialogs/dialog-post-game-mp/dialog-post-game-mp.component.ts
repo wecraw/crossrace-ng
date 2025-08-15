@@ -153,7 +153,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       .subscribe((message) => {
         if (message.type === 'postGameCellClicked') {
           const color = this.colorService.getColorById(message.colorId);
-          this.triggerExclamation(message.row, message.col, color);
+          this.triggerExclamation(message.row, message.col, color.hexCode);
           this.highlightWordAt(message.row, message.col);
         }
         if (message.type === 'gameEnded' && message.lastGameEndTimestamp) {
@@ -472,7 +472,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     );
     // Fallback to red if player not found (should not happen).
     const color = localPlayer
-      ? this.colorService.getColorById(localPlayer.colorId)
+      ? this.colorService.getColorById(localPlayer.colorId).hexCode
       : '#B50000';
     this.triggerExclamation(row, col, color);
     this.highlightWordAt(row, col);

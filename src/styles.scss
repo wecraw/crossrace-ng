@@ -80,4 +80,8 @@ body {
   height: 100%;
   width: 100%;
   object-fit: contain;
+
+  &.inverted {
+    filter: invert(1);
+  }
 }
