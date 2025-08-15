@@ -22,18 +22,29 @@ export class PlayerCardComponent {
   @Output() onAvatarChange: EventEmitter<number> = new EventEmitter<number>();
 
   colorGrid: Color[] = COLORS;
+  private totalAvatars: number;
 
   constructor(
     public colorService: ColorService,
     public avatarService: AvatarService,
-  ) {}
+  ) {
+    this.totalAvatars = this.avatarService.getAvatars().length;
+  }
 
   avatarScroll(direction: 'left' | 'right') {
+    if (!this.allowEdit) return;
+
+    let currentId = this.player.avatarId;
+
     if (direction === 'left') {
-      this.player.avatarId--;
+      // Decrement and wrap around if it goes below 1
+      currentId = currentId - 1 < 1 ? this.totalAvatars : currentId - 1;
     } else {
-      this.player.avatarId++;
+      // Increment and wrap around if it exceeds totalAvatars
+      currentId = currentId + 1 > this.totalAvatars ? 1 : currentId + 1;
     }
+
+    this.player.avatarId = currentId;
     this.onAvatarChange.emit(this.player.avatarId);
   }
 

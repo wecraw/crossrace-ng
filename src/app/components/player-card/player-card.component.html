@@ -1,23 +1,35 @@
 <div class="player-card fade-in">
-  <div
-    [ngStyle]="{
-      'background-color': colorService.getColorById(player.colorId).hexCode,
-    }"
-    class="player-avatar"
-    [class.editable]="allowEdit"
-  >
-    <!-- avatar image here based on the avatar id -->
-    <img
-      class="avatar"
-      [src]="avatarService.getAvatarUrlById(player.avatarId)"
-      [class.inverted]="
-        colorService.getColorById(player.colorId).avatarColor === 'White'
-      "
-    />
-    @if (player.ready) {
-      <div class="ready-indicator">
-        <i class="fa-solid fa-check"></i>
-      </div>
+  <div class="avatar-container">
+    @if (allowEdit) {
+      <i
+        class="fa-solid fa-chevron-left arrow"
+        (click)="avatarScroll('left')"
+      ></i>
+    }
+    <div
+      [ngStyle]="{
+        'background-color': colorService.getColorById(player.colorId).hexCode,
+      }"
+      class="player-avatar"
+    >
+      <img
+        class="avatar"
+        [src]="avatarService.getAvatarUrlById(player.avatarId)"
+        [class.inverted]="
+          colorService.getColorById(player.colorId).avatarColor === 'White'
+        "
+      />
+      @if (player.ready) {
+        <div class="ready-indicator">
+          <i class="fa-solid fa-check"></i>
+        </div>
+      }
+    </div>
+    @if (allowEdit) {
+      <i
+        class="fa-solid fa-chevron-right arrow"
+        (click)="avatarScroll('right')"
+      ></i>
     }
   </div>
   <div class="player-name">

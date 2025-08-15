@@ -186,7 +186,25 @@ export class LobbyComponent implements OnInit, OnDestroy {
         }
 
         const connected = state.players.filter((p) => !p.disconnected);
-        this.selfPlayer = connected.find((p) => this.isPlayerSelf(p));
+        const serverSelf = connected.find((p) => this.isPlayerSelf(p));
+
+        if (serverSelf) {
+          // If we already have a selfPlayer object, update it selectively
+          // to prevent optimistic UI updates (avatar, color) from being overwritten by stale server data.
+          if (this.selfPlayer) {
+            // Destructure to separate locally-controlled cosmetic properties from server-controlled state.
+            const { avatarId, colorId, ...restOfServerData } = serverSelf;
+            // Apply server updates for everything else (name, ready status, win count, etc.).
+            Object.assign(this.selfPlayer, restOfServerData);
+          } else {
+            // This is the first time we're setting selfPlayer, so assign the whole object.
+            this.selfPlayer = serverSelf;
+          }
+        } else {
+          // The local player is no longer in the connected list (e.g., kicked).
+          this.selfPlayer = undefined;
+        }
+
         this.otherPlayers = connected.filter((p) => !this.isPlayerSelf(p));
         this.updateReadyCounts(state.players);
 

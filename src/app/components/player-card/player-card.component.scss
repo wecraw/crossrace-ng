@@ -9,6 +9,26 @@
   padding-top: 2px;
 }
 
+.avatar-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 75px;
+}
+
+.arrow {
+  cursor: pointer;
+  color: $gray-icon;
+  font-size: 24px;
+  padding: 0 8px;
+  transition: color 0.2s ease-in-out;
+
+  &:hover {
+    color: $dark-gray;
+  }
+}
+
 .btn-outline-secondary {
   margin-left: 10px;
   background-color: $white;
@@ -25,10 +45,7 @@
   height: 75px;
   border-radius: 10px;
   position: relative;
-
-  &.editable {
-    cursor: pointer;
-  }
+  padding: 5px;
 }
 .player-name {
   font-weight: bold;
