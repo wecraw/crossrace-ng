@@ -2,6 +2,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { Player } from '../../interfaces/player';
+import { ColorService } from '../../services/color/color.service';
+import { AvatarService } from '../../services/avatar/avatar.service';
 
 @Component({
   selector: 'app-leaderboard',
@@ -21,4 +23,9 @@ export class LeaderboardComponent {
       .filter((player) => !player.disconnected)
       .sort((a, b) => b.winCount - a.winCount);
   }
+
+  constructor(
+    public colorService: ColorService,
+    public avatarService: AvatarService,
+  ) {}
 }

@@ -31,6 +31,8 @@ import {
   COUNTDOWN_START_DELAY,
   LOBBY_GAME_START_COUNTDOWN_DURATION,
 } from '../../../constants/game-constants';
+import { ColorService } from '../../../services/color/color.service';
+import { AvatarService } from '../../../services/avatar/avatar.service';
 
 interface Word {
   text: string;
@@ -99,9 +101,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: {
-      winnerDisplayName: string;
-      winnerEmoji: string;
-      winnerColor: string;
+      winner: Player;
       grid: string[][];
       time: string;
       singlePlayer?: boolean;
@@ -111,6 +111,8 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private gameStateService: GameStateService,
     private webSocketService: WebSocketService,
+    public colorService: ColorService,
+    public avatarService: AvatarService,
   ) {}
 
   readonly dialogRef = inject(MatDialogRef<DialogPostGameMp>);
@@ -467,7 +469,9 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       (p: Player) => p.id === this.gameState.localPlayerId,
     );
     // Fallback to red if player not found (should not happen).
-    const color = localPlayer ? localPlayer.playerColor : '#B50000';
+    const color = localPlayer
+      ? this.colorService.getColorById(localPlayer.colorId)
+      : '#B50000';
     this.triggerExclamation(row, col, color);
     this.highlightWordAt(row, col);
 

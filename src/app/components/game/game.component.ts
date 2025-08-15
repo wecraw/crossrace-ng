@@ -308,7 +308,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private handleVersusGameOver(data: any): void {
-    this.isWinner = data.winner === this.gameState.localPlayerId;
+    this.isWinner = data.winner.id === this.gameState.localPlayerId;
     this.gameStateService.updateGameState({
       players: data.players,
     });
@@ -316,9 +316,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (!this.isGameOver) {
       this.openDialog({
-        winnerDisplayName: data.winnerDisplayName,
-        winnerColor: data.winnerColor,
-        winnerEmoji: data.winnerEmoji,
+        winner: data.winner,
         grid: data.condensedGrid,
         time: data.time,
       });

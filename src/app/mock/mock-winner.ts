@@ -1,9 +1,5 @@
 export const MOCK_WIN = {
   type: 'gameEnded',
-  winner: '39d733ec-618e-4ccc-a9de-84e124ae79ec',
-  winnerDisplayName: 'Crocodile',
-  winnerEmoji: '🐬',
-  winnerColor: '#3cb44b',
   grid: [
     ['', '', '', '', '', '', '', '', '', '', '', ''],
     ['', '', '', '', '', '', '', '', '', '', '', ''],
@@ -18,6 +14,12 @@ export const MOCK_WIN = {
     ['', '', '', '', '', '', '', '', '', '', '', ''],
     ['', '', '', '', '', '', '', '', '', '', '', ''],
   ],
+  winner: {
+    id: '39d733ec-618e-4ccc-a9de-84e124ae79ec',
+    displayName: 'Crocodile',
+    colorId: 0,
+    avatarId: 0,
+  },
   time: '1:07',
   players: [
     {

@@ -2,8 +2,14 @@
   <div class="player-list">
     @for (player of sortedPlayers; track player.displayName) {
       <div class="player-item">
-        <div class="player-emoji" [style.background-color]="player.playerColor">
-          {{ player.playerEmoji }}
+        <div
+          class="player-emoji"
+          [style.background-color]="colorService.getColorById(player.colorId)"
+        >
+          <img
+            class="avatar"
+            [src]="avatarService.getAvatarUrlById(player.avatarId)"
+          />
         </div>
         <span class="player-name">{{ player.displayName }}</span>
         <div class="wins-container">

@@ -1,64 +1,16 @@
-@if (allowEdit) {
-  <div
-    class="emoji-mart-container"
-    #emojiMartContainer
-    [ngClass]="{ visible: editingEmoji }"
-  >
-    <div class="avatar-tabs">
-      <div
-        class="tab"
-        (click)="selectTab(0)"
-        [ngClass]="{ selected: selectedTab === 0 }"
-      >
-        Avatar
-      </div>
-      <div
-        class="tab"
-        (click)="selectTab(1)"
-        [ngClass]="{ selected: selectedTab === 1 }"
-      >
-        Color
-      </div>
-    </div>
-
-    <div class="emoji-grid" [ngClass]="{ visible: selectedTab === 0 }">
-      @for (emoji of emojis; track emoji) {
-        <div
-          class="emoji-container noselect"
-          (click)="selectEmoji(emoji)"
-          [class.selected]="emoji === player.playerEmoji"
-        >
-          <!-- <span class="emoji">{{ emoji }}</span> -->
-          <img src="assets/avatars/bill.png" />
-
-          />
-        </div>
-      }
-    </div>
-
-    <div class="color-picker" [ngClass]="{ visible: selectedTab === 1 }">
-      <div class="color-grid">
-        @for (color of colorGrid; track color) {
-          <div
-            class="color-circle"
-            [style.background-color]="color"
-            [class.selected]="color === player.playerColor"
-            (click)="selectColor(color)"
-          ></div>
-        }
-      </div>
-    </div>
-  </div>
-}
-
 <div class="player-card fade-in">
   <div
-    [ngStyle]="{ 'background-color': player.playerColor }"
+    [ngStyle]="{
+      'background-color': colorService.getColorById(player.colorId),
+    }"
     class="player-avatar"
     [class.editable]="allowEdit"
-    (click)="allowEdit ? editEmoji() : null"
   >
-    <img src="assets/avatars/bill.png" />
+    <!-- avatar image here based on the avatar id -->
+    <img
+      class="avatar"
+      [src]="avatarService.getAvatarUrlById(player.avatarId)"
+    />
     @if (player.ready) {
       <div class="ready-indicator">
         <i class="fa-solid fa-check"></i>

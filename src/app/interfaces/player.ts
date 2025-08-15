@@ -3,8 +3,8 @@ export interface Player {
   connectionId?: string;
   displayName: string;
   inGame?: boolean;
-  playerColor: string;
-  playerEmoji: string;
+  colorId: number;
+  avatarId: number;
   winCount: number;
   disconnected?: boolean;
   ready?: boolean;

@@ -1,16 +1,10 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  Input,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { COLORS } from '../../constants/colors';
 import { Player } from '../../interfaces/player';
-import { Emojis } from '../../constants/emoji-list';
+import { ColorService } from '../../services/color/color.service';
+import { AvatarService } from '../../services/avatar/avatar.service';
 
 @Component({
   selector: 'player-card',
@@ -19,86 +13,35 @@ import { Emojis } from '../../constants/emoji-list';
   styleUrl: './player-card.component.scss',
 })
 export class PlayerCardComponent {
-  @ViewChild('emojiMartContainer') emojiMartContainer!: ElementRef;
-  clickOutsideEnabled: boolean = false;
-
-  @HostListener('document:click', ['$event'])
-  clickOutside(event: MouseEvent) {
-    if (
-      this.clickOutsideEnabled &&
-      this.editingEmoji &&
-      this.emojiMartContainer &&
-      !this.emojiMartContainer.nativeElement.contains(event.target)
-    ) {
-      this.editingEmoji = false;
-      this.clickOutsideEnabled = false;
-    }
-  }
-
   @Input() player!: Player;
   @Input() playerIndex: number = 0;
   @Input() allowEdit: boolean = false;
 
-  @Output() onColorSelect: EventEmitter<string> = new EventEmitter<string>();
-  @Output() onEmojiSelect: EventEmitter<string> = new EventEmitter<string>();
+  @Output() onColorChange: EventEmitter<number> = new EventEmitter<number>();
+  @Output() onAvatarChange: EventEmitter<number> = new EventEmitter<number>();
 
-  editingEmoji: boolean = false;
+  colorGrid: string[] = COLORS;
 
-  selectedTab: number = 0;
-  emojis = Emojis;
+  constructor(
+    public colorService: ColorService,
+    public avatarService: AvatarService,
+  ) {}
 
-  colorGrid: string[] = [
-    '#e6194b',
-    '#3cb44b',
-    '#ffe119',
-    '#4363d8',
-    '#f58231',
-    '#911eb4',
-    '#46f0f0',
-    '#f032e6',
-    '#bcf60c',
-    '#fabebe',
-    '#008080',
-    '#e6beff',
-    '#9a6324',
-    '#fffac8',
-    '#800000',
-    '#aaffc3',
-    '#808000',
-    '#ffd8b1',
-    '#000075',
-    '#808080',
-    '#ffffff',
-    '#000000',
-    '#00FF7F',
-    '#8B008B',
-    '#DAA520',
-  ];
-
-  editEmoji() {
-    if (!this.editingEmoji) {
-      this.editingEmoji = true;
-      this.clickOutsideEnabled = false;
-      setTimeout(() => {
-        this.clickOutsideEnabled = true;
-      }, 100);
+  avatarScroll(direction: 'left' | 'right') {
+    if (direction === 'left') {
+      this.player.avatarId--;
     } else {
-      this.editingEmoji = false;
-      this.clickOutsideEnabled = false;
+      this.player.avatarId++;
     }
+    this.onAvatarChange.emit(this.player.avatarId);
   }
 
-  selectEmoji(emoji: string) {
-    this.player.playerEmoji = emoji;
-    this.onEmojiSelect.emit(emoji);
-  }
-
-  selectColor(color: string) {
-    this.player.playerColor = color;
-    this.onColorSelect.emit(color);
-  }
-
-  selectTab(tabIndex: number) {
-    this.selectedTab = tabIndex;
+  colorScroll(direction: 'left' | 'right') {
+    if (direction === 'left') {
+      this.player.colorId--;
+    } else {
+      this.player.colorId++;
+    }
+    this.onColorChange.emit(this.player.colorId);
   }
 }

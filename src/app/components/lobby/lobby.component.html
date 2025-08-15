@@ -41,8 +41,8 @@
               <player-card
                 [player]="selfPlayer"
                 [allowEdit]="true"
-                (onColorSelect)="updatePlayer({ playerColor: $event })"
-                (onEmojiSelect)="updatePlayer({ playerEmoji: $event })"
+                (onColorChange)="updatePlayer({ colorId: $event })"
+                (onAvatarChange)="updatePlayer({ avatarId: $event })"
               ></player-card>
             }
           </div>

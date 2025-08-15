@@ -5,14 +5,19 @@
       <div class="player-card">
         <i class="fa-solid fa-crown crown"></i>
         <div
-          [ngStyle]="{ 'background-color': data.winnerColor }"
+          [ngStyle]="{
+            'background-color': colorService.getColorById(data.winner.colorId),
+          }"
           class="player-avatar"
         >
-          <div class="emoji noselect">{{ data.winnerEmoji }}</div>
+          <img
+            class="avatar"
+            [src]="avatarService.getAvatarUrlById(data.winner.avatarId)"
+          />
         </div>
       </div>
       <div class="d-flex flex-column w-auto" style="height: 80px">
-        <h2>{{ data.winnerDisplayName }} won!</h2>
+        <h2>{{ data.winner.displayName }} won!</h2>
       </div>
     </div>
 
