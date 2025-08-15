@@ -34,16 +34,6 @@ $grid-cell-size: 32px;
   border-radius: $border-radius-round;
   background-color: $avatar-blue;
   box-shadow: inset 0 0 0 1px $black-transparent-10;
-
-  .emoji {
-    font-size: $font-size-mega;
-    display: flex;
-    height: 100%;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-    margin-top: 1px; //alignment
-  }
 }
 app-leaderboard {
   margin-top: $spacing-s;

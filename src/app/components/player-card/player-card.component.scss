@@ -20,12 +20,6 @@
   }
 }
 
-.avatar {
-  height: 100%;
-  width: 100%;
-  object-fit: contain;
-}
-
 .player-avatar {
   width: 75px;
   height: 75px;
@@ -34,16 +28,6 @@
 
   &.editable {
     cursor: pointer;
-  }
-
-  .emoji {
-    font-size: 32px;
-    display: flex;
-    height: 100%;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-    margin-top: 1px; //alignment
   }
 }
 .player-name {
@@ -78,53 +62,8 @@
   line-height: 0;
 }
 
-.emoji-mart-container {
-  background-color: #fff;
-  display: none;
-  position: absolute;
-  z-index: 999;
-  margin-top: 85px;
-  left: 50%;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
-  filter: drop-shadow(3px 3px 2px $black-transparent-30);
-  border-radius: 5px;
-  height: 359px;
-  width: 338px;
-}
-
 .visible {
   display: inline-grid !important;
-}
-
-.avatar-tabs {
-  width: 100%;
-  display: flex;
-  border-radius: 5px;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border: 1px solid $gray-border;
-  overflow: hidden;
-  border-bottom: 0;
-  height: 46px;
-  .tab {
-    width: 50%;
-    padding: 10px;
-    text-align: center;
-    cursor: pointer;
-    background-color: #f5f5f5;
-    border-bottom: 1px solid $gray-border;
-
-    &.selected {
-      border-bottom: 0;
-      background-color: $white;
-      font-weight: bold;
-    }
-
-    &:first-child {
-      border-right: 1px solid $gray-border;
-    }
-  }
 }
 
 .ready-indicator {
@@ -184,63 +123,4 @@
   &:hover {
     transform: scale(1.1);
   }
-}
-
-.emoji-grid {
-  grid-template-columns: repeat(9, 1fr);
-  grid-template-rows: repeat(8, 1fr);
-  width: 338px;
-  height: 313px;
-  justify-content: center;
-  align-content: center;
-  border: 1px solid $gray-border;
-  border-top: 0;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  display: none !important;
-  padding: 5px;
-  &.visible {
-    display: grid !important;
-  }
-}
-
-.emoji-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  cursor: pointer;
-  border-radius: 50%;
-}
-
-.emoji {
-  font-size: 24px;
-  z-index: 1;
-}
-
-.emoji-container::before {
-  content: "";
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.emoji-container.selected::before {
-  opacity: 1;
-  content: "";
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid $black;
-}
-
-.emoji-container:hover::before {
-  opacity: 1;
-  background-color: $black-transparent-10;
 }

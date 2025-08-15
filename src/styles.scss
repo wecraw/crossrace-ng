@@ -15,12 +15,6 @@
   font-style: normal;
 }
 
-.emoji-mart {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  border-top: 0;
-}
-
 html {
   overscroll-behavior: none;
 }
@@ -80,4 +74,10 @@ body {
 
 .translucent {
   opacity: 0.1;
+}
+
+.avatar {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
 }
