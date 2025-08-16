@@ -7,9 +7,61 @@
   margin: 0 auto;
 }
 
-h2 {
+.room-code-label {
   text-align: center;
-  color: $dark-gray-text;
+  font-weight: 500;
+  color: $gray-text;
+  margin-bottom: $spacing-xs;
+}
+
+.room-code-row {
+  margin-bottom: $spacing-m;
+  height: 48px;
+}
+
+.room-code-container {
+  border: 1px solid $light-gray;
+  border-radius: $border-radius-xl;
+  cursor: pointer;
+  padding: $spacing-xs;
+  padding-left: $spacing-s;
+  width: fit-content;
+
+  &:hover {
+    background: $light-gray-hover;
+  }
+}
+
+.code-wrapper {
+  gap: $spacing-xs;
+}
+
+.tile-wrapper {
+  background-color: $success-green;
+  border-radius: $border-radius-tile;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.letter {
+  color: $white;
+  font-weight: bold;
+  font-size: $font-size-l;
+}
+
+.copy-share-icon {
+  margin-left: $spacing-s;
+  margin-right: $spacing-xs;
+  display: flex;
+  align-items: center;
+  font-size: $font-size-xl;
+  color: $gray-icon;
+  img {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .player-list {
