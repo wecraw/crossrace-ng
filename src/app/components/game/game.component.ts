@@ -508,7 +508,6 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   startPuzzle() {
     this.isGameStarted = true;
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
-    this.timerStartTime = 0; // A fresh start is always from 0.
     this.startTimer();
   }
 
