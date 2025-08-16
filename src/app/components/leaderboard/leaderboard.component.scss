@@ -9,9 +9,9 @@
 
 .room-code-label {
   text-align: center;
-  font-weight: 500;
-  color: $gray-text;
   margin-bottom: $spacing-xs;
+  font-weight: bold;
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
 }
 
 .room-code-row {
@@ -20,35 +20,28 @@
 }
 
 .room-code-container {
-  border: 1px solid $light-gray;
-  border-radius: $border-radius-xl;
   cursor: pointer;
   padding: $spacing-xs;
   padding-left: $spacing-s;
   width: fit-content;
 
   &:hover {
-    background: $light-gray-hover;
+    cursor: pointer;
   }
 }
 
-.code-wrapper {
-  gap: $spacing-xs;
-}
-
 .tile-wrapper {
-  background-color: $success-green;
   border-radius: $border-radius-tile;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
 }
 
 .letter {
   color: $white;
-  font-weight: bold;
-  font-size: $font-size-l;
+  font-weight: 700;
+  font-size: $font-size-xxl;
 }
 
 .copy-share-icon {
