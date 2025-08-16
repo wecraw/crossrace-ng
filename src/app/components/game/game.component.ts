@@ -424,6 +424,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.condensedGrid = [];
     this.bankLettersVisible = false;
+    this.resetBoardPosition();
   }
 
   /**
@@ -513,6 +514,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
   refreshPuzzle() {
     this.gameLogicService.refreshPuzzle();
+    this.resetBoardPosition();
   }
 
   private handleWin(condensedGrid: string[][]): void {
@@ -712,6 +714,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
         this.gridCellIds.push(`cell-${i}-${j}`);
       }
     }
+    this.resetBoardPosition();
+  }
+
+  resetBoardPosition() {
     if (window.innerWidth < 390) {
       this.dragPosition = { x: -254, y: -247 };
     } else {
