@@ -134,8 +134,11 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       this.gameLogicService.initializeGame(resolvedData.gameSeed);
       this.startAfterCountDown();
     } else if (gameMode === 'versus') {
-      // Versus mode: game seed is received via websocket.
-      this.startAfterCountDown();
+      // Versus mode: game state (seed, time) is set by the join/rejoin response.
+      const currentState = this.gameStateService.getCurrentState();
+      // startAfterCountDown handles game initialization from the seed and
+      // will correctly sync the timer if a time is provided.
+      this.startAfterCountDown(currentState.currentGameTime);
     } else {
       console.log(
         'Game component initialized without required data. Navigation likely cancelled by resolver.',
@@ -284,20 +287,18 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
         this.isCountingDown = false;
 
         if (syncTime !== undefined) {
-          // This was a sync. The animations have just finished.
-          // The server time we received is now stale by the duration of these animations.
-          const animationDurationS =
-            (LOBBY_GAME_START_COUNTDOWN_DURATION +
-              COUNTDOWN_START_DELAY +
+          // This was a sync. The animations we just played on the client took time.
+          // We need to estimate the current server time to sync the timer accurately.
+          const clientAnimationDurationS =
+            (COUNTDOWN_START_DELAY +
               COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
               COUNTDOWN_FADEOUT_DELAY) /
             1000;
 
-          // The current server time is what we received plus how long we just animated.
-          const currentServerTime = syncTime + animationDurationS;
+          const estimatedServerTime = syncTime + clientAnimationDurationS;
 
-          // Now sync the timer using this updated, more accurate server time.
-          this.syncTimer(currentServerTime);
+          // syncTimer will correctly subtract the *full* animation offset (including lobby load time)
+          this.syncTimer(estimatedServerTime);
         } else {
           // This was a fresh start, not a sync. Start the puzzle from zero.
           this.startPuzzle();
@@ -467,27 +468,25 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       gameEndData,
     );
 
-    // Case 1: Player was on post-game, new game started. They need the full animation sequence.
+    // Case 1: Player was on post-game screen, and a new round has started.
     if (this.isGameOver && !gameEnded) {
-      this.isCountingDown = false; // Stop any existing countdowns immediately.
-
       console.log(
         'Reconnected to an active game from post-game screen. Starting new round.',
       );
+      // startNewRound handles resetting and calling startAfterCountDown
       await this.startNewRound(serverTime);
       return;
     }
 
-    // Case 2: Game ended while away. Show post-game dialog.
+    // Case 2: Game ended while player was disconnected. Show post-game dialog.
     if (gameEnded && gameEndData) {
-      this.isCountingDown = false; // Stop any existing countdowns immediately.
-
       console.log('Game ended while disconnected, showing end game dialog');
+      this.isCountingDown = false; // Stop any existing countdowns immediately.
       this.handleVersusGameOver(gameEndData);
       return;
     }
 
-    // Case 3: Player was in-game and reconnected. No animations needed. Sync immediately.
+    // Case 3: Player was in an active game and reconnected.
     const totalAnimationDurationS =
       (LOBBY_GAME_START_COUNTDOWN_DURATION +
         COUNTDOWN_START_DELAY +
@@ -495,11 +494,26 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
         COUNTDOWN_FADEOUT_DELAY) /
       1000;
 
+    // We must stop any ongoing local countdowns before making a decision.
+    this.isCountingDown = false;
+
     if (serverTime > totalAnimationDurationS) {
-      this.isCountingDown = false; // Stop any existing countdowns immediately.
+      // MID-GAME RECONNECT: Player might have progress.
+      // Sync the timer immediately without animations or resetting the board.
+      console.log(
+        `Mid-game reconnect detected (serverTime: ${serverTime}s). Syncing timer.`,
+      );
       this.isGameStarted = true;
-      console.log(serverTime, totalAnimationDurationS, this.isGameStarted);
+      this.bankLettersVisible = true;
+      this.allDropListIds = ['letter-bank', ...this.gridCellIds];
       this.syncTimer(serverTime);
+    } else {
+      // EARLY-GAME RECONNECT: Player has little to no progress.
+      // It's safe and better UX to show them the countdown animation.
+      console.log(
+        `Early-game reconnect detected (serverTime: ${serverTime}s). Starting with countdown.`,
+      );
+      this.startAfterCountDown(serverTime);
     }
   }
 
