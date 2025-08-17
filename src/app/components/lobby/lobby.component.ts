@@ -12,19 +12,16 @@ import { Router } from '@angular/router';
 import { WebSocketService } from '../../services/websocket/websocket.service';
 import { Subject, takeUntil } from 'rxjs';
 import { ClipboardModule } from '@angular/cdk/clipboard';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
-import { Dialog } from '../dialogs/dialog/dialog.component';
 import { GameStateService } from '../../services/game-state/game-state.service';
 import { PlayerCardComponent } from '../player-card/player-card.component';
 import { Player } from '../../interfaces/player';
-import { DialogData } from '../../interfaces/dialog-data';
-import { LoadingService } from '../../services/loading/loading.service';
-import { LOBBY_GAME_START_COUNTDOWN_DURATION } from '../../constants/game-constants';
 import { GameState } from '../../interfaces/game-state';
+import { GameFlowService } from '../../services/game-flow/game-flow.service';
 
 @Component({
   selector: 'app-lobby',
@@ -64,9 +61,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
     private webSocketService: WebSocketService,
     private gameStateService: GameStateService,
     private router: Router,
-    private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-    private loadingService: LoadingService,
+    private gameFlowService: GameFlowService,
   ) {}
 
   get connectedPlayers(): Player[] {
@@ -96,6 +92,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.isShareSupported =
       !!navigator.share &&
       /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    this.gameFlowService.initialize();
     this.setupSubscriptions();
   }
 
@@ -115,6 +112,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       currentState.gameMode !== 'daily' &&
       currentState.gameMode !== 'practice'
     ) {
+      this.gameFlowService.destroy();
       this.webSocketService.disconnect();
       this.gameStateService.clearGameState();
     }
@@ -144,11 +142,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   readyUp(): void {
-    if (this.gameState.gameCode) {
-      this.isLocalPlayerReady = true; // Optimistic update
-      this.readyPlayersCount++; // Optimistic update
-      this.webSocketService.playerReady(this.gameState.gameCode);
-    }
+    this.gameFlowService.playerReady();
   }
 
   get readyButtonText(): string {
@@ -193,76 +187,5 @@ export class LobbyComponent implements OnInit, OnDestroy {
         console.log('Lobby received updated game state:', state);
         this.cdr.detectChanges();
       });
-
-    this.webSocketService
-      .getMessages()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((message) => this.handleMessage(message));
-  }
-
-  private async handleMessage(message: any): Promise<void> {
-    console.log('Lobby received message:', message.type, message);
-    switch (message.type) {
-      case 'playerList':
-        this.gameStateService.updateGameState({
-          players: message.players,
-        });
-        break;
-
-      case 'gameStarted':
-        this.gameStateService.updateGameState({
-          gameSeed: message.gameSeed,
-          isInGame: true,
-          gameMode: 'versus',
-        });
-
-        await this.loadingService.showAndHide({
-          message: 'Game starting!',
-          duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
-        });
-
-        this.router.navigate(['/versus', this.gameState.gameCode]);
-        break;
-
-      case 'error':
-        const errorMessage = message.message || '';
-        console.error('Received server error:', errorMessage);
-
-        if (errorMessage.includes('Failed to start game')) {
-          return;
-        }
-
-        this.openDialog(
-          {
-            dialogText: errorMessage || 'An unknown error occurred.',
-            showSpinner: false,
-            showConfirm: true,
-          },
-          false,
-        );
-        break;
-    }
-  }
-
-  openDialog(data: DialogData, disableClose: boolean) {
-    if (!disableClose) {
-      const dialogRef = this.dialog.open(Dialog, {
-        data: data,
-      });
-      dialogRef.afterClosed().subscribe((result) => {
-        if (result) {
-          if (result.event === 'confirm') {
-            this.router.navigate(['/']);
-          }
-        } else {
-          this.router.navigate(['/']);
-        }
-      });
-    } else {
-      this.dialog.open(Dialog, {
-        data: data,
-        disableClose: true,
-      });
-    }
   }
 }

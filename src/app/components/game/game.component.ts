@@ -22,14 +22,12 @@ import { MOCK_WIN } from '../../mock/mock-winner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { GameBoardComponent } from '../game-board/game-board.component';
 
-import { WebSocketService } from '../../services/websocket/websocket.service';
 import { Subject, Subscription, takeUntil } from 'rxjs';
 import * as confetti from 'canvas-confetti';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameStateService } from '../../services/game-state/game-state.service';
 import { GameState } from '../../interfaces/game-state';
 import { DialogTutorial } from '../dialogs/dialog-tutorial/dialog-tutorial.component';
-import { DialogPostGameMp } from '../dialogs/dialog-post-game-mp/dialog-post-game-mp.component';
 import {
   COUNTDOWN_INITIAL_VALUE,
   COUNTDOWN_INTERVAL,
@@ -44,6 +42,7 @@ import { LoadingService } from '../../services/loading/loading.service';
 import { GameLogicService } from '../../services/game-logic/game-logic.service';
 import { PUZZLES } from './puzzles';
 import { GameResolverData } from '../../resolvers/game.resolver';
+import { GameFlowService } from '../../services/game-flow/game-flow.service';
 
 @Component({
   selector: 'app-game',
@@ -61,8 +60,6 @@ import { GameResolverData } from '../../resolvers/game.resolver';
 })
 export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;
-
-  private webSocketService = inject(WebSocketService);
 
   private readonly destroy$ = new Subject<void>();
   private dialogCloseSubscription: Subscription | null = null;
@@ -95,9 +92,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly dialog = inject(MatDialog);
 
   //MP
-  private wsSubscription!: Subscription;
   isGameOver: boolean = false;
-  isWinner: boolean = false;
   isGameStarted: boolean = false;
 
   // Game State
@@ -117,6 +112,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     private ngZone: NgZone,
     private loadingService: LoadingService,
     public gameLogicService: GameLogicService,
+    private gameFlowService: GameFlowService,
   ) {}
 
   ngOnInit(): void {
@@ -152,8 +148,25 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       .getGameState()
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
-        const oldStateHasForceWinFlag = this.gameState?.debugForceWin;
+        const oldState = this.gameState; // Capture previous state before overwriting
+        const oldStateHasForceWinFlag = oldState?.debugForceWin;
         this.gameState = state;
+
+        // Check if a new round has started in 'versus' mode.
+        // This is detected by a change in the gameSeed while we are on the GameComponent.
+        // 'oldState' check prevents this from running on component initialization.
+        if (
+          oldState && // Ensures this is not the first state emission
+          oldState.gameSeed !== state.gameSeed &&
+          state.gameMode === 'versus'
+        ) {
+          console.log(
+            `New game seed detected (${state.gameSeed}). Starting new round.`,
+          );
+          // A new round always starts from a fresh state, not a sync.
+          this.startAfterCountDown();
+          return; // Stop further processing of this state update.
+        }
 
         if (
           this.gameState.debugForceWin &&
@@ -165,12 +178,6 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
           this.gameStateService.updateGameState({ debugForceWin: false });
         }
       });
-
-    // Subscribe to WebSocket messages
-    this.webSocketService
-      .getMessages()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((message) => this.handleWebSocketMessage(message));
 
     // Subscribe to game logic service state
     this.gameLogicService.grid$
@@ -217,16 +224,9 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       this.dialogCloseSubscription.unsubscribe();
     }
 
-    if (this.gameState.gameMode === 'versus') {
-      this.gameStateService.clearPendingWin();
-    }
-
     this.gameStateService.updateGameState({
       isInGame: false,
     });
-    if (this.wsSubscription) {
-      this.wsSubscription.unsubscribe();
-    }
   }
 
   getRandomPuzzleSeed() {
@@ -262,6 +262,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
    * If a `syncTime` is provided, it syncs the timer after animations instead of starting fresh.
    */
   startAfterCountDown(syncTime?: number) {
+    this.resetForNewGame();
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
@@ -307,114 +308,13 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     }, COUNTDOWN_START_DELAY);
   }
 
-  private handleVersusGameOver(data: any): void {
-    this.isWinner = data.winner === this.gameState.localPlayerId;
-    this.gameStateService.updateGameState({
-      players: data.players,
-    });
-    this.gameStateService.clearPendingWin();
-
-    if (!this.isGameOver) {
-      this.openDialog({
-        winnerDisplayName: data.winnerDisplayName,
-        winnerColor: data.winnerColor,
-        winnerEmoji: data.winnerEmoji,
-        grid: data.condensedGrid,
-        time: data.time,
-      });
-      this.isGameOver = true;
-    }
-    this.stopTimer();
-  }
-
-  async handleWebSocketMessage(message: any): Promise<void> {
-    console.log('Game received message:', message.type, message);
-
-    switch (message.type) {
-      case 'gameEnded':
-        this.handleVersusGameOver(message);
-        break;
-
-      case 'gameStarted':
-        if (this.isGameOver) {
-          this.gameStateService.updateGameState({
-            gameSeed: message.gameSeed,
-          });
-          await this.startNewRound();
-        }
-        break;
-
-      case 'playerList':
-        if (this.gameState.gameMode === 'versus') {
-          console.log('Updating player list during gameplay');
-          this.gameStateService.updateGameState({
-            players: message.players,
-          });
-        }
-        break;
-
-      case 'syncGameState':
-        if (this.gameState.gameMode === 'versus') {
-          console.log('Received game state sync after local reconnection');
-          await this.syncGameState(
-            message.time,
-            message.isGameEnded,
-            message.gameEndData,
-          );
-        }
-        break;
-
-      case 'error':
-        // This specific error is handled by the post-game dialog to show a "waiting" message.
-        // The game component should ignore it and not navigate away.
-        if (
-          message.message?.includes(
-            'A multiplayer game requires at least 2 players',
-          )
-        ) {
-          return; // Do nothing, let the dialog handle it.
-        }
-
-        console.error(
-          'Received server error during gameplay:',
-          message.message,
-        );
-        this.router.navigate(['/']);
-        break;
-    }
-  }
-
-  /**
-   * Resets the game state and starts a new round, including animations.
-   * If `initialServerTime` is provided, it's passed to the animation sequence for later syncing.
-   */
-  private async startNewRound(initialServerTime?: number): Promise<void> {
-    if (this.dialogCloseSubscription) {
-      this.dialogCloseSubscription.unsubscribe();
-      this.dialogCloseSubscription = null;
-    }
-    this.closeDialog();
-    this.gameStateService.updateGameState({ isInGame: true });
-
-    await this.loadingService.showAndHide({
-      message: 'Game starting!',
-      duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
-    });
-
-    this.resetForNewGame();
-    // Pass the sync time to the countdown sequence
-    this.startAfterCountDown(initialServerTime);
-  }
-
   private resetForNewGame(): void {
     this.isGameOver = false;
-    this.isWinner = false;
     this.isGameStarted = false;
     this.waitingForRestart = false;
     this.countdownEnded = false;
     this.countdown = COUNTDOWN_INITIAL_VALUE;
     this.isPulsating = true;
-    this.isCountingDown = false;
 
     this.timerRunning = false;
     this.timerStartTime = 0;
@@ -430,12 +330,14 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /**
    * Calculates the correct gameplay time from the server's raw time and syncs the timer.
-   * This is only called for in-progress games.
+   * This is only called for in-progress games on reconnect.
    */
   private syncTimer(serverTime: number): void {
     if (serverTime === undefined) return;
     this.isGameStarted = true; // Mark game as started since we are syncing a timer
     this.isCountingDown = false; // Ensure no animations are playing
+    this.bankLettersVisible = true;
+    this.allDropListIds = ['letter-bank', ...this.gridCellIds];
 
     // The server provides raw elapsed time. The client-side gameplay time is that
     // value minus the total duration of the startup animations.
@@ -456,67 +358,6 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     this.startTimer();
   }
 
-  private async syncGameState(
-    serverTime: number,
-    gameEnded: boolean,
-    gameEndData: any,
-  ): Promise<void> {
-    console.log(
-      'Syncing game state on connection:',
-      serverTime,
-      gameEnded,
-      gameEndData,
-    );
-
-    // Case 1: Player was on post-game screen, and a new round has started.
-    if (this.isGameOver && !gameEnded) {
-      console.log(
-        'Reconnected to an active game from post-game screen. Starting new round.',
-      );
-      // startNewRound handles resetting and calling startAfterCountDown
-      await this.startNewRound(serverTime);
-      return;
-    }
-
-    // Case 2: Game ended while player was disconnected. Show post-game dialog.
-    if (gameEnded && gameEndData) {
-      console.log('Game ended while disconnected, showing end game dialog');
-      this.isCountingDown = false; // Stop any existing countdowns immediately.
-      this.handleVersusGameOver(gameEndData);
-      return;
-    }
-
-    // Case 3: Player was in an active game and reconnected.
-    const totalAnimationDurationS =
-      (LOBBY_GAME_START_COUNTDOWN_DURATION +
-        COUNTDOWN_START_DELAY +
-        COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
-        COUNTDOWN_FADEOUT_DELAY) /
-      1000;
-
-    // We must stop any ongoing local countdowns before making a decision.
-    this.isCountingDown = false;
-
-    if (serverTime > totalAnimationDurationS) {
-      // MID-GAME RECONNECT: Player might have progress.
-      // Sync the timer immediately without animations or resetting the board.
-      console.log(
-        `Mid-game reconnect detected (serverTime: ${serverTime}s). Syncing timer.`,
-      );
-      this.isGameStarted = true;
-      this.bankLettersVisible = true;
-      this.allDropListIds = ['letter-bank', ...this.gridCellIds];
-      this.syncTimer(serverTime);
-    } else {
-      // EARLY-GAME RECONNECT: Player has little to no progress.
-      // It's safe and better UX to show them the countdown animation.
-      console.log(
-        `Early-game reconnect detected (serverTime: ${serverTime}s). Starting with countdown.`,
-      );
-      this.startAfterCountDown(serverTime);
-    }
-  }
-
   /**
    * Starts the puzzle for a fresh game (not a reconnect/sync).
    */
@@ -535,9 +376,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     this.condensedGrid = condensedGrid;
     this.stopTimer();
     this.renderConfetti();
+    this.isGameOver = true;
 
     if (this.gameState.gameMode === 'versus') {
-      this.announceWinAsync();
+      this.gameFlowService.reportWin(this.condensedGrid);
     } else {
       if (this.gameState.gameMode === 'daily') {
         this.updateDailyLocalStorage();
@@ -555,17 +397,6 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
       this.isGameStarted = false;
       this.waitingForRestart = true;
-    }
-  }
-
-  private async announceWinAsync(debug?: boolean): Promise<void> {
-    try {
-      await this.webSocketService.announceWin(
-        this.gameState.localPlayerId!,
-        debug ? this.mockWin.grid : this.condensedGrid,
-      );
-    } catch (error) {
-      console.error('Error announcing win:', error);
     }
   }
 
@@ -594,9 +425,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     this.renderConfetti();
     this.condensedGrid = this.mockWin.grid;
     this.stopTimer();
+    this.isGameOver = true;
 
     if (this.gameState.gameMode === 'versus') {
-      this.announceWinAsync(true);
+      this.gameFlowService.reportWin(this.mockWin.grid);
     } else {
       if (this.gameState.gameMode === 'daily') {
         this.updateDailyLocalStorage();
@@ -652,36 +484,23 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       this.dialogCloseSubscription = null;
     }
 
-    let dialogRef;
-    if (this.gameState.gameMode === 'versus') {
-      dialogRef = this.dialog.open(DialogPostGameMp, {
-        data: data,
-        minWidth: 380,
-        disableClose: true,
-      });
-    } else {
-      dialogRef = this.dialog.open(DialogPostGame, {
-        data: data,
-        minWidth: 380,
-      });
-    }
+    // This component now only opens the single-player dialog
+    const dialogRef = this.dialog.open(DialogPostGame, {
+      data: data,
+      minWidth: 380,
+    });
 
     this.dialogCloseSubscription = dialogRef
       .afterClosed()
       .subscribe((result) => {
         if (!result) {
-          // This case handles when the dialog is closed without an explicit action,
-          // for example, when a new multiplayer round starts and closes the dialog.
-          // In single player, it handles closing via Esc/backdrop click.
-          this.gameStateService.clearPendingWin();
+          // Handles closing via Esc/backdrop click.
           this.router.navigate(['/']);
         } else {
           if (result.event === 'confirm') {
-            if (this.gameState.gameMode === 'versus')
-              this.router.navigate(['/join/' + this.gameState.gameCode]);
-            if (this.gameState.gameMode === 'daily')
+            if (this.gameState.gameMode === 'daily') {
               this.router.navigate(['/practice']);
-            if (this.gameState.gameMode === 'practice') {
+            } else if (this.gameState.gameMode === 'practice') {
               this.gameStateService.updateGameState({
                 gameSeed: this.getRandomPuzzleSeed(),
               });
@@ -690,15 +509,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
             }
           }
           if (result.event === 'quit') {
-            this.gameStateService.clearPendingWin();
             this.router.navigate(['/']);
           }
         }
       });
-  }
-
-  closeDialog() {
-    this.dialog.closeAll();
   }
 
   openTutorialDialog(data: any) {
