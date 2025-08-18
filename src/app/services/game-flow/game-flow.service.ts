@@ -69,9 +69,21 @@ export class GameFlowService {
   }
 
   public playerReady(): void {
-    const gameCode = this.gameStateService.getCurrentState().gameCode;
-    if (gameCode) {
-      this.webSocketService.playerReady(gameCode);
+    const currentState = this.gameStateService.getCurrentState();
+    if (currentState.gameCode && currentState.localPlayerId) {
+      // Optimistic update: Update the local state immediately.
+      const newPlayers = currentState.players.map((player) => {
+        if (player.id === currentState.localPlayerId) {
+          // Create a new player object with the ready status updated
+          return { ...player, ready: true };
+        }
+        return player;
+      });
+
+      this.gameStateService.updateGameState({ players: newPlayers });
+
+      // Send the actual request to the server.
+      this.webSocketService.playerReady(currentState.gameCode);
     }
   }
 
