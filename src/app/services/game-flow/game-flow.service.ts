@@ -107,8 +107,9 @@ export class GameFlowService {
       case 'gameStarted':
         this.closePostGameDialog();
         this.gamePhaseSubject.next('STARTING');
+        // Set isInGame first. This is important for the lobby->game transition
+        // so that the inGameGuard passes.
         this.gameStateService.updateGameState({
-          gameSeed: message.gameSeed,
           isInGame: true,
           gameMode: 'versus',
         });
@@ -116,6 +117,12 @@ export class GameFlowService {
         await this.loadingService.showAndHide({
           message: 'Game starting!',
           duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
+        });
+
+        // after the delay, update the game seed. This will trigger
+        // the GameComponent to start a new round if it's already active.
+        this.gameStateService.updateGameState({
+          gameSeed: message.gameSeed,
         });
 
         this.gamePhaseSubject.next('IN_GAME');

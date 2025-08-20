@@ -38,7 +38,6 @@ import {
   DRAG_POSITION_INIT,
   LOBBY_GAME_START_COUNTDOWN_DURATION,
 } from '../../constants/game-constants';
-import { LoadingService } from '../../services/loading/loading.service';
 import { GameLogicService } from '../../services/game-logic/game-logic.service';
 import { PUZZLES } from './puzzles';
 import { GameResolverData } from '../../resolvers/game.resolver';
@@ -110,7 +109,6 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     private router: Router,
     private route: ActivatedRoute,
     private ngZone: NgZone,
-    private loadingService: LoadingService,
     public gameLogicService: GameLogicService,
     private gameFlowService: GameFlowService,
   ) {}
