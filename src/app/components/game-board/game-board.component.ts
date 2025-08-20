@@ -37,6 +37,7 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 
   @Output() dropped = new EventEmitter<CdkDragDrop<string[]>>();
   @Output() dragStarted = new EventEmitter<CdkDragStart>();
+  @Output() boardReady = new EventEmitter<void>();
 
   @ViewChild('gridWrapper') gridWrapper!: ElementRef;
   @ViewChild('gridContainer') gridContainer!: ElementRef;
@@ -45,6 +46,7 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.setupTouchEventHandling();
+    this.boardReady.emit();
   }
 
   ngOnDestroy(): void {

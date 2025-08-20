@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   Component,
   ElementRef,
   inject,
@@ -35,9 +34,10 @@ import {
   COUNTDOWN_ANIMATION_DELAY,
   COUNTDOWN_START_DELAY,
   WIN_DIALOG_DELAY,
-  DRAG_POSITION_INIT,
   LOBBY_GAME_START_COUNTDOWN_DURATION,
   GRID_SIZE,
+  GRID_INITIAL_POSITION_Y,
+  GRID_INITIAL_POSITION_X,
 } from '../../constants/game-constants';
 import { GameLogicService } from '../../services/game-logic/game-logic.service';
 import { PUZZLES } from './puzzles';
@@ -58,7 +58,7 @@ import { GameFlowService } from '../../services/game-flow/game-flow.service';
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
 })
-export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
+export class GameComponent implements OnInit, OnDestroy {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;
 
   private readonly destroy$ = new Subject<void>();
@@ -76,7 +76,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   countdown: number = 3;
 
   // Grid DOM settings
-  dragPosition = DRAG_POSITION_INIT;
+  dragPosition = {
+    x: -GRID_INITIAL_POSITION_X,
+    y: -GRID_INITIAL_POSITION_Y,
+  };
   gridSize = GRID_SIZE;
 
   // Timer
@@ -143,6 +146,38 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  prepareGrid() {
+    // Defer grid creation to a separate macrotask with a small delay.
+    // This allows the browser to render and animate the letter tiles
+    // before the main thread gets busy rendering the heavy game board.
+    setTimeout(() => {
+      this.isGridReady = true;
+    }, 50);
+  }
+
+  onBoardReady(): void {
+    // This is called when the game board component has finished rendering.
+    // We can now make it visible with the fade-in effect. A small delay
+    // ensures the browser has a chance to paint the board before the
+    // transition starts.
+    setTimeout(() => {
+      this.isGridVisible = true;
+    }, 50);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    if (this.dialogCloseSubscription) {
+      this.dialogCloseSubscription.unsubscribe();
+    }
+
+    this.gameStateService.updateGameState({
+      isInGame: false,
+    });
+  }
+
   private setupSubscriptions(): void {
     // Subscribe to the game state
     this.gameStateService
@@ -207,36 +242,6 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
-  ngAfterViewInit() {
-    // Grid preparation is now handled by startAfterCountDown to support restarting games.
-  }
-
-  prepareGrid() {
-    // Defer grid creation until after the current change detection cycle.
-    setTimeout(() => {
-      this.isGridReady = true;
-      // After setting isGridReady, Angular renders the grid.
-      // We wait a bit before making it visible to allow for this rendering,
-      // then trigger a smooth CSS transition.
-      setTimeout(() => {
-        this.isGridVisible = true;
-      }, 50); // A small delay is enough time for rendering to begin.
-    }, 0);
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-
-    if (this.dialogCloseSubscription) {
-      this.dialogCloseSubscription.unsubscribe();
-    }
-
-    this.gameStateService.updateGameState({
-      isInGame: false,
-    });
-  }
-
   getRandomPuzzleSeed() {
     return Math.floor(Math.random() * PUZZLES.length);
   }
@@ -271,7 +276,6 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   startAfterCountDown(syncTime?: number) {
     this.resetForNewGame();
-    this.prepareGrid();
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
@@ -283,13 +287,12 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
       this.gameLogicService.initializeGame(this.gameState.gameSeed);
     }
 
-    this.ngZone.runOutsideAngular(() => {
-      setTimeout(() => {
-        this.ngZone.run(() => {
-          this.bankLettersVisible = true;
-        });
-      });
-    });
+    // Set bank letters to visible immediately.
+    // This will trigger a render of the letter tiles in the current cycle.
+    this.bankLettersVisible = true;
+
+    // Now, schedule the heavy grid preparation for a later cycle.
+    this.prepareGrid();
 
     setTimeout(() => {
       this.startCountdown(() => {
@@ -558,11 +561,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   resetBoardPosition() {
-    if (window.innerWidth < 390) {
-      this.dragPosition = { x: -254, y: -247 };
-    } else {
-      this.dragPosition = { x: -246, y: -246 };
-    }
+    this.dragPosition = {
+      x: -GRID_INITIAL_POSITION_X,
+      y: -GRID_INITIAL_POSITION_Y,
+    };
   }
 
   getCellCoordinates(id: string): [number, number] {

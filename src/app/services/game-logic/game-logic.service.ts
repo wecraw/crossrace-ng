@@ -8,6 +8,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { PUZZLES } from '../../components/game/puzzles';
 import { VALID_WORDS } from '../../components/game/valid-words';
+import { GRID_SIZE } from '../../constants/game-constants';
 
 interface ValidatedWord {
   word: string;
@@ -22,7 +23,7 @@ interface ValidatedWord {
 })
 export class GameLogicService {
   // --- Constants ---
-  private readonly GRID_SIZE = 24;
+  private readonly GRID_SIZE = GRID_SIZE;
   private readonly CONDENSED_SIZE = 12;
 
   // --- Game State ---
