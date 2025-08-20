@@ -31,6 +31,7 @@ import {
   COUNTDOWN_START_DELAY,
   LOBBY_GAME_START_COUNTDOWN_DURATION,
 } from '../../../constants/game-constants';
+import { GameFlowService } from '../../../services/game-flow/game-flow.service';
 
 interface Word {
   text: string;
@@ -65,9 +66,6 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   isLocalPlayerReady = false;
   readyPlayersCount = 0;
   totalPlayersCount = 0;
-  countdownDisplay: string = '30s';
-  isWaitingForPlayers = false;
-  private countdownInterval: any;
   private readonly destroy$ = new Subject<void>();
 
   // Word highlighting properties
@@ -110,7 +108,8 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     },
     private cdr: ChangeDetectorRef,
     private gameStateService: GameStateService,
-    private webSocketService: WebSocketService,
+    private webSocketService: WebSocketService, // Kept for postGameCellClick
+    public gameFlowService: GameFlowService,
   ) {}
 
   readonly dialogRef = inject(MatDialogRef<DialogPostGameMp>);
@@ -136,14 +135,10 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
         if (state.players) {
           this.updateReadyCounts(state.players);
         }
-        // If the timestamp is already in the state when the dialog opens, start the timer
-        if (state.lastGameEndTimestamp && !this.countdownInterval) {
-          this.startCountdownTimer(state.lastGameEndTimestamp);
-        }
         this.cdr.detectChanges();
       });
 
-    // Subscribe to WebSocket messages
+    // Subscribe ONLY for post-game cell clicks. All other flow is handled by GameFlowService.
     this.webSocketService
       .getMessages()
       .pipe(takeUntil(this.destroy$))
@@ -151,28 +146,6 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
         if (message.type === 'postGameCellClicked') {
           this.triggerExclamation(message.row, message.col, message.color);
           this.highlightWordAt(message.row, message.col);
-        }
-        if (message.type === 'gameEnded' && message.lastGameEndTimestamp) {
-          this.startCountdownTimer(message.lastGameEndTimestamp);
-        }
-        if (message.type === 'playerList') {
-          this.updateReadyCounts(message.players);
-        }
-        if (
-          message.type === 'error' &&
-          message.message?.includes(
-            'A multiplayer game requires at least 2 players',
-          )
-        ) {
-          this.isWaitingForPlayers = true;
-          if (this.countdownInterval) {
-            clearInterval(this.countdownInterval);
-            this.countdownInterval = null;
-          }
-          this.cdr.detectChanges();
-        }
-        if (message.type === 'gameStarted') {
-          this.isWaitingForPlayers = false;
         }
       });
   }
@@ -211,9 +184,6 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     if (this.exclamationTimeout) {
       clearTimeout(this.exclamationTimeout);
     }
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-    }
   }
 
   toggleView() {
@@ -227,16 +197,11 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   }
 
   quit() {
-    this.webSocketService.disconnect();
     this.dialogRef.close({ event: 'quit' });
   }
 
   readyUp(): void {
-    if (this.gameState.gameCode) {
-      this.isLocalPlayerReady = true; // Optimistic update
-      this.readyPlayersCount++; // Optimistic update
-      this.webSocketService.playerReady(this.gameState.gameCode);
-    }
+    this.gameFlowService.playerReady();
   }
 
   get readyButtonText(): string {
@@ -256,49 +221,6 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
       this.isLocalPlayerReady = !!self.ready;
     }
     this.cdr.detectChanges();
-  }
-
-  private startCountdownTimer(timestamp: string | Date): void {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-      this.countdownInterval = null;
-    }
-
-    const AUTO_START_SECONDS = 30;
-    const serverEndTime = new Date(timestamp).getTime();
-    const autoStartTime = serverEndTime + AUTO_START_SECONDS * 1000;
-
-    const updateCountdown = () => {
-      const now = Date.now();
-      const remainingSeconds = Math.round((autoStartTime - now) / 1000);
-
-      if (remainingSeconds <= 0) {
-        this.countdownDisplay = '0s';
-        if (this.countdownInterval) {
-          clearInterval(this.countdownInterval);
-          this.countdownInterval = null;
-        }
-        // If the countdown is over, the game either started (and this dialog is gone)
-        // or it failed to start (e.g., not enough players).
-        // Therefore, if this dialog is still open, we must be in a waiting state.
-        // We only set this after a delay to prevent a flicker.
-        setTimeout(() => {
-          this.isWaitingForPlayers = true;
-        }, 1000);
-      } else {
-        this.countdownDisplay = `${remainingSeconds}s`;
-        this.isWaitingForPlayers = false; // Countdown is active, so we are not in a waiting state.
-      }
-      this.cdr.detectChanges();
-    };
-
-    updateCountdown(); // Run immediately to set initial state correctly
-
-    // Only set an interval if the auto-start time is still in the future.
-    // This prevents creating a useless interval for players reconnecting late.
-    if (Date.now() < autoStartTime) {
-      this.countdownInterval = setInterval(updateCountdown, 1000);
-    }
   }
 
   private parseWordsFromGrid(grid: string[][]): Word[] {

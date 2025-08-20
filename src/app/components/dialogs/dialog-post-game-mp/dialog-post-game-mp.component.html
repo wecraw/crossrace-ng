@@ -60,15 +60,7 @@
     </div>
 
     <div class="countdown-timer">
-      @if (isWaitingForPlayers) {
-        @if (totalPlayersCount < 2) {
-          Waiting for more players...
-        } @else {
-          Waiting for players to ready up...
-        }
-      } @else {
-        Next game starts in: {{ countdownDisplay }}
-      }
+      {{ gameFlowService.nextGameCountdown$ | async }}
     </div>
 
     <div class="action-buttons d-flex">
