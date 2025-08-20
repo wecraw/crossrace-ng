@@ -47,27 +47,27 @@
 }
 
 @if (isGridReady) {
-  <app-game-board
-    [grid]="(gameLogicService.grid$ | async)!"
-    [validLetterIndices]="(gameLogicService.validLetterIndices$ | async)!"
-    [allDropListIds]="allDropListIds"
-    [dragPosition]="dragPosition"
-    [isDisabled]="!timerRunning"
-    (dropped)="drop($event)"
-    (dragStarted)="onDragStarted($event)"
-  >
-  </app-game-board>
-}
-@if (isGridReady) {
-  <div class="lower-menu m-lr-auto">
-    <app-timer
-      [startTime]="timerStartTime"
-      [isRunning]="timerRunning"
-      (timeChanged)="onTimeChanged($event)"
+  <div class="game-board-container" [class.visible]="isGridVisible">
+    <app-game-board
+      [grid]="(gameLogicService.grid$ | async)!"
+      [validLetterIndices]="(gameLogicService.validLetterIndices$ | async)!"
+      [allDropListIds]="allDropListIds"
+      [dragPosition]="dragPosition"
+      [isDisabled]="!timerRunning"
+      (dropped)="drop($event)"
+      (dragStarted)="onDragStarted($event)"
     >
-    </app-timer>
-    <i class="material-icons refresh noselect" (click)="refreshPuzzle()"
-      >refresh</i
-    >
+    </app-game-board>
+    <div class="lower-menu m-lr-auto">
+      <app-timer
+        [startTime]="timerStartTime"
+        [isRunning]="timerRunning"
+        (timeChanged)="onTimeChanged($event)"
+      >
+      </app-timer>
+      <i class="material-icons refresh noselect" (click)="refreshPuzzle()"
+        >refresh</i
+      >
+    </div>
   </div>
 }

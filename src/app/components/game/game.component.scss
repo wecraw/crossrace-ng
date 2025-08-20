@@ -240,3 +240,12 @@
     transform: rotate(360deg);
   }
 }
+
+.game-board-container {
+  opacity: 0;
+  transition: opacity 0.4s ease-in;
+
+  &.visible {
+    opacity: 1;
+  }
+}

@@ -15,3 +15,6 @@ export const COUNTDOWN_ANIMATION_DELAY = 15; // Delay for pulsating animation
 
 // Drag position constants
 export const DRAG_POSITION_INIT = { x: -237, y: -232 };
+
+// Grid constants
+export const GRID_SIZE = 36;

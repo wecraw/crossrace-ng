@@ -37,6 +37,7 @@ import {
   WIN_DIALOG_DELAY,
   DRAG_POSITION_INIT,
   LOBBY_GAME_START_COUNTDOWN_DURATION,
+  GRID_SIZE,
 } from '../../constants/game-constants';
 import { GameLogicService } from '../../services/game-logic/game-logic.service';
 import { PUZZLES } from './puzzles';
@@ -76,6 +77,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Grid DOM settings
   dragPosition = DRAG_POSITION_INIT;
+  gridSize = GRID_SIZE;
 
   // Timer
   timerRunning = false;
@@ -99,6 +101,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   isCountingDown: boolean = false;
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
+  isGridVisible: boolean = false;
   timerStartTime: number = 0; // Used for setting time on reconnect/resume
   bankLettersVisible = false;
 
@@ -205,12 +208,19 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    requestAnimationFrame(() => this.prepareGrid());
+    // Grid preparation is now handled by startAfterCountDown to support restarting games.
   }
 
   prepareGrid() {
+    // Defer grid creation until after the current change detection cycle.
     setTimeout(() => {
       this.isGridReady = true;
+      // After setting isGridReady, Angular renders the grid.
+      // We wait a bit before making it visible to allow for this rendering,
+      // then trigger a smooth CSS transition.
+      setTimeout(() => {
+        this.isGridVisible = true;
+      }, 50); // A small delay is enough time for rendering to begin.
     }, 0);
   }
 
@@ -261,6 +271,7 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   startAfterCountDown(syncTime?: number) {
     this.resetForNewGame();
+    this.prepareGrid();
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
@@ -324,6 +335,10 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
     this.condensedGrid = [];
     this.bankLettersVisible = false;
     this.resetBoardPosition();
+
+    // Reset grid visibility for fade-in effect on new game
+    this.isGridReady = false;
+    this.isGridVisible = false;
   }
 
   /**
@@ -533,10 +548,9 @@ export class GameComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   generateGridCellIds() {
-    const GRID_SIZE = 24;
     this.gridCellIds = [];
-    for (let i = 0; i < GRID_SIZE; i++) {
-      for (let j = 0; j < GRID_SIZE; j++) {
+    for (let i = 0; i < this.gridSize; i++) {
+      for (let j = 0; j < this.gridSize; j++) {
         this.gridCellIds.push(`cell-${i}-${j}`);
       }
     }
