@@ -13,10 +13,7 @@ export const WIN_DIALOG_DELAY = 1100; // Delay before showing win dialog
 // Countdown animation constants
 export const COUNTDOWN_ANIMATION_DELAY = 15; // Delay for pulsating animation
 
-// // Drag position constants
-// export const DRAG_POSITION_INIT = { x: -474, y: -464 };
-
 // Grid constants
-export const GRID_SIZE = 48;
-export const GRID_INITIAL_POSITION_X = 677;
-export const GRID_INITIAL_POSITION_Y = 677;
+export const GRID_SIZE = 25;
+export const GRID_INITIAL_POSITION_X = 267;
+export const GRID_INITIAL_POSITION_Y = 267;
