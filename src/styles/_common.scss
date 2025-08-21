@@ -22,15 +22,15 @@ $grid-cell-size: 36px;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  color: white;
+  color: $white;
   border-radius: 6px;
 
   &.blue {
-    background-color: #3f51b5;
+    background-color: $primary-color;
   }
 
   &.green {
-    background-color: #28a745;
+    background-color: $success-green;
   }
 }
 

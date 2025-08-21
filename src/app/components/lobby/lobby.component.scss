@@ -38,28 +38,28 @@ hr {
 }
 
 .shimmer {
-  --shimmer-color: #2d8653aa;
+  --shimmer-color: $shimmer-green;
   animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
   0% {
     box-shadow:
-      0 0 5px #2d8653aa,
-      0 0 10px #2d8653aa,
-      0 0 15px #2d8653aa;
+      0 0 5px $shimmer-green,
+      0 0 10px $shimmer-green,
+      0 0 15px $shimmer-green;
   }
   50% {
     box-shadow:
-      0 0 8px #2d8653aa,
-      0 0 15px #2d8653aa,
-      0 0 23px #2d8653aa;
+      0 0 8px $shimmer-green,
+      0 0 15px $shimmer-green,
+      0 0 23px $shimmer-green;
   }
   100% {
     box-shadow:
-      0 0 5px #2d8653aa,
-      0 0 10px #2d8653aa,
-      0 0 15px #2d8653aa;
+      0 0 5px $shimmer-green,
+      0 0 10px $shimmer-green,
+      0 0 15px $shimmer-green;
   }
 }
 
