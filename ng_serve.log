@@ -1,0 +1,15 @@
+
+> crossrace-ng@0.11.0 dev
+> node scripts/version.js && ng serve --configuration=dev
+
+Updated src/environments/environment.ts with version info
+Updated src/environments/environment.prod.ts with version info
+Updated src/environments/environment.dev.ts with version info
+Version info generated: {
+  version: '0.11.0',
+  buildNumber: 1755755323,
+  buildDate: '2025-08-21T05:48:43.058Z',
+  gitHash: 'b24962d',
+  gitBranch: 'HEAD',
+  production: false
+}

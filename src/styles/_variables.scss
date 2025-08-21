@@ -1,40 +1,33 @@
 // Color Palette
 $blue: #3f51b5;
 $blue-hover: #3849a2;
-$light-gray: #ccc;
-$white: #fff;
-$black: #000;
-$dark-gray: #444;
-$disabled-gray: #ccc;
 $orange-red: #ff5722;
 $orange-red-hover: #e64a19;
 $transparent-blue: #3f51b528;
-$gray-aaa: #aaa;
+
+// CSS variable-based colors for theming
+// Default values are defined in styles.scss in the :root selector
+$light-gray: var(--theme-light-gray);
+$white: var(--theme-white);
+$black: var(--theme-black);
+$dark-gray: var(--theme-dark-gray);
+$disabled-gray: var(--theme-disabled-gray);
+$gray-aaa: var(--theme-gray-aaa);
+$light-gray-hover: var(--theme-light-gray-hover);
+$medium-gray: var(--theme-medium-gray);
+$dark-gray-text: var(--theme-dark-gray-text);
+$very-light-gray-bg: var(--theme-very-light-gray-bg);
+$gray-text: var(--theme-gray-text);
+$gray-icon: var(--theme-gray-icon);
+$gray-border: var(--theme-gray-border);
+$dark-blue-gray: var(--theme-dark-blue-gray);
+$back-button-gray: var(--theme-back-button-gray);
+$back-button-gray-hover: var(--theme-back-button-gray-hover);
+$main-menu-grid-cell-border: var(--theme-main-menu-grid-cell-border);
+$grid-cell-border-color: var(--theme-grid-cell-border-color);
 
 $primary-color: $blue;
 $primary-color-hover: $blue-hover;
-
-$grid-cell-border-color: $light-gray;
-
-// dark mode
-$dark-mode-body-bg: #121212;
-$dark-mode-text: #b7cad4;
-$dark-mode-icon: #b7cad4;
-$dark-mode-grid-cell-border-color: #444;
-$dark-mode-main-menu-grid-cell-border: #333;
-
-// Grays
-$light-gray-hover: #eee;
-$medium-gray: #666;
-$dark-gray-text: #333;
-$very-light-gray-bg: #f0f0f0;
-$gray-text: #6c757d;
-$gray-icon: $gray-aaa;
-$gray-border: #d9d9d9;
-$dark-blue-gray: #344452;
-$back-button-gray: #888;
-$back-button-gray-hover: #666;
-$main-menu-grid-cell-border: #eee;
 
 // Colors
 $primary-color-light: #5c6bc0;
@@ -49,13 +42,13 @@ $debug-orange: $orange-red;
 $debug-orange-hover: $orange-red-hover;
 
 // Special
-$white-transparent-66: #ffffff66;
-$white-transparent-cc: #ffffffcc;
-$white-transparent-ee: #ffffffee;
-$black-transparent-10: rgba(0, 0, 0, 0.1);
-$black-transparent-30: rgba(0, 0, 0, 0.3);
-$white-transparent-0: rgba(255, 255, 255, 0);
-$white-opaque: rgba(255, 255, 255, 1);
+$white-transparent-66: var(--theme-white-transparent-66);
+$white-transparent-cc: var(--theme-white-transparent-cc);
+$white-transparent-ee: var(--theme-white-transparent-ee);
+$black-transparent-10: var(--theme-black-transparent-10);
+$black-transparent-30: var(--theme-black-transparent-30);
+$white-transparent-0: var(--theme-white-transparent-0);
+$white-opaque: var(--theme-white-opaque);
 $primary-color-transparent: $transparent-blue;
 
 // Sizing

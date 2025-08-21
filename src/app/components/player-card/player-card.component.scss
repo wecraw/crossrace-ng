@@ -175,7 +175,7 @@
     box-shadow:
       0 0 0 2px $white,
       0 0 0 4px currentColor,
-      inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+      inset 0 0 0 1px $black-transparent-10;
   }
   &:hover {
     transform: scale(1.1);

@@ -5,6 +5,70 @@
 /* You can add global styles to this file, and also import other style files */
 @use "../node_modules/bootstrap/scss/bootstrap" as bootstrap;
 
+:root {
+  // Light Theme
+  --theme-light-gray: #ccc;
+  --theme-white: #fff;
+  --theme-black: #000;
+  --theme-dark-gray: #444;
+  --theme-disabled-gray: #ccc;
+  --theme-gray-aaa: #aaa;
+  --theme-light-gray-hover: #eee;
+  --theme-medium-gray: #666;
+  --theme-dark-gray-text: #333;
+  --theme-very-light-gray-bg: #f0f0f0;
+  --theme-gray-text: #6c757d;
+  --theme-gray-icon: #aaa;
+  --theme-gray-border: #d9d9d9;
+  --theme-dark-blue-gray: #344452;
+  --theme-back-button-gray: #888;
+  --theme-back-button-gray-hover: #666;
+  --theme-main-menu-grid-cell-border: #eee;
+  --theme-grid-cell-border-color: #ccc;
+  --theme-white-transparent-66: #ffffff66;
+  --theme-white-transparent-cc: #ffffffcc;
+  --theme-white-transparent-ee: #ffffffee;
+  --theme-black-transparent-10: rgba(0, 0, 0, 0.1);
+  --theme-black-transparent-30: rgba(0, 0, 0, 0.3);
+  --theme-white-transparent-0: rgba(255, 255, 255, 0);
+  --theme-white-opaque: rgba(255, 255, 255, 1);
+  --body-bg: var(--theme-white);
+  --text-color: var(--theme-black);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    // Dark Theme
+    --theme-light-gray: #333;
+    --theme-white: #1e1e1e;
+    --theme-black: #e0e0e0;
+    --theme-dark-gray: #aaa;
+    --theme-disabled-gray: #555;
+    --theme-gray-aaa: #888;
+    --theme-light-gray-hover: #282828;
+    --theme-medium-gray: #999;
+    --theme-dark-gray-text: #e0e0e0;
+    --theme-very-light-gray-bg: #121212;
+    --theme-gray-text: #b7cad4;
+    --theme-gray-icon: #b7cad4;
+    --theme-gray-border: #444;
+    --theme-dark-blue-gray: #b7cad4;
+    --theme-back-button-gray: #555;
+    --theme-back-button-gray-hover: #777;
+    --theme-main-menu-grid-cell-border: #333;
+    --theme-grid-cell-border-color: #444;
+    --theme-white-transparent-66: rgba(255, 255, 255, 0.1);
+    --theme-white-transparent-cc: rgba(255, 255, 255, 0.2);
+    --theme-white-transparent-ee: rgba(255, 255, 255, 0.3);
+    --theme-black-transparent-10: rgba(255, 255, 255, 0.1);
+    --theme-black-transparent-30: rgba(255, 255, 255, 0.3);
+    --theme-white-transparent-0: rgba(18, 18, 18, 0);
+    --theme-white-opaque: rgba(18, 18, 18, 1);
+    --body-bg: #121212;
+    --text-color: #b7cad4;
+  }
+}
+
 // <uniquifier>: Use a unique and descriptive class name
 // <weight>: Use a value from 200 to 700
 
@@ -30,6 +94,8 @@ body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
   overscroll-behavior: none;
   touch-action: none;
+  background-color: var(--body-bg);
+  color: var(--text-color);
 }
 
 .noselect {

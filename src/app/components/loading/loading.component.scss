@@ -10,7 +10,7 @@
   z-index: 9999999; // Ensure it's on top of everything
 
   // Appearance
-  background-color: rgba(0, 0, 0, 0.72); // 70% opacity black
+  background-color: $black-transparent-30;
 
   // Center the spinner
   display: flex;
@@ -41,7 +41,7 @@
 
 .message {
   position: absolute;
-  color: white;
+  color: $white;
   font-weight: bold;
   font-size: 1.5rem;
   z-index: 1; // Should be on top of .loader
@@ -49,11 +49,11 @@
 
 .message-in-game {
   position: absolute;
-  color: white;
+  color: $white;
   font-weight: bold;
   font-size: 0.9rem;
   text-align: center;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); // Add shadow for better visibility
+  text-shadow: 1px 1px 2px $black-transparent-30; // Add shadow for better visibility
   z-index: 1;
 }
 

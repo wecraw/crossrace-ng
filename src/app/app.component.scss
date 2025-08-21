@@ -10,7 +10,7 @@
   background-color: $debug-orange; // Orange/red color to indicate debug functionality
   border: none;
   color: $white;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px $black-transparent-30;
   cursor: pointer;
   z-index: 999999999999999; // High z-index to ensure it's above everything
   display: flex;
@@ -20,13 +20,13 @@
 
   &:hover {
     background-color: $debug-orange-hover;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 12px $black-transparent-30;
     transform: translateY(-2px);
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 4px $black-transparent-30;
   }
 
   i {
