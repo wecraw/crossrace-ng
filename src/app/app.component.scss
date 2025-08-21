@@ -7,9 +7,9 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background-color: #ff5722; // Orange/red color to indicate debug functionality
+  background-color: $debug-orange; // Orange/red color to indicate debug functionality
   border: none;
-  color: white;
+  color: $white;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   z-index: 999999999999999; // High z-index to ensure it's above everything
@@ -19,7 +19,7 @@
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: #e64a19;
+    background-color: $debug-orange-hover;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
     transform: translateY(-2px);
   }
