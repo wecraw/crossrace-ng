@@ -18,7 +18,7 @@ h4 {
   margin-top: 15px;
   margin-bottom: 15px;
   text-align: center;
-  color: $black;
+  color: var(--text-color);
 }
 
 .letter-tile {
@@ -29,7 +29,7 @@ h4 {
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  color: white;
+  color: var(--theme-black);
   border-radius: 6px;
 }
 
@@ -38,7 +38,7 @@ h4 {
   width: 40px;
   border-right: solid 1px $light-gray;
   border-radius: 6px;
-  color: $white;
+  color: var(--theme-black);
   display: flex;
   flex-direction: row;
   text-align: center;

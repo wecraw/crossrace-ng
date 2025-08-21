@@ -86,6 +86,11 @@
       color: var(--theme-black);
     }
   }
+
+  .mat-dialog-container {
+    background-color: var(--body-bg);
+    color: var(--text-color);
+  }
 }
 
 // <uniquifier>: Use a unique and descriptive class name
