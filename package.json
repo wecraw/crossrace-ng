@@ -10,7 +10,7 @@
     "build": "ng build",
     "build:prod": "npm run prebuild:prod && ng build --configuration=production",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test --watch=false --browsers=Firefox"
   },
   "private": true,
   "dependencies": {
@@ -27,6 +27,7 @@
     "bootstrap": "^5.3.7",
     "canvas-confetti": "^1.9.3",
     "eslint-plugin-prettier": "^5.2.1",
+    "karma-firefox-launcher": "^2.1.3",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.8.1",
     "tslib": "^2.3.0",
