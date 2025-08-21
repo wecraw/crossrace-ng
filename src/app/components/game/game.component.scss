@@ -204,7 +204,7 @@
 
 .countdown-number {
   position: absolute;
-  color: $white;
+  color: var(--text-color);
   font-weight: bold;
   font-size: 1.5rem;
   z-index: 1;

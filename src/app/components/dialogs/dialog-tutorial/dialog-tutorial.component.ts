@@ -7,21 +7,10 @@ import {
   OnInit,
   AfterViewInit,
   NgZone,
-  ViewChild,
-  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import {
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogModule,
-  MatDialogRef,
-  MatDialogTitle,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 

@@ -67,6 +67,25 @@
     --body-bg: #121212;
     --text-color: #b7cad4;
   }
+
+  .tile-wrapper,
+  .letter-tile {
+    color: #e0e0e0;
+  }
+
+  .dropdown-menu {
+    background-color: var(--theme-white);
+    border-color: var(--theme-gray-border);
+    color: var(--theme-black);
+  }
+
+  .dropdown-item {
+    color: var(--theme-black);
+    &:hover {
+      background-color: var(--theme-light-gray-hover);
+      color: var(--theme-black);
+    }
+  }
 }
 
 // <uniquifier>: Use a unique and descriptive class name

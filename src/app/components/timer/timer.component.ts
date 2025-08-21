@@ -22,14 +22,14 @@ import {
     `
       .time {
         width: fit-content;
-        background: #ffffffee;
+        background: transparent;
         padding: 2px 10px;
         font-size: 20px;
         font-weight: 500;
         border-radius: 20px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--theme-light-gray);
         margin: 16px 0;
-        color: #444;
+        color: var(--text-color);
       }
     `,
   ],
