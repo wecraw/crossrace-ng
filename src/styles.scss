@@ -34,6 +34,7 @@
   --theme-white-opaque: rgba(255, 255, 255, 1);
   --body-bg: var(--theme-white);
   --text-color: var(--theme-black);
+  --tile-text-color: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -65,7 +66,8 @@
     --theme-white-transparent-0: rgba(18, 18, 18, 0);
     --theme-white-opaque: rgba(18, 18, 18, 1);
     --body-bg: #121212;
-    --text-color: #b7cad4;
+    --text-color: #e0e0e0;
+    --tile-text-color: #fff;
   }
 
   .tile-wrapper,

@@ -2,18 +2,6 @@
 
 $grid-cell-size: 35px;
 
-h1 {
-  margin: 20px 0;
-}
-
-h2 {
-  margin-top: 20px;
-}
-h4 {
-  margin: 20px 0 !important;
-  margin-bottom: 32px !important;
-}
-
 .room-code-label {
   font-weight: bold;
   text-align: center;
@@ -28,13 +16,6 @@ h4 {
   margin-left: auto;
   padding-left: 40px;
   padding-right: 5px;
-}
-
-hr {
-  width: 250px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 32px;
 }
 
 .shimmer {
@@ -61,13 +42,6 @@ hr {
       0 0 10px $shimmer-green,
       0 0 15px $shimmer-green;
   }
-}
-
-.btn-outline-success,
-.btn-outline-danger {
-  border-color: transparent;
-  height: 30px;
-  line-height: 0;
 }
 
 .tile-wrapper {
@@ -102,12 +76,6 @@ hr {
   }
 }
 
-.player-grid-container {
-  position: relative;
-  width: 100%;
-  overflow-y: auto;
-}
-
 .waiting-for-players {
   color: $gray-icon;
   font-size: 24px;
@@ -123,16 +91,6 @@ hr {
   height: 80px; /* Adjust the height of the fade effect */
   background: linear-gradient(to bottom, $white-transparent-0, $white-opaque);
   pointer-events: none;
-}
-
-.btn-outline-secondary {
-  background-color: $white;
-  color: $dark-blue-gray;
-
-  &:hover {
-    color: $dark-blue-gray;
-    background-color: $light-gray-hover;
-  }
 }
 
 .btn-success {
@@ -154,23 +112,14 @@ i {
   margin-right: auto;
 }
 
-.flex-column-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
 .flex-fixed {
   flex-shrink: 0;
 }
 
-.flex-grow {
-  flex-grow: 1;
-  overflow: auto;
-}
-
 .container {
   overflow: hidden;
+  height: 100vh;
+  max-height: -webkit-fill-available;
 }
 //TODO: fix this
 .action-buttons {
@@ -199,39 +148,4 @@ i {
 
 .self {
   margin-bottom: 10px;
-}
-
-@supports (-webkit-touch-callout: none) {
-  .vh-100 {
-    height: -webkit-fill-available;
-  }
-}
-
-.container {
-  height: 100vh;
-  max-height: -webkit-fill-available;
-}
-
-.button-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid $white-transparent-cc;
-  border-top: 2px solid $white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
 }

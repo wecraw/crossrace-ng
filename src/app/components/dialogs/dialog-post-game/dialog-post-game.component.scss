@@ -49,10 +49,10 @@ h4 {
 .grid-cell {
   width: $grid-cell-size;
   height: $grid-cell-size;
-  border: 1px solid $grid-cell-border-color;
 }
 
 .letter-tile {
+  border: 1px solid $grid-cell-border-color;
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
   background-color: $success-green;

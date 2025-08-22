@@ -156,7 +156,7 @@ $grid-cell-size: 36px;
     justify-content: center;
     align-items: center;
     background: $primary-color;
-    color: $white;
+    color: var(--text-color);
     font-weight: bold;
     border-radius: 6px;
     font-size: 17px;

@@ -1,18 +1,5 @@
 @use "variables" as *;
 
-.letter-tile {
-  width: 28px;
-  height: 28px;
-  background-color: $primary-color;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  color: $white;
-  border-radius: 6px;
-  margin-left: 1px;
-}
-
 h2 {
   margin-bottom: 0;
 }
@@ -24,16 +11,6 @@ h2 {
   box-sizing: border-box;
   position: absolute;
   top: 0;
-}
-.nav-link {
-  color: $black;
-  text-decoration: none;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 5px;
-  &:hover {
-    background-color: $primary-color-transparent;
-  }
 }
 
 .fa-circle-question {
@@ -56,13 +33,6 @@ h2 {
   display: flex;
   margin-right: auto;
   margin-top: 4px;
-}
-
-.divider {
-  height: 24px;
-  margin-top: 5px;
-  width: 1px;
-  background-color: $gray-icon;
 }
 
 hr {

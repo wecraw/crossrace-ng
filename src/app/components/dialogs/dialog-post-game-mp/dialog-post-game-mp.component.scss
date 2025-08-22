@@ -220,7 +220,7 @@ h2 {
   border-top: 2px solid $white;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0; //override existing margin
+  margin: 0;
 }
 
 @keyframes spin {
