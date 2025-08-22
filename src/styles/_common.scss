@@ -22,8 +22,9 @@ $grid-cell-size: 36px;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  color: $white;
-  border-radius: 6px;
+  border-radius: $border-radius-tile;
+  color: var(--tile-text-color);
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
 
   &.blue {
     background-color: $primary-color;
@@ -48,6 +49,8 @@ $grid-cell-size: 36px;
   box-sizing: border-box;
   background: $primary-color;
   font-weight: bold;
+  color: var(--tile-text-color);
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
 
   &:last-child {
     border: none;

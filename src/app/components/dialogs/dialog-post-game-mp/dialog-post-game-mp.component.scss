@@ -59,6 +59,7 @@ app-leaderboard {
   padding: $spacing-l;
   min-height: 600px;
   overflow-x: hidden;
+  background: $white;
 }
 
 .spinner {
@@ -148,13 +149,6 @@ h2 {
 .letter-tile {
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
-  background-color: $success-green;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  color: $white;
-  border-radius: $border-radius-tile;
   font-size: $font-size-l;
   cursor: pointer;
   transition: all 0.2s ease-in-out;

@@ -25,7 +25,7 @@
           <div class="grid-row">
             @for (cell of row; track cell; let j = $index) {
               <div
-                class="grid-cell noselect"
+                class="grid-cell noselect green"
                 [ngClass]="{
                   'letter-tile': cell,
                   'pulsate-fwd-intense': isCellHighlighted(i, j),

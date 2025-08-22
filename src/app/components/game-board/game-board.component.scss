@@ -17,6 +17,7 @@
   opacity: 0;
 }
 
+// controls how fast tiles snap to grid
 .cdk-drag-animating {
   transition: transform 150ms cubic-bezier(0, 0, 0.2, 1);
 }
@@ -51,18 +52,9 @@ $grid-cell-size: 36px;
 
 .grid-cell {
   background-color: $white;
-
-  &.valid-letter {
-    .letter-tile {
-      background-color: $success-green !important;
-    }
-  }
 }
 
 .letter-tile {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
   background-color: $primary-color;

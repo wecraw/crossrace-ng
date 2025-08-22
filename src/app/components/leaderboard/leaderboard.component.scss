@@ -30,20 +30,6 @@
   }
 }
 
-.tile-wrapper {
-  border-radius: $border-radius-tile;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-}
-
-.letter {
-  color: $white;
-  font-weight: 700;
-  font-size: $font-size-xxl;
-}
-
 .copy-share-icon {
   margin-left: $spacing-s;
   margin-right: $spacing-xs;

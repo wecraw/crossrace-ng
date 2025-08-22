@@ -18,7 +18,7 @@
           @for (cell of row; track $index; let j = $index) {
             <div
               [ngClass]="{
-                'valid-letter pulsate-fwd': validLetterIndices[i][j],
+                'pulsate-fwd': validLetterIndices[i][j],
               }"
               class="grid-cell noselect"
               cdkDropList
@@ -33,6 +33,7 @@
               @for (letter of cell; track letter) {
                 <div
                   class="letter-tile"
+                  [class.green]="validLetterIndices[i][j]"
                   cdkDrag
                   (cdkDragStarted)="onDragStarted($event)"
                 >

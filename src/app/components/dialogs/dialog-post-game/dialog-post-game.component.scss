@@ -7,6 +7,7 @@ $grid-cell-size: 30px;
   height: fit-content;
   padding: 20px;
   max-width: 380px;
+  background: $white;
 }
 
 .spinner {
@@ -55,12 +56,5 @@ h4 {
   border: 1px solid $grid-cell-border-color;
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
-  background-color: $success-green;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  color: $white;
-  border-radius: 6px;
   font-size: 15px;
 }
