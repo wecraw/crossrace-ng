@@ -21,32 +21,3 @@ h4 {
   text-align: center;
   color: $black;
 }
-
-.letter-tile {
-  min-width: $grid-cell-size;
-  min-height: $grid-cell-size;
-  background-color: $primary-color;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  color: var(--text-color);
-  border-radius: 6px;
-}
-
-.tile-wrapper {
-  height: 40px;
-  width: 40px;
-  border-right: solid 1px $light-gray;
-  border-radius: 6px;
-  color: $white;
-  display: flex;
-  flex-direction: row;
-  text-align: center;
-  align-items: center;
-  font-size: 18px;
-  justify-content: space-between;
-  box-sizing: border-box;
-  background: $primary-color;
-  font-weight: bold;
-}

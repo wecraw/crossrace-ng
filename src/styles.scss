@@ -72,7 +72,7 @@
 
   .tile-wrapper,
   .letter-tile {
-    color: #e0e0e0;
+    color: var(--tile-text-color);
   }
 
   .dropdown-menu {

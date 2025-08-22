@@ -39,13 +39,11 @@
   </div>
 </div>
 
-<!-- A class is added here to control the view state -->
 <div #gridWrapper class="grid-wrapper" [ngClass]="'view--' + activeMenu">
   <div class="fade-out-edges m-lr-auto">
-    <!-- Main Menu Content (will slide out) -->
+    <!-- Main Menu Content -->
     <div class="main-menu main-menu-panel m-lr-auto">
       <div class="main-menu-buttons">
-        <!-- PLAY Button -->
         <div
           class="tile-button-wrapper m-auto"
           (click)="daily()"
@@ -59,7 +57,6 @@
           </div>
         </div>
 
-        <!-- VERSUS Button -->
         <div
           class="tile-button-wrapper green m-auto"
           (click)="switchToVersus()"
@@ -77,7 +74,7 @@
       </div>
     </div>
 
-    <!-- Versus Menu Content (will slide) -->
+    <!-- Versus Menu Content -->
     <div class="main-menu versus-menu-panel m-lr-auto">
       <div class="back-button-wrapper tile-button-wrapper">
         <div
@@ -102,7 +99,6 @@
           </div>
         </div>
 
-        <!-- JOIN Button -->
         <div
           class="tile-button-wrapper green m-auto"
           (click)="switchToJoin()"
@@ -118,7 +114,7 @@
       </div>
     </div>
 
-    <!-- Join/Host Menu Content (will slide) -->
+    <!-- Join/Host Menu Content -->
     <div class="main-menu join-menu-panel m-lr-auto">
       <div class="back-button-wrapper form tile-button-wrapper">
         <div
@@ -176,7 +172,6 @@
       </div>
     </div>
 
-    <!-- The grid will slide in sync with the menus -->
     <div #gridContainer class="grid-container">
       @for (row of grid; track $index; let i = $index) {
         <div class="grid-row">

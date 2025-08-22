@@ -44,23 +44,6 @@ $grid-cell-size: 35px;
   }
 }
 
-.tile-wrapper {
-  height: 40px;
-  width: 40px;
-  border-right: solid 1px $light-gray;
-  border-radius: 6px;
-  color: $white;
-  display: flex;
-  flex-direction: row;
-  text-align: center;
-  align-items: center;
-  font-size: 18px;
-  justify-content: space-between;
-  box-sizing: border-box;
-  background: $primary-color;
-  font-weight: bold;
-}
-
 .player-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
@@ -121,7 +104,7 @@ i {
   height: 100vh;
   max-height: -webkit-fill-available;
 }
-//TODO: fix this
+//TODO: fix this so that it's not just floating all the way at the bottom on larger screens
 .action-buttons {
   position: absolute;
   bottom: 0;
@@ -134,11 +117,11 @@ i {
 
   .ready-button {
     width: 100%;
-    max-width: 400px; // Optional: constrain width on larger screens
+    max-width: 400px;
     margin: 0 auto;
     min-height: 48px;
     font-size: $font-size-xl;
-    display: block; // Ensures margin auto works
+    display: block;
   }
 
   .btn:disabled {
