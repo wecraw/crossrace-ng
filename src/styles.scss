@@ -10,7 +10,6 @@
   --theme-black: #000;
   --theme-dark-gray: #444;
   --theme-disabled-gray: #ccc;
-  --theme-gray-aaa: #aaa;
   --theme-light-gray-hover: #eee;
   --theme-medium-gray: #666;
   --theme-dark-gray-text: #333;
@@ -34,6 +33,8 @@
   --text-color: var(--theme-black);
   --tile-text-color: #fff;
   --theme-join-form-color: #3f51b5;
+  --theme-disabled-green: #93d3a2;
+  --theme-disabled-text-color: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,7 +45,6 @@
     --theme-black: #e0e0e0;
     --theme-dark-gray: #aaa;
     --theme-disabled-gray: #555;
-    --theme-gray-aaa: #888;
     --theme-light-gray-hover: #282828;
     --theme-medium-gray: #999;
     --theme-dark-gray-text: #e0e0e0;
@@ -68,6 +68,8 @@
     --text-color: #e0e0e0;
     --tile-text-color: #fff;
     --theme-join-form-color: #4d5ec1;
+    --theme-disabled-green: #19692c;
+    --theme-disabled-text-color: #888;
   }
 
   .dropdown-menu {

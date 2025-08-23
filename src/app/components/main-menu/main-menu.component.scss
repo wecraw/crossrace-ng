@@ -183,6 +183,7 @@ $grid-cell-size: 36px;
   &.disabled:hover .tile-letter,
   &.disabled.green:hover .tile-letter {
     background-color: $disabled-green;
+    color: $disabled-text-color;
   }
 
   &.disabled {
