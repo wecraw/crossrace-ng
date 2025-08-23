@@ -3,11 +3,10 @@
 
 $grid-cell-size: 30px;
 
-.wrapper {
+.dialog-wrapper {
   height: fit-content;
   padding: 20px;
   max-width: 380px;
-  background: $white;
 }
 
 .spinner {
@@ -21,6 +20,7 @@ h1 {
 h4 {
   text-align: center;
 }
+
 .action-buttons {
   align-self: flex-end;
   margin-top: auto;

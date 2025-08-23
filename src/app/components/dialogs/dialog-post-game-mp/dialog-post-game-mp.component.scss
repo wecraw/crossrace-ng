@@ -54,12 +54,11 @@ app-leaderboard {
   font-size: $font-size-xxl;
   color: $crown-gold;
 }
-.wrapper {
+.dialog-wrapper {
   height: 1px; //needed so that child height 100 works
   padding: $spacing-l;
   min-height: 600px;
   overflow-x: hidden;
-  background: $white;
 }
 
 .spinner {

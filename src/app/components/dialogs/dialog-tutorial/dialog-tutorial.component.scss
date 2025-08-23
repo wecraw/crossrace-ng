@@ -18,11 +18,10 @@ $grid-cell-size: 30px;
   }
 }
 
-.wrapper {
+.dialog-wrapper {
   height: 525px;
   padding: 35px;
   max-width: 380px;
-  background-color: $white;
 }
 
 .spinner {
@@ -52,15 +51,8 @@ h1 {
 }
 
 .letter-bank {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 5px;
   width: 150px;
   min-height: 45px;
-  border: 1px solid $light-gray;
-  padding: 10px;
-  border-radius: 16px;
   margin-bottom: 0px;
   top: $spacing-xl;
 }

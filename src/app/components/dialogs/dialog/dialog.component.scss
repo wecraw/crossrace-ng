@@ -1,11 +1,10 @@
 @use "variables" as *;
 $grid-cell-size: 36px;
 
-.wrapper {
+.dialog-wrapper {
   min-width: 275px;
   min-height: 100px;
   padding: 20px;
-  background-color: $white;
 }
 
 .spinner {

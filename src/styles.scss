@@ -1,8 +1,6 @@
 @use "variables" as *;
 @use "common" as *;
 @use "animations" as *;
-
-/* You can add global styles to this file, and also import other style files */
 @use "../node_modules/bootstrap/scss/bootstrap" as bootstrap;
 
 :root {
@@ -35,6 +33,7 @@
   --body-bg: var(--theme-white);
   --text-color: var(--theme-black);
   --tile-text-color: #fff;
+  --theme-join-form-color: #3f51b5;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -68,6 +67,7 @@
     --body-bg: #121212;
     --text-color: #e0e0e0;
     --tile-text-color: #fff;
+    --theme-join-form-color: #4d5ec1;
   }
 
   .dropdown-menu {
@@ -85,22 +85,6 @@
   }
 }
 
-// <uniquifier>: Use a unique and descriptive class name
-// <weight>: Use a value from 200 to 700
-
-.josefin-sans-400 {
-  font-family: "Josefin Sans", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.emoji-mart {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  border-top: 0;
-}
-
 html {
   overscroll-behavior: none;
 }
@@ -114,14 +98,19 @@ body {
   color: var(--text-color);
 }
 
+h1,
+h2,
+h3,
+h4,
+h5 {
+  color: $black;
+}
+
 .noselect {
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  -khtml-user-select: none; /* Konqueror HTML */
-  -moz-user-select: none; /* Old versions of Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-  user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Edge, Opera and Firefox */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .btn-primary {
@@ -130,12 +119,6 @@ body {
   &:hover {
     background-color: $primary-color-hover;
   }
-}
-
-.btn-outline-success {
-  opacity: 1 !important;
-  color: $success-green;
-  background-color: $success-green;
 }
 
 .btn-outline-secondary {
@@ -149,17 +132,20 @@ body {
   }
 }
 
-.btn-outline-danger {
-  opacity: 1 !important;
-  color: $danger-color;
-  background-color: $danger-color;
-}
-
 .m-lr-auto {
   margin-left: auto;
   margin-right: auto;
 }
 
-.translucent {
-  opacity: 0.1;
+.dialog-wrapper {
+  background-color: $white;
+}
+
+.form-control {
+  background-color: $white;
+  color: $black;
+  &:focus {
+    color: $black;
+    background-color: $white;
+  }
 }

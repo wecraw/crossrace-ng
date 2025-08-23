@@ -9,17 +9,6 @@
   padding-top: 2px;
 }
 
-.btn-outline-secondary {
-  margin-left: 10px;
-  background-color: $white;
-  color: $dark-blue-gray;
-
-  &:hover {
-    color: $dark-blue-gray;
-    background-color: $light-gray-hover;
-  }
-}
-
 .player-avatar {
   width: 60px;
   height: 60px;
@@ -65,13 +54,6 @@
 
 .transparent {
   opacity: 0;
-}
-
-.btn-outline-success,
-.btn-outline-danger {
-  border-color: transparent;
-  height: 30px;
-  line-height: 0;
 }
 
 .emoji-mart-container {
