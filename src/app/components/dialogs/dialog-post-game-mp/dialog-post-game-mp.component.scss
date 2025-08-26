@@ -154,12 +154,12 @@ h2 {
   font-style: normal;
   font-size: $font-size-mega;
   font-variation-settings: "wdth" 100;
-  pointer-events: none; // Prevent it from capturing clicks
+  pointer-events: none;
   animation: float-off-random 2s ease-out forwards;
   --rand-x: 0;
   --rand-y: -150;
 
-  -webkit-text-stroke: 2px $black; /* width and color */
+  -webkit-text-stroke: 2px $black;
 }
 
 @keyframes float-off-random {
