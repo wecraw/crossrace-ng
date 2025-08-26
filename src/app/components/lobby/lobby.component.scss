@@ -19,29 +19,8 @@ $grid-cell-size: 35px;
 }
 
 .shimmer {
-  --shimmer-color: $shimmer-green;
+  --shimmer-color: #{$shimmer-green};
   animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    box-shadow:
-      0 0 5px $shimmer-green,
-      0 0 10px $shimmer-green,
-      0 0 15px $shimmer-green;
-  }
-  50% {
-    box-shadow:
-      0 0 8px $shimmer-green,
-      0 0 15px $shimmer-green,
-      0 0 23px $shimmer-green;
-  }
-  100% {
-    box-shadow:
-      0 0 5px $shimmer-green,
-      0 0 10px $shimmer-green,
-      0 0 15px $shimmer-green;
-  }
 }
 
 .player-grid {

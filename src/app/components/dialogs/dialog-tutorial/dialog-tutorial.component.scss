@@ -1,26 +1,17 @@
 @use "variables" as *;
 @use "mixins" as *;
+@use "common" as *;
 
 $grid-cell-size: 30px;
 
 .close-icon {
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  cursor: pointer;
-  font-size: 24px;
-  color: $gray-icon;
-  z-index: 10;
-  padding: $spacing-xs;
-
-  &:hover {
-    color: $dark-gray;
-  }
+  @extend %dialog-close-icon;
 }
 
 .dialog-wrapper {
+  @extend %dialog-wrapper;
   height: 525px;
-  padding: 35px;
+  padding: $spacing-xl; // Override padding
   max-width: 380px;
 }
 

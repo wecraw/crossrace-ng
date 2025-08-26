@@ -1,10 +1,12 @@
 @use "variables" as *;
+@use "common" as *;
+
 $grid-cell-size: 36px;
 
 .dialog-wrapper {
+  @extend %dialog-wrapper;
   min-width: 275px;
   min-height: 100px;
-  padding: 20px;
 }
 
 .spinner {
