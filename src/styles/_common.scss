@@ -97,6 +97,18 @@ $grid-cell-size: 36px;
   align-items: center;
 }
 
+.time {
+  width: fit-content;
+  background: transparent;
+  padding: 2px $spacing-s;
+  font-size: $font-size-huge;
+  font-weight: 500;
+  border-radius: $border-radius-xl;
+  border: 1px solid $light-gray;
+  margin-top: $spacing-m;
+  color: var(--text-color);
+}
+
 // Common Dialog Placeholders
 %dialog-wrapper {
   padding: $spacing-l;

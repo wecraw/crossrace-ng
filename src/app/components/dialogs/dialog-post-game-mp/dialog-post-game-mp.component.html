@@ -66,6 +66,7 @@
     <div class="action-buttons d-flex">
       <button
         class="btn btn-success ready-button"
+        [ngClass]="{ shimmer: !isLocalPlayerReady }"
         (click)="readyUp()"
         [disabled]="isLocalPlayerReady"
       >

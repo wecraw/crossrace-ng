@@ -66,7 +66,10 @@
 @if (gameState.gameCode) {
   <div class="action-buttons">
     <button
-      class="btn btn-success ready-button shimmer"
+      class="btn btn-success ready-button"
+      [ngClass]="{
+        shimmer: !(isLocalPlayerReady || connectedPlayers.length < 2),
+      }"
       (click)="readyUp()"
       [disabled]="isLocalPlayerReady || connectedPlayers.length < 2"
     >

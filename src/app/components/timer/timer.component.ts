@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/components/timer/timer.component.ts
 import {
   Component,
   OnDestroy,
@@ -18,21 +17,6 @@ import {
       <div class="time">{{ formattedTime }}</div>
     </div>
   `,
-  styles: [
-    `
-      .time {
-        width: fit-content;
-        background: transparent;
-        padding: 2px 10px;
-        font-size: 20px;
-        font-weight: 500;
-        border-radius: 20px;
-        border: 1px solid var(--theme-light-gray);
-        margin: 16px 0;
-        color: var(--text-color);
-      }
-    `,
-  ],
 })
 export class TimerComponent implements OnInit, OnDestroy, OnChanges {
   @Input() isRunning = false;

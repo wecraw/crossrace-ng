@@ -5,6 +5,11 @@
   max-width: 300px;
   width: 300px;
   margin: 0 auto;
+  background-color: $white;
+  color: $black;
+  padding: $spacing-m;
+  border-radius: $border-radius-large;
+  border: 1px solid $grid-cell-border-color;
 }
 
 .room-code-label {
