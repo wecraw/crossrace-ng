@@ -91,7 +91,6 @@ export const gameResolver: ResolveFn<GameResolverData> = (
               // Handle navigation when the dialog closes.
               dialogRef.afterClosed().subscribe((result) => {
                 if (result && result.event === 'confirm') {
-                  // The 'confirm' button in this dialog context means "Play Practice"
                   router.navigate(['/practice']);
                 }
                 // If the user quits or closes the dialog, they are already on the
