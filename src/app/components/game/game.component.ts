@@ -130,9 +130,8 @@ export class GameComponent implements OnInit, OnDestroy {
 
     if (resolvedData) {
       // Practice or Daily mode: data is pre-fetched by the resolver.
-      this.timerStartTime = resolvedData.startTime;
       this.gameLogicService.initializeGame(resolvedData.gameSeed);
-      this.startAfterCountDown();
+      this.startAfterCountDown(resolvedData.startTime);
     } else if (gameMode === 'versus') {
       // Versus mode: game state (seed, time) is set by the join/rejoin response.
       const currentState = this.gameStateService.getCurrentState();
@@ -272,13 +271,22 @@ export class GameComponent implements OnInit, OnDestroy {
 
   /**
    * Triggers the full animation sequence before starting the game.
-   * If a `syncTime` is provided, it syncs the timer after animations instead of starting fresh.
+   * If a `startTime` is provided, it's used to either resume a single-player game
+   * or sync the timer for a multiplayer game.
+   * @param startTime For single-player modes, this is the gameplay time to resume from.
+   *                  For versus mode, this is the raw server time to sync with.
    */
-  startAfterCountDown(syncTime?: number) {
+  startAfterCountDown(startTime?: number) {
     this.resetForNewGame();
     this.resetTimer();
     this.isCountingDown = true;
     this.waitingForRestart = false;
+
+    // For single-player modes (practice/daily), set the start time directly.
+    // This happens *after* resetForNewGame has cleared the old value.
+    if (this.gameState.gameMode !== 'versus' && startTime !== undefined) {
+      this.timerStartTime = startTime;
+    }
 
     if (
       this.gameState.gameMode === 'versus' &&
@@ -299,21 +307,20 @@ export class GameComponent implements OnInit, OnDestroy {
         // This is the completion handler for all animations.
         this.isCountingDown = false;
 
-        if (syncTime !== undefined) {
-          // This was a sync. The animations we just played on the client took time.
-          // We need to estimate the current server time to sync the timer accurately.
+        // The logic for handling startTime differs between versus and single-player.
+        if (this.gameState.gameMode === 'versus' && startTime !== undefined) {
+          // In versus, startTime is a raw server time that needs to be synced.
           const clientAnimationDurationS =
             (COUNTDOWN_START_DELAY +
               COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
               COUNTDOWN_FADEOUT_DELAY) /
             1000;
 
-          const estimatedServerTime = syncTime + clientAnimationDurationS;
-
-          // syncTimer will correctly subtract the *full* animation offset (including lobby load time)
+          const estimatedServerTime = startTime + clientAnimationDurationS;
           this.syncTimer(estimatedServerTime);
         } else {
-          // This was a fresh start, not a sync. Start the puzzle from zero.
+          // In single-player, timerStartTime is already set. We just need to start the puzzle.
+          // This also handles fresh starts where startTime is 0 or undefined.
           this.startPuzzle();
         }
       });
