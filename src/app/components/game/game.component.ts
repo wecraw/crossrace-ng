@@ -134,6 +134,8 @@ export class GameComponent implements OnInit, OnDestroy {
       this.startAfterCountDown(resolvedData.startTime);
     } else if (gameMode === 'versus') {
       // Versus mode: game state (seed, time) is set by the join/rejoin response.
+      this.gameFlowService.initialize();
+
       const currentState = this.gameStateService.getCurrentState();
       // startAfterCountDown handles game initialization from the seed and
       // will correctly sync the timer if a time is provided.
