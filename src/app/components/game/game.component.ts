@@ -130,7 +130,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
     if (resolvedData) {
       // Practice or Daily mode: data is pre-fetched by the resolver.
-      this.gameLogicService.initializeGame(resolvedData.gameSeed);
+      // Game initialization is handled within startAfterCountDown.
       this.startAfterCountDown(resolvedData.startTime);
     } else if (gameMode === 'versus') {
       // Versus mode: game state (seed, time) is set by the join/rejoin response.
@@ -290,10 +290,9 @@ export class GameComponent implements OnInit, OnDestroy {
       this.timerStartTime = startTime;
     }
 
-    if (
-      this.gameState.gameMode === 'versus' &&
-      this.gameState.gameSeed !== null
-    ) {
+    // Initialize the game logic service with the current seed from the game state.
+    // This is now the single point of initialization for all game modes.
+    if (this.gameState.gameSeed !== null) {
       this.gameLogicService.initializeGame(this.gameState.gameSeed);
     }
 
