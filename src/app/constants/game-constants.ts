@@ -15,5 +15,5 @@ export const COUNTDOWN_ANIMATION_DELAY = 15; // Delay for pulsating animation
 
 // Grid constants
 export const GRID_SIZE = 25;
-export const GRID_INITIAL_POSITION_X = 266;
-export const GRID_INITIAL_POSITION_Y = 266;
+export const GRID_INITIAL_POSITION_X = 315;
+export const GRID_INITIAL_POSITION_Y = 315;

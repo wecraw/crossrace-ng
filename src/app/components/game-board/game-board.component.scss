@@ -1,6 +1,8 @@
 @use "variables" as *;
 @use "mixins" as *;
 
+$grid-cell-size: 40px;
+
 // CDK Drag and Drop Global Styles
 // These are needed here because this component's view is encapsulated.
 
@@ -21,8 +23,6 @@
 .cdk-drag-animating {
   transition: transform 150ms cubic-bezier(0, 0, 0.2, 1);
 }
-
-$grid-cell-size: 36px;
 
 .grid-wrapper {
   margin: 200px auto 0;
@@ -51,6 +51,8 @@ $grid-cell-size: 36px;
 }
 
 .grid-cell {
+  width: $grid-cell-size;
+  height: $grid-cell-size;
   background-color: $white;
 }
 
