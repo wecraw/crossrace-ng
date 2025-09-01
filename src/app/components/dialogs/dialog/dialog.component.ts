@@ -13,11 +13,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
-    selector: 'dialog',
-    templateUrl: 'dialog.component.html',
-    styleUrls: ['./dialog.component.scss'],
-    imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
-    changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'dialog',
+  templateUrl: 'dialog.component.html',
+  styleUrls: ['./dialog.component.scss'],
+  imports: [MatButtonModule, MatProgressSpinnerModule, CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Dialog implements OnInit {
   public dialogLetters: string[] = [];
@@ -26,9 +26,12 @@ export class Dialog implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       dialogText: string;
-      showSpinner: boolean;
-      showConfirm: boolean;
+      showSpinner?: boolean;
+      showConfirm?: boolean;
       confirmText?: string;
+      showCancel?: boolean;
+      cancelText?: string;
+      isConfirmation?: boolean;
     },
     private cdr: ChangeDetectorRef,
   ) {}
@@ -46,6 +49,14 @@ export class Dialog implements OnInit {
   }
 
   confirm() {
-    this.dialogRef.close({ event: 'confirm', data: this.data.dialogText });
+    if (this.data.isConfirmation) {
+      this.dialogRef.close(true);
+    } else {
+      this.dialogRef.close({ event: 'confirm', data: this.data.dialogText });
+    }
+  }
+
+  cancel() {
+    this.dialogRef.close(false);
   }
 }

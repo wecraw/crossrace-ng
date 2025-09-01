@@ -16,7 +16,11 @@ import {
   animate,
   transition,
 } from '@angular/animations';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { Player } from '../../../interfaces/player';
@@ -32,6 +36,7 @@ import {
   LOBBY_GAME_START_COUNTDOWN_DURATION,
 } from '../../../constants/game-constants';
 import { GameFlowService } from '../../../services/game-flow/game-flow.service';
+import { Dialog } from '../dialog/dialog.component';
 
 interface Word {
   text: string;
@@ -110,6 +115,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
     private gameStateService: GameStateService,
     private webSocketService: WebSocketService, // Kept for postGameCellClick
     public gameFlowService: GameFlowService,
+    private dialog: MatDialog,
   ) {}
 
   readonly dialogRef = inject(MatDialogRef<DialogPostGameMp>);
@@ -197,7 +203,23 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
   }
 
   quit() {
-    this.dialogRef.close({ event: 'quit' });
+    const dialogRef = this.dialog.open(Dialog, {
+      data: {
+        dialogText: 'Are you sure you want to quit?',
+        showConfirm: true,
+        confirmText: 'Yes',
+        showCancel: true,
+        cancelText: 'No',
+        isConfirmation: true,
+      },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.dialogRef.close({ event: 'quit' });
+      }
+    });
   }
 
   readyUp(): void {

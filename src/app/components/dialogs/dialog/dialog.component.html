@@ -7,15 +7,18 @@
       <mat-spinner [diameter]="25" class="spinner"></mat-spinner>
     }
   </div>
-  @if (data.showConfirm) {
-    <div class="d-flex w-100">
-      <button
-        style="min-width: 75px; margin-top: 15px"
-        class="m-lr-auto btn btn-primary"
-        (click)="confirm()"
-      >
-        {{ data.confirmText ? data.confirmText : "Ok" }}
-      </button>
+  @if (data.showConfirm || data.showCancel) {
+    <div class="button-container">
+      @if (data.showCancel) {
+        <button class="btn btn-secondary" (click)="cancel()">
+          {{ data.cancelText ?? "No" }}
+        </button>
+      }
+      @if (data.showConfirm) {
+        <button class="btn btn-primary" (click)="confirm()">
+          {{ data.confirmText ?? "Ok" }}
+        </button>
+      }
     </div>
   }
 </div>
