@@ -59,6 +59,7 @@ $grid-cell-size: 40px;
 .letter-tile {
   min-width: $grid-cell-size;
   min-height: $grid-cell-size;
+  font-size: $font-size-xxl;
   cursor: move;
 }
 
