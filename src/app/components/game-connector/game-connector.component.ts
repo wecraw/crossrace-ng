@@ -58,16 +58,13 @@ export class GameConnectorComponent implements OnInit {
       minWidth: 380,
       disableClose: true, // User must complete/close tutorial to proceed
     });
-
     await firstValueFrom(dialogRef.afterClosed());
-
     localStorage.setItem('hasViewedVersusTutorial', 'true');
   }
 
   private async createNewGame(playerName: string): Promise<void> {
     try {
       const response = await this.webSocketService.createGame(playerName);
-
       this.gameStateService.updateGameState({ gameCode: response.gameCode });
 
       // Navigate to the lobby, replacing the '/create' URL in history
@@ -86,18 +83,15 @@ export class GameConnectorComponent implements OnInit {
   ): Promise<void> {
     try {
       // Verify the game exists and get its state
-      const response = await this.webSocketService.joinGame(
-        gameCode,
-        playerName,
-      );
+      await this.webSocketService.joinGame(gameCode, playerName);
+
+      // Snapshot has already been applied by WebSocketService; inspect state
       this.gameStateService.updateGameState({ gameCode: gameCode });
 
-      if (response.isGameActive) {
-        // If the game is already in progress, go straight to the game screen
-        // TODO: this should only happen if the player is returning to the game otherwise they should go to the lobby
+      const current = this.gameStateService.getCurrentState();
+      if (current.isInGame) {
         this.router.navigate(['/versus', gameCode], { replaceUrl: true });
       } else {
-        // Otherwise, go to the lobby
         this.router.navigate(['/lobby', gameCode], { replaceUrl: true });
       }
     } catch (error) {

@@ -1,4 +1,5 @@
 import { Player } from './player';
+import { PostGameData } from './api-responses';
 
 export interface GameState {
   gameCode: string | null;
@@ -16,4 +17,6 @@ export interface GameState {
     condensedGrid: string[][];
     timestamp: number;
   } | null;
+  gamePhase: 'LOBBY' | 'IN_GAME' | 'POST_GAME' | null;
+  postGameData?: PostGameData | null;
 }

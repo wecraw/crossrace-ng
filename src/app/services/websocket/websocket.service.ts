@@ -10,7 +10,6 @@ import {
   CreateGameResponse,
   JoinGameResponse,
 } from '../../interfaces/api-responses';
-
 import * as SocketIOClient from 'socket.io-client';
 
 @Injectable({
@@ -39,7 +38,6 @@ export class WebSocketService implements OnDestroy {
       reconnectionDelayMax: 5000,
       timeout: 20000,
     });
-
     this.setupSocketListeners();
     window.addEventListener('beforeunload', () => this.disconnect());
   }
@@ -82,9 +80,9 @@ export class WebSocketService implements OnDestroy {
       this.socket.connect();
     }
   }
+
   private setupSocketListeners(): void {
     // --- Socket.IO Event Listeners ---
-
     this.socket.on('connect', async () => {
       console.log('Connected to server with socket ID:', this.socket!.id);
       this.connectionStatus.next('connected');
@@ -100,7 +98,6 @@ export class WebSocketService implements OnDestroy {
 
     this.socket.on('disconnect', (reason: string) => {
       console.log('Disconnected from server. Reason:', reason);
-
       // If the disconnect was NOT initiated by our client code calling .disconnect()
       // then it's an unexpected event (server crash, network loss) and we should
       // immediately show the user we are trying to reconnect.
@@ -121,18 +118,15 @@ export class WebSocketService implements OnDestroy {
 
     this.socket.on('forceDisconnect', (data: { message: string }) => {
       console.warn('Forcefully disconnected by server:', data.message);
-
       // We were kicked because a new tab took over.
       // 1. Stop any "reconnecting..." spinners.
       this.hideAllReconnectingMessages();
       this.connectionStatus.next('disconnected');
       this.clearReconnectionTimeout(); // Clear timeout for force disconnect
-
       // 2. Prevent this client from attempting to reconnect automatically.
       // By calling disconnect(), we ensure 'io client disconnect' is the reason,
       // which our 'disconnect' handler above will ignore for reconnection purposes.
       this.disconnect();
-
       // 3. Redirect the user to the main menu with a disconnected state, which triggers the disconnected modal.
       this.router.navigate(['/disconnected']).then(() => {
         // 4. Clear local game state so a page refresh doesn't try to rejoin.
@@ -163,15 +157,20 @@ export class WebSocketService implements OnDestroy {
     });
 
     this.socket.on('message', (data: { type: string; [key: string]: any }) => {
-      // Update game state with the last game end timestamp when a game ends
+      if (data.type === 'gameStateSnapshot') {
+        this.gameStateService.applyAuthoritativeSnapshot(data['snapshot']);
+        return;
+      }
+
+      // legacy support path
       if (data.type === 'gameEnded' && data['lastGameEndTimestamp']) {
         this.gameStateService.updateGameState({
           lastGameEndTimestamp: data['lastGameEndTimestamp'],
         });
       }
+
       this.messageSubject.next(data);
 
-      // Clear pending wins when the game ends
       if (data.type === 'gameEnded') {
         this.gameStateService.clearPendingWin();
       }
@@ -179,7 +178,6 @@ export class WebSocketService implements OnDestroy {
 
     this.socket.on('error', (data: any) => {
       this.messageSubject.next({ type: 'error', ...data });
-
       // Clear pending wins on certain errors that indicate the game is no longer valid
       if (
         data.message &&
@@ -210,7 +208,7 @@ export class WebSocketService implements OnDestroy {
 
         // After successfully rejoining, check for any pending win that needs to be sent
         if (this.gameStateService.hasPendingWin()) {
-          const pendingWin = gameState.pendingWin;
+          const pendingWin = this.gameStateService.getCurrentState().pendingWin;
           if (pendingWin && pendingWin.playerId === localPlayerId) {
             console.log(
               'Resending pending win announcement after reconnection',
@@ -254,6 +252,7 @@ export class WebSocketService implements OnDestroy {
       const ackTimeout = setTimeout(() => {
         reject(`Server acknowledgement timeout for event '${event}'.`);
       }, 10000);
+
       this.socket.emit(
         event,
         ...args,
@@ -276,16 +275,19 @@ export class WebSocketService implements OnDestroy {
     const hideLoader = this.loadingService.show({
       message: 'Creating game...',
     });
+
     try {
       const response = await this.emitWithAck<CreateGameResponse>('create', {
         playerName,
       });
+
       if (response.success && response.playerId) {
         this.gameStateService.updateGameState({
           localPlayerId: response.playerId,
           players: response.players,
         });
       }
+
       return response;
     } finally {
       hideLoader();
@@ -318,24 +320,19 @@ export class WebSocketService implements OnDestroy {
       console.log('Join game response:', response);
 
       if (response.success && response.playerId) {
+        // Persist local player id
         this.gameStateService.updateGameState({
           localPlayerId: response.playerId,
-          players: response.players,
-          gameSeed: response.gameSeed,
-          gameMode: 'versus',
-          currentGameTime: response.currentGameTime,
-          isInGame: response.isGameActive,
-          lastGameEndTimestamp: response.lastGameEndTimestamp,
         });
 
-        // Handle game state sync
-        this.messageSubject.next({
-          type: 'syncGameState',
-          time: response.currentGameTime,
-          isGameEnded: response.gameEnded,
-          gameEndData: response.gameEndData,
-        });
+        // Apply the server-authoritative snapshot
+        if (response.gameStateSnapshot) {
+          this.gameStateService.applyAuthoritativeSnapshot(
+            response.gameStateSnapshot,
+          );
+        }
       }
+
       return response;
     } finally {
       if (hideLoader) {
@@ -368,7 +365,6 @@ export class WebSocketService implements OnDestroy {
   ): Promise<void> {
     // Get the current game code from GameStateService
     const gameCode = this.gameStateService.getCurrentState().gameCode;
-
     if (!gameCode) {
       console.error('Cannot announce win: no game code available.');
       return;
@@ -383,6 +379,7 @@ export class WebSocketService implements OnDestroy {
           playerId,
           condensedGrid,
         });
+
         // Clear any pending win since we successfully sent it
         this.gameStateService.clearPendingWin();
         console.log('Win announcement sent successfully');
@@ -397,7 +394,6 @@ export class WebSocketService implements OnDestroy {
         'Socket disconnected during win announcement. Storing win information for reconnect.',
       );
       this.gameStateService.setPendingWin(playerId, condensedGrid);
-
       // Try to reconnect immediately
       this.connect();
     }
@@ -416,6 +412,7 @@ export class WebSocketService implements OnDestroy {
         this.hideReconnectingMessages.push(hide);
         this.startReconnectionTimeout(); // Start timeout for simulated reconnection
       }, 0);
+
       setTimeout(() => {
         this.connectionStatus.next('reconnecting');
         setTimeout(() => {
