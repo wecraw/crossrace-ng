@@ -22,7 +22,6 @@ export class GameFlowService {
   private loadingService = inject(LoadingService);
 
   private readonly destroy$ = new Subject<void>();
-
   private postGameDialogRef: MatDialogRef<DialogPostGameMp> | null = null;
 
   private readonly gamePhaseSubject = new BehaviorSubject<GamePhase>('LOBBY');
@@ -114,11 +113,32 @@ export class GameFlowService {
         this.gamePhaseSubject.next('IN_GAME');
         this.stopCountdownTimer();
         this.closePostGameDialog();
-        // Show "Game starting!" interstitial only on transitions from non-IN_GAME
+
+        // If we are rejoining an in-progress game (elapsed time > 0), skip the interstitial
+        // and barrier entirely to allow immediate timer sync.
+        const elapsed = currentState.currentGameTime ?? 0;
+        if (elapsed > 0) {
+          this.gameStateService.updateGameState({ startBarrierUntil: null });
+          if (currentState.gameCode) {
+            this.router.navigate(['/versus', currentState.gameCode]);
+          }
+          break;
+        }
+
+        // Set a barrier so GameComponent defers its own 3..2..1 countdown
+        // until after the "Game starting!" animation finishes.
+        const barrierUntil = Date.now() + LOBBY_GAME_START_COUNTDOWN_DURATION;
+        this.gameStateService.updateGameState({
+          startBarrierUntil: barrierUntil,
+        });
+
+        // Show "Game starting!" interstitial, then navigate.
+        // If showAndHide doesn't truly await, the barrier still enforces the delay in GameComponent.
         await this.loadingService.showAndHide({
           message: 'Game starting!',
           duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
         });
+
         if (currentState.gameCode) {
           this.router.navigate(['/versus', currentState.gameCode]);
         }
@@ -222,7 +242,6 @@ export class GameFlowService {
           'Waiting for players to ready up...',
         );
       }
-
       // No need to keep ticking after time has elapsed.
       this.stopCountdownTimer();
       return;

@@ -20,7 +20,6 @@ import { DialogPostGame } from '../dialogs/dialog-post-game/dialog-post-game.com
 import { MOCK_WIN } from '../../mock/mock-winner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { GameBoardComponent } from '../game-board/game-board.component';
-
 import { Subject, Subscription, takeUntil } from 'rxjs';
 import * as confetti from 'canvas-confetti';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -60,7 +59,6 @@ import { GameFlowService } from '../../services/game-flow/game-flow.service';
 })
 export class GameComponent implements OnInit, OnDestroy {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;
-
   private readonly destroy$ = new Subject<void>();
   private dialogCloseSubscription: Subscription | null = null;
 
@@ -73,6 +71,7 @@ export class GameComponent implements OnInit, OnDestroy {
   condensedGrid: string[][] = [];
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
+
   countdown: number = 3;
 
   // Grid DOM settings
@@ -135,7 +134,6 @@ export class GameComponent implements OnInit, OnDestroy {
     } else if (gameMode === 'versus') {
       // Versus mode: game state (seed, time) is set by the join/rejoin response.
       this.gameFlowService.initialize();
-
       const currentState = this.gameStateService.getCurrentState();
       // startAfterCountDown handles game initialization from the seed and
       // will correctly sync the timer if a time is provided.
@@ -187,6 +185,7 @@ export class GameComponent implements OnInit, OnDestroy {
       .subscribe((state) => {
         const oldState = this.gameState; // Capture previous state before overwriting
         const oldStateHasForceWinFlag = oldState?.debugForceWin;
+
         this.gameState = state;
 
         // Check if a new round has started in 'versus' mode.
@@ -249,11 +248,11 @@ export class GameComponent implements OnInit, OnDestroy {
 
   private startCountdown(onComplete: () => void) {
     this.countdown = COUNTDOWN_INITIAL_VALUE;
+
     this.ngZone.runOutsideAngular(() => {
       const countInterval = setInterval(() => {
         this.ngZone.run(() => {
           this.countdown--;
-
           this.isPulsating = false;
           setTimeout(() => {
             this.isPulsating = true;
@@ -279,59 +278,86 @@ export class GameComponent implements OnInit, OnDestroy {
    *                  For versus mode, this is the raw server time to sync with.
    */
   startAfterCountDown(startTime?: number) {
-    this.resetForNewGame();
-    this.resetTimer();
-    this.isCountingDown = true;
-    this.waitingForRestart = false;
-
-    // For single-player modes (practice/daily), set the start time directly.
-    // This happens *after* resetForNewGame has cleared the old value.
-    if (this.gameState.gameMode !== 'versus' && startTime !== undefined) {
-      this.timerStartTime = startTime;
-    }
-
-    // Initialize the game logic service with the current seed from the game state.
-    // This is now the single point of initialization for all game modes.
-    if (this.gameState.gameSeed !== null) {
-      this.gameLogicService.initializeGame(this.gameState.gameSeed);
-    }
-
-    // Set bank letters to visible immediately.
-    // This will trigger a render of the letter tiles in the current cycle.
-    this.bankLettersVisible = true;
-
-    // Now, schedule the heavy grid preparation for a later cycle.
-    this.prepareGrid();
+    const preDelayMs = this.getPreStartDelayMs(startTime);
 
     setTimeout(() => {
-      this.startCountdown(() => {
-        // This is the completion handler for all animations.
-        this.isCountingDown = false;
+      this.resetForNewGame();
+      this.resetTimer();
 
-        // The logic for handling startTime differs between versus and single-player.
-        if (this.gameState.gameMode === 'versus' && startTime !== undefined) {
-          // In versus, startTime is a raw server time that needs to be synced.
-          const clientAnimationDurationS =
-            (COUNTDOWN_START_DELAY +
-              COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
-              COUNTDOWN_FADEOUT_DELAY) /
-            1000;
+      this.isCountingDown = true;
+      this.waitingForRestart = false;
 
-          const estimatedServerTime = startTime + clientAnimationDurationS;
-          this.syncTimer(estimatedServerTime);
-        } else {
-          // In single-player, timerStartTime is already set. We just need to start the puzzle.
-          // This also handles fresh starts where startTime is 0 or undefined.
-          this.startPuzzle();
-        }
-      });
-    }, COUNTDOWN_START_DELAY);
+      // For single-player modes (practice/daily), set the start time directly.
+      // This happens *after* resetForNewGame has cleared the old value.
+      if (this.gameState.gameMode !== 'versus' && startTime !== undefined) {
+        this.timerStartTime = startTime;
+      }
+
+      // Initialize the game logic service with the current seed from the game state.
+      // This is now the single point of initialization for all game modes.
+      if (this.gameState.gameSeed !== null) {
+        this.gameLogicService.initializeGame(this.gameState.gameSeed);
+      }
+
+      // Set bank letters to visible immediately.
+      // This will trigger a render of the letter tiles in the current cycle.
+      this.bankLettersVisible = true;
+
+      // Now, schedule the heavy grid preparation for a later cycle.
+      this.prepareGrid();
+
+      setTimeout(() => {
+        this.startCountdown(() => {
+          // This is the completion handler for all animations.
+          this.isCountingDown = false;
+
+          // The logic for handling startTime differs between versus and single-player.
+          if (this.gameState.gameMode === 'versus' && startTime !== undefined) {
+            // In versus, startTime is a raw server time that needs to be synced.
+            const clientAnimationDurationS =
+              (COUNTDOWN_START_DELAY +
+                COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
+                COUNTDOWN_FADEOUT_DELAY) /
+              1000;
+            const estimatedServerTime = startTime + clientAnimationDurationS;
+            this.syncTimer(estimatedServerTime);
+          } else {
+            // In single-player, timerStartTime is already set. We just need to start the puzzle.
+            // This also handles fresh starts where startTime is 0 or undefined.
+            this.startPuzzle();
+          }
+        });
+      }, COUNTDOWN_START_DELAY);
+
+      // Clear the barrier so subsequent rounds don’t inherit it.
+      if (this.gameState.startBarrierUntil) {
+        this.gameStateService.updateGameState({ startBarrierUntil: null });
+      }
+    }, preDelayMs);
+  }
+
+  /** Compute a pre-start delay to allow the “Game starting!” interstitial to finish in versus mode. */
+  private getPreStartDelayMs(startTime?: number): number {
+    // Only gate versus games that are starting fresh (elapsed time 0 or undefined).
+    if (this.gameState.gameMode !== 'versus') return 0;
+    if (startTime !== undefined && startTime > 0) return 0; // mid-game rejoin: no delay
+
+    const barrierUntil = this.gameState.startBarrierUntil ?? null;
+    if (!barrierUntil) return 0;
+
+    const remaining = barrierUntil - Date.now();
+    // If barrier is stale, fall back to the nominal animation duration as a conservative default.
+    if (remaining <= 0) return 0;
+
+    // Cap the delay to the interstitial duration so it can't over-delay.
+    return Math.min(remaining, LOBBY_GAME_START_COUNTDOWN_DURATION);
   }
 
   private resetForNewGame(): void {
     this.isGameOver = false;
     this.isGameStarted = false;
     this.waitingForRestart = false;
+
     this.countdownEnded = false;
     this.countdown = COUNTDOWN_INITIAL_VALUE;
     this.isPulsating = true;
@@ -339,12 +365,14 @@ export class GameComponent implements OnInit, OnDestroy {
     this.timerRunning = false;
     this.timerStartTime = 0;
     this.currentTimeString = '0:00';
+
     if (this.timerComponent) {
       this.timerComponent.resetTimer();
     }
 
     this.condensedGrid = [];
     this.bankLettersVisible = false;
+
     this.resetBoardPosition();
 
     // Reset grid visibility for fade-in effect on new game
@@ -358,6 +386,7 @@ export class GameComponent implements OnInit, OnDestroy {
    */
   private syncTimer(serverTime: number): void {
     if (serverTime === undefined) return;
+
     this.isGameStarted = true; // Mark game as started since we are syncing a timer
     this.isCountingDown = false; // Ensure no animations are playing
     this.bankLettersVisible = true;
@@ -370,9 +399,10 @@ export class GameComponent implements OnInit, OnDestroy {
       COUNTDOWN_START_DELAY +
       COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
       COUNTDOWN_FADEOUT_DELAY;
-    const animationOffsetS = totalOffsetMs / 1000;
 
+    const animationOffsetS = totalOffsetMs / 1000;
     const gameplayTime = Math.max(0, serverTime - animationOffsetS);
+
     console.log(
       `Syncing timer. Server time: ${serverTime}s, Gameplay time: ${gameplayTime}s`,
     );
@@ -418,7 +448,6 @@ export class GameComponent implements OnInit, OnDestroy {
           daily: this.gameState.gameMode === 'daily',
         });
       }, WIN_DIALOG_DELAY);
-
       this.isGameStarted = false;
       this.waitingForRestart = true;
     }
@@ -432,12 +461,14 @@ export class GameComponent implements OnInit, OnDestroy {
     let timesString = localStorage.getItem('allTimes');
     let times = [];
     let finalTimeNumber = +localStorage.getItem('dailyCurrentTime')!;
+
     if (timesString) {
       times = JSON.parse(timesString);
       times.push(finalTimeNumber);
     } else {
       times = [finalTimeNumber];
     }
+
     localStorage.setItem('allTimes', JSON.stringify(times));
   }
 
@@ -467,14 +498,12 @@ export class GameComponent implements OnInit, OnDestroy {
           daily: this.gameState.gameMode === 'daily',
         });
       }, WIN_DIALOG_DELAY);
-
       this.isGameStarted = false;
       this.waitingForRestart = true;
     }
   }
 
   // Timer===============================================================
-
   startTimer() {
     this.timerRunning = true;
   }
@@ -501,7 +530,6 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   // DOM Helpers=========================================================
-
   openDialog(data: any) {
     if (this.dialogCloseSubscription) {
       this.dialogCloseSubscription.unsubscribe();
@@ -587,15 +615,12 @@ export class GameComponent implements OnInit, OnDestroy {
 
   renderConfetti() {
     const canvas = this.renderer2.createElement('canvas');
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
     this.renderer2.setStyle(canvas, 'position', 'fixed');
     this.renderer2.setStyle(canvas, 'top', '0');
     this.renderer2.setStyle(canvas, 'left', '0');
     this.renderer2.setStyle(canvas, 'pointer-events', 'none');
-
     this.renderer2.appendChild(this.elementRef.nativeElement, canvas);
 
     const myConfetti = confetti.create(canvas, {
@@ -609,7 +634,6 @@ export class GameComponent implements OnInit, OnDestroy {
       angle: 60,
       origin: { y: 0.5, x: 0 },
     });
-
     myConfetti({
       particleCount: 150,
       ticks: 150,
