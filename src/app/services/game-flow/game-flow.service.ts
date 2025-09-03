@@ -22,6 +22,7 @@ export class GameFlowService {
   private loadingService = inject(LoadingService);
 
   private readonly destroy$ = new Subject<void>();
+
   private postGameDialogRef: MatDialogRef<DialogPostGameMp> | null = null;
 
   private readonly gamePhaseSubject = new BehaviorSubject<GamePhase>('LOBBY');
@@ -32,6 +33,10 @@ export class GameFlowService {
     this.nextGameCountdownSubject.asObservable();
 
   private initialized = false;
+
+  // Countdown management (prevents multiple overlapping timers)
+  private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
+  private countdownTargetMs: number | null = null;
 
   public initialize(): void {
     if (this.initialized) return;
@@ -51,6 +56,7 @@ export class GameFlowService {
     this.initialized = false;
     this.destroy$.next();
     this.destroy$.complete();
+    this.stopCountdownTimer();
     this.closePostGameDialog();
   }
 
@@ -86,7 +92,7 @@ export class GameFlowService {
     const currPhase = currentState.gamePhase;
 
     if (prevPhase === currPhase) {
-      // No phase change; still update countdown label if in POST_GAME
+      // If we remain in POST_GAME, ensure the single countdown for the current round is running.
       if (currPhase === 'POST_GAME' && currentState.lastGameEndTimestamp) {
         this.startCountdownTimer(currentState.lastGameEndTimestamp);
       }
@@ -96,6 +102,7 @@ export class GameFlowService {
     switch (currPhase) {
       case 'LOBBY': {
         this.gamePhaseSubject.next('LOBBY');
+        this.stopCountdownTimer();
         this.closePostGameDialog();
         if (currentState.gameCode) {
           this.router.navigate(['/lobby', currentState.gameCode]);
@@ -105,6 +112,7 @@ export class GameFlowService {
 
       case 'IN_GAME': {
         this.gamePhaseSubject.next('IN_GAME');
+        this.stopCountdownTimer();
         this.closePostGameDialog();
         // Show "Game starting!" interstitial only on transitions from non-IN_GAME
         await this.loadingService.showAndHide({
@@ -119,6 +127,7 @@ export class GameFlowService {
 
       case 'POST_GAME': {
         this.gamePhaseSubject.next('POST_GAME');
+
         const data = currentState.postGameData;
         if (data && !this.postGameDialogRef) {
           this.postGameDialogRef = this.dialog.open(DialogPostGameMp, {
@@ -132,6 +141,7 @@ export class GameFlowService {
             minWidth: 380,
             disableClose: true,
           });
+
           this.postGameDialogRef.afterClosed().subscribe((result) => {
             this.postGameDialogRef = null;
             if (result && result.event === 'quit') {
@@ -140,6 +150,7 @@ export class GameFlowService {
             }
           });
         }
+
         if (currentState.lastGameEndTimestamp) {
           this.startCountdownTimer(currentState.lastGameEndTimestamp);
         }
@@ -155,19 +166,55 @@ export class GameFlowService {
     }
   }
 
+  /**
+   * Starts or updates a single countdown tied to a specific end timestamp.
+   * Clears any previous countdown to prevent overlapping timers across rounds.
+   */
   private startCountdownTimer(timestamp: string | Date): void {
     const AUTO_START_SECONDS = 30;
     const serverEndTime = new Date(timestamp).getTime();
-    const autoStartTime = serverEndTime + AUTO_START_SECONDS * 1000;
+    if (!isFinite(serverEndTime)) return;
 
-    const now = Date.now();
-    const remainingSeconds = Math.round((autoStartTime - now) / 1000);
+    const targetMs = serverEndTime + AUTO_START_SECONDS * 1000;
 
-    const totalPlayers = this.gameStateService
-      .getCurrentState()
-      .players.filter((p) => !p.disconnected).length;
+    // If we're already counting down to this exact target, just tick once.
+    if (this.countdownTargetMs === targetMs && this.countdownIntervalId) {
+      this.updateCountdownLabel();
+      return;
+    }
+
+    // Otherwise switch to the new target.
+    this.stopCountdownTimer();
+    this.countdownTargetMs = targetMs;
+
+    // Immediate label update, then tick every second.
+    this.updateCountdownLabel();
+    this.countdownIntervalId = setInterval(() => {
+      this.updateCountdownLabel();
+    }, 1000);
+  }
+
+  private stopCountdownTimer(): void {
+    if (this.countdownIntervalId) {
+      clearInterval(this.countdownIntervalId);
+      this.countdownIntervalId = null;
+    }
+    this.countdownTargetMs = null;
+    this.nextGameCountdownSubject.next('');
+  }
+
+  private updateCountdownLabel(): void {
+    if (this.countdownTargetMs === null) return;
+
+    const remainingSeconds = Math.round(
+      (this.countdownTargetMs - Date.now()) / 1000,
+    );
 
     if (remainingSeconds <= 0) {
+      const totalPlayers = this.gameStateService
+        .getCurrentState()
+        .players.filter((p) => !p.disconnected).length;
+
       if (totalPlayers < 2) {
         this.nextGameCountdownSubject.next('Waiting for more players...');
       } else {
@@ -175,12 +222,14 @@ export class GameFlowService {
           'Waiting for players to ready up...',
         );
       }
-    } else {
-      this.nextGameCountdownSubject.next(
-        `Next game starts in: ${remainingSeconds}s`,
-      );
-      // schedule a tick to keep label reasonably fresh
-      setTimeout(() => this.startCountdownTimer(timestamp), 1000);
+
+      // No need to keep ticking after time has elapsed.
+      this.stopCountdownTimer();
+      return;
     }
+
+    this.nextGameCountdownSubject.next(
+      `Next game starts in: ${remainingSeconds}s`,
+    );
   }
 }
