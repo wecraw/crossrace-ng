@@ -12,7 +12,7 @@
   color: $white;
   box-shadow: 0 4px 8px $black-transparent-30;
   cursor: pointer;
-  z-index: 999999999999999; // High z-index to ensure it's above everything
+  z-index: 9999999; // High z-index to ensure it's above everything
   display: flex;
   align-items: center;
   justify-content: center;

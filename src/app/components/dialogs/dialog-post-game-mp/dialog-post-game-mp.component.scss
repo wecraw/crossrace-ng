@@ -189,3 +189,9 @@ h2 {
     transform: rotate(360deg);
   }
 }
+
+// Use ::ng-deep to apply styles to the dialog panel, which is created at the root level.
+// This ensures the confirmation dialog always appears on top of the post-game dialog.
+::ng-deep .confirmation-dialog-panel {
+  z-index: 99999 !important;
+}

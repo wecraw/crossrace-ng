@@ -147,3 +147,8 @@ h5 {
     background-color: $white;
   }
 }
+
+.mat-mdc-dialog-surface {
+  border-radius: 10px !important;
+  background: transparent !important;
+}

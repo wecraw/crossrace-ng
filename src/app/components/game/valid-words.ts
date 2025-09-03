@@ -37744,6 +37744,8 @@ export const VALID_WORDS = [
   'prepared',
   'gameness',
   'mog',
+  'pog',
+  'mald',
   'sycee',
   'tharm',
   'cablets',

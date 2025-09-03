@@ -213,6 +213,7 @@ export class DialogPostGameMp implements OnInit, OnDestroy {
         isConfirmation: true,
       },
       disableClose: true,
+      panelClass: 'confirmation-dialog-panel',
     });
 
     dialogRef.afterClosed().subscribe((result) => {
