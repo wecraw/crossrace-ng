@@ -6,6 +6,28 @@ export interface AckResponse {
   message?: string;
 }
 
+// New snapshot-based structures
+export interface GameData {
+  gameSeed: number;
+  serverElapsedTimeSeconds: number;
+}
+export interface PostGameData {
+  winner: string;
+  winnerDisplayName: string;
+  winnerEmoji: string;
+  winnerColor: string;
+  condensedGrid: string[][];
+  time: string;
+  lastGameEndTimestamp: Date;
+}
+export interface GameStateSnapshot {
+  phase: 'LOBBY' | 'IN_GAME' | 'POST_GAME';
+  gameCode: string;
+  players: Player[];
+  gameData?: GameData;
+  postGameData?: PostGameData;
+}
+
 // The specific shape for the 'create' event's response
 export interface CreateGameResponse extends AckResponse {
   type: 'gameCreated';
@@ -17,7 +39,7 @@ export interface CreateGameResponse extends AckResponse {
   players: Player[];
 }
 
-// The specific shape for the 'join' event's response
+// The specific shape for the 'join' event's response (snapshot-based)
 export interface JoinGameResponse extends AckResponse {
   playerId: string;
   gameCode: string;
@@ -25,22 +47,5 @@ export interface JoinGameResponse extends AckResponse {
   playerColor: string;
   playerEmoji: string;
   players: Player[];
-  gameSeed: number;
-  // Properties for handling games that ended while disconnected
-  gameEnded?: boolean;
-  gameEndData?: {
-    winner: string;
-    winnerDisplayName: string;
-    winnerColor: string;
-    winnerEmoji: string;
-    players: any[];
-    condensedGrid: string[][];
-    time: string;
-    lastGameEndTimestamp?: Date;
-  };
-  // Properties for timer synchronization
-  gameState?: string;
-  currentGameTime?: number;
-  isGameActive?: boolean;
-  lastGameEndTimestamp?: Date;
+  gameStateSnapshot: GameStateSnapshot;
 }
