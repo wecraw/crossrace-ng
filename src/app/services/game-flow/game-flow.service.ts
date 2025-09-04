@@ -214,13 +214,19 @@ export class GameFlowService {
     }, 1000);
   }
 
-  private stopCountdownTimer(): void {
+  /**
+   * Stops the active countdown.
+   * @param preserveLabel When true, keeps the current label text instead of clearing it.
+   */
+  private stopCountdownTimer(preserveLabel: boolean = false): void {
     if (this.countdownIntervalId) {
       clearInterval(this.countdownIntervalId);
       this.countdownIntervalId = null;
     }
     this.countdownTargetMs = null;
-    this.nextGameCountdownSubject.next('');
+    if (!preserveLabel) {
+      this.nextGameCountdownSubject.next('');
+    }
   }
 
   private updateCountdownLabel(): void {
@@ -236,14 +242,15 @@ export class GameFlowService {
         .players.filter((p) => !p.disconnected).length;
 
       if (totalPlayers < 2) {
-        this.nextGameCountdownSubject.next('Waiting for more players...');
+        // Match intended copy exactly (no ellipsis)
+        this.nextGameCountdownSubject.next('Waiting for more players');
       } else {
         this.nextGameCountdownSubject.next(
           'Waiting for players to ready up...',
         );
       }
-      // No need to keep ticking after time has elapsed.
-      this.stopCountdownTimer();
+      // Stop the countdown but keep the label visible.
+      this.stopCountdownTimer(true);
       return;
     }
 
