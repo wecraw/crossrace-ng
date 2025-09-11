@@ -279,6 +279,7 @@ export class GameComponent implements OnInit, OnDestroy {
     // Fresh start: build a cancellable sequence
     const preDelayMs = this.getPreStartDelayMs(startTime);
     this.cancelStartSequence();
+    this.startSequenceCancel$ = new Subject<void>(); // Re-create the subject for the new sequence
     this.startSequenceActive = true;
 
     concat(
@@ -357,6 +358,7 @@ export class GameComponent implements OnInit, OnDestroy {
   private cancelStartSequence() {
     if (this.startSequenceActive) {
       this.startSequenceCancel$.next();
+      this.startSequenceCancel$.complete();
     }
     this.isCountingDown = false;
   }
