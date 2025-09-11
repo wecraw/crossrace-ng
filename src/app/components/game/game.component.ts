@@ -20,7 +20,16 @@ import { DialogPostGame } from '../dialogs/dialog-post-game/dialog-post-game.com
 import { MOCK_WIN } from '../../mock/mock-winner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { GameBoardComponent } from '../game-board/game-board.component';
-import { Subject, Subscription, takeUntil } from 'rxjs';
+import {
+  Subject,
+  Subscription,
+  concat,
+  defer,
+  of,
+  takeUntil,
+  timer,
+} from 'rxjs';
+import { finalize, take, tap } from 'rxjs/operators';
 import * as confetti from 'canvas-confetti';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameStateService } from '../../services/game-state/game-state.service';
@@ -71,7 +80,6 @@ export class GameComponent implements OnInit, OnDestroy {
   condensedGrid: string[][] = [];
   gridCellIds: string[] = [];
   allDropListIds: string[] = ['letter-bank'];
-
   countdown: number = 3;
 
   // Grid DOM settings
@@ -86,6 +94,7 @@ export class GameComponent implements OnInit, OnDestroy {
   currentTimeString: string = '0:00';
   isPulsating: boolean = true;
   countdownEnded: boolean = false;
+  isCountingDown: boolean = false;
 
   // Debug
   debug: boolean = false;
@@ -100,7 +109,11 @@ export class GameComponent implements OnInit, OnDestroy {
 
   // Game State
   gameState!: GameState;
-  isCountingDown: boolean = false;
+
+  // Start sequence control (pre-delay + 3..2..1)
+  private startSequenceCancel$ = new Subject<void>();
+  private startSequenceActive = false;
+
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
   isGridVisible: boolean = false;
@@ -128,15 +141,12 @@ export class GameComponent implements OnInit, OnDestroy {
     const gameMode = this.route.snapshot.data['gameMode'];
 
     if (resolvedData) {
-      // Practice or Daily mode: data is pre-fetched by the resolver.
-      // Game initialization is handled within startAfterCountDown.
+      // Practice or Daily mode
       this.startAfterCountDown(resolvedData.startTime);
     } else if (gameMode === 'versus') {
-      // Versus mode: game state (seed, time) is set by the join/rejoin response.
+      // Versus mode
       this.gameFlowService.initialize();
       const currentState = this.gameStateService.getCurrentState();
-      // startAfterCountDown handles game initialization from the seed and
-      // will correctly sync the timer if a time is provided.
       this.startAfterCountDown(currentState.currentGameTime);
     } else {
       console.log(
@@ -146,32 +156,24 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   prepareGrid() {
-    // Defer grid creation to a separate macrotask with a small delay.
-    // This allows the browser to render and animate the letter tiles
-    // before the main thread gets busy rendering the heavy game board.
     setTimeout(() => {
       this.isGridReady = true;
     }, 50);
   }
 
   onBoardReady(): void {
-    // This is called when the game board component has finished rendering.
-    // We can now make it visible with the fade-in effect. A small delay
-    // ensures the browser has a chance to paint the board before the
-    // transition starts.
     setTimeout(() => {
       this.isGridVisible = true;
     }, 50);
   }
 
   ngOnDestroy(): void {
+    this.cancelStartSequence();
     this.destroy$.next();
     this.destroy$.complete();
-
     if (this.dialogCloseSubscription) {
       this.dialogCloseSubscription.unsubscribe();
     }
-
     this.gameStateService.updateGameState({
       isInGame: false,
     });
@@ -183,25 +185,27 @@ export class GameComponent implements OnInit, OnDestroy {
       .getGameState()
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
-        const oldState = this.gameState; // Capture previous state before overwriting
+        const oldState = this.gameState;
         const oldStateHasForceWinFlag = oldState?.debugForceWin;
-
         this.gameState = state;
 
-        // Check if a new round has started in 'versus' mode.
-        // This is detected by a change in the gameSeed while we are on the GameComponent.
-        // 'oldState' check prevents this from running on component initialization.
+        // Cancel any in-flight start sequence if we leave IN_GAME (e.g., POST_GAME/LOBBY)
         if (
-          oldState && // Ensures this is not the first state emission
+          oldState &&
+          oldState.gamePhase === 'IN_GAME' &&
+          state.gamePhase !== 'IN_GAME'
+        ) {
+          this.cancelStartSequence();
+        }
+
+        // New round while we are already on GameComponent (new seed)
+        if (
+          oldState && // not first emission
           oldState.gameSeed !== state.gameSeed &&
           state.gameMode === 'versus'
         ) {
-          console.log(
-            `New game seed detected (${state.gameSeed}). Starting new round.`,
-          );
-          // A new round always starts from a fresh state, not a sync.
           this.startAfterCountDown();
-          return; // Stop further processing of this state update.
+          return;
         }
 
         if (
@@ -221,13 +225,11 @@ export class GameComponent implements OnInit, OnDestroy {
       .subscribe((grid) => {
         this.grid = grid;
       });
-
     this.gameLogicService.bankLetters$
       .pipe(takeUntil(this.destroy$))
       .subscribe((letters) => {
         this.bankLetters = letters;
       });
-
     this.gameLogicService.validLetterIndices$
       .pipe(takeUntil(this.destroy$))
       .subscribe((indices) => {
@@ -246,94 +248,117 @@ export class GameComponent implements OnInit, OnDestroy {
     return Math.floor(Math.random() * PUZZLES.length);
   }
 
-  private startCountdown(onComplete: () => void) {
-    this.countdown = COUNTDOWN_INITIAL_VALUE;
-
-    this.ngZone.runOutsideAngular(() => {
-      const countInterval = setInterval(() => {
-        this.ngZone.run(() => {
-          this.countdown--;
-          this.isPulsating = false;
-          setTimeout(() => {
-            this.isPulsating = true;
-          }, COUNTDOWN_ANIMATION_DELAY);
-
-          if (this.countdown <= 0) {
-            this.countdownEnded = true;
-            setTimeout(() => {
-              clearInterval(countInterval);
-              onComplete();
-            }, COUNTDOWN_FADEOUT_DELAY);
-          }
-        });
-      }, COUNTDOWN_INTERVAL);
-    });
-  }
-
   /**
-   * Triggers the full animation sequence before starting the game.
-   * If a `startTime` is provided, it's used to either resume a single-player game
-   * or sync the timer for a multiplayer game.
-   * @param startTime For single-player modes, this is the gameplay time to resume from.
-   *                  For versus mode, this is the raw server time to sync with.
+   * RxJS-driven pre-start pipeline that is cancellable and reentry-safe.
+   * Skips interstitial/countdown for mid-game rejoins (versus with elapsed > 0).
    */
   startAfterCountDown(startTime?: number) {
-    const preDelayMs = this.getPreStartDelayMs(startTime);
-
-    setTimeout(() => {
+    // Mid-game rejoin: initialize immediately and sync timer (no interstitial/countdown).
+    if (
+      this.gameState?.gameMode === 'versus' &&
+      startTime !== undefined &&
+      startTime > 0
+    ) {
+      this.cancelStartSequence();
       this.resetForNewGame();
-      this.resetTimer();
-
-      this.isCountingDown = true;
-      this.waitingForRestart = false;
-
-      // For single-player modes (practice/daily), set the start time directly.
-      // This happens *after* resetForNewGame has cleared the old value.
-      if (this.gameState.gameMode !== 'versus' && startTime !== undefined) {
-        this.timerStartTime = startTime;
-      }
-
-      // Initialize the game logic service with the current seed from the game state.
-      // This is now the single point of initialization for all game modes.
       if (this.gameState.gameSeed !== null) {
         this.gameLogicService.initializeGame(this.gameState.gameSeed);
       }
-
-      // Set bank letters to visible immediately.
-      // This will trigger a render of the letter tiles in the current cycle.
       this.bankLettersVisible = true;
-
-      // Now, schedule the heavy grid preparation for a later cycle.
       this.prepareGrid();
+      const totalOffsetMs =
+        LOBBY_GAME_START_COUNTDOWN_DURATION +
+        COUNTDOWN_START_DELAY +
+        COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
+        COUNTDOWN_FADEOUT_DELAY;
+      const estimatedServerTime = startTime + totalOffsetMs / 1000;
+      this.syncTimer(estimatedServerTime);
+      return;
+    }
 
-      setTimeout(() => {
-        this.startCountdown(() => {
-          // This is the completion handler for all animations.
-          this.isCountingDown = false;
+    // Fresh start: build a cancellable sequence
+    const preDelayMs = this.getPreStartDelayMs(startTime);
+    this.cancelStartSequence();
+    this.startSequenceActive = true;
 
-          // The logic for handling startTime differs between versus and single-player.
-          if (this.gameState.gameMode === 'versus' && startTime !== undefined) {
-            // In versus, startTime is a raw server time that needs to be synced.
-            const clientAnimationDurationS =
-              (COUNTDOWN_START_DELAY +
-                COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
-                COUNTDOWN_FADEOUT_DELAY) /
-              1000;
-            const estimatedServerTime = startTime + clientAnimationDurationS;
-            this.syncTimer(estimatedServerTime);
-          } else {
-            // In single-player, timerStartTime is already set. We just need to start the puzzle.
-            // This also handles fresh starts where startTime is 0 or undefined.
-            this.startPuzzle();
-          }
-        });
-      }, COUNTDOWN_START_DELAY);
+    concat(
+      // Pre-delay (barrier)
+      timer(preDelayMs),
 
-      // Clear the barrier so subsequent rounds don’t inherit it.
-      if (this.gameState.startBarrierUntil) {
-        this.gameStateService.updateGameState({ startBarrierUntil: null });
-      }
-    }, preDelayMs);
+      // Init game state & light-weight prep
+      defer(() => {
+        this.resetForNewGame();
+        this.resetTimer();
+        this.isCountingDown = true;
+        this.waitingForRestart = false;
+
+        // Single-player resume support
+        if (this.gameState.gameMode !== 'versus' && startTime !== undefined) {
+          this.timerStartTime = startTime;
+        }
+
+        if (this.gameState.gameSeed !== null) {
+          this.gameLogicService.initializeGame(this.gameState.gameSeed);
+        }
+
+        this.bankLettersVisible = true;
+        this.prepareGrid();
+
+        return of(null);
+      }),
+
+      // Small delay before starting visible countdown numbers
+      timer(COUNTDOWN_START_DELAY),
+
+      // The "3..2..1" countdown
+      this.countdown$(),
+
+      // Fade out the countdown
+      timer(COUNTDOWN_FADEOUT_DELAY),
+
+      // Start gameplay
+      defer(() => {
+        this.isCountingDown = false;
+        this.startPuzzle();
+        return of(null);
+      }),
+    )
+      .pipe(
+        takeUntil(this.startSequenceCancel$),
+        finalize(() => {
+          this.startSequenceActive = false;
+        }),
+      )
+      .subscribe();
+  }
+
+  /** A cancellable countdown observable that updates component state each tick. */
+  private countdown$() {
+    // Initialize current value
+    this.countdown = COUNTDOWN_INITIAL_VALUE;
+    this.countdownEnded = false;
+
+    // Emits COUNTDOWN_INITIAL_VALUE ticks at COUNTDOWN_INTERVAL
+    return timer(0, COUNTDOWN_INTERVAL).pipe(
+      take(COUNTDOWN_INITIAL_VALUE),
+      tap(() => {
+        this.countdown--;
+        if (this.countdown <= 0) {
+          this.countdownEnded = true;
+        }
+        this.isPulsating = false;
+        setTimeout(() => {
+          this.isPulsating = true;
+        }, COUNTDOWN_ANIMATION_DELAY);
+      }),
+    );
+  }
+
+  private cancelStartSequence() {
+    if (this.startSequenceActive) {
+      this.startSequenceCancel$.next();
+    }
+    this.isCountingDown = false;
   }
 
   /** Compute a pre-start delay to allow the “Game starting!” interstitial to finish in versus mode. */
@@ -341,15 +366,10 @@ export class GameComponent implements OnInit, OnDestroy {
     // Only gate versus games that are starting fresh (elapsed time 0 or undefined).
     if (this.gameState.gameMode !== 'versus') return 0;
     if (startTime !== undefined && startTime > 0) return 0; // mid-game rejoin: no delay
-
     const barrierUntil = this.gameState.startBarrierUntil ?? null;
     if (!barrierUntil) return 0;
-
     const remaining = barrierUntil - Date.now();
-    // If barrier is stale, fall back to the nominal animation duration as a conservative default.
     if (remaining <= 0) return 0;
-
-    // Cap the delay to the interstitial duration so it can't over-delay.
     return Math.min(remaining, LOBBY_GAME_START_COUNTDOWN_DURATION);
   }
 
@@ -357,22 +377,17 @@ export class GameComponent implements OnInit, OnDestroy {
     this.isGameOver = false;
     this.isGameStarted = false;
     this.waitingForRestart = false;
-
     this.countdownEnded = false;
     this.countdown = COUNTDOWN_INITIAL_VALUE;
     this.isPulsating = true;
-
     this.timerRunning = false;
     this.timerStartTime = 0;
     this.currentTimeString = '0:00';
-
     if (this.timerComponent) {
       this.timerComponent.resetTimer();
     }
-
     this.condensedGrid = [];
     this.bankLettersVisible = false;
-
     this.resetBoardPosition();
 
     // Reset grid visibility for fade-in effect on new game
@@ -386,27 +401,22 @@ export class GameComponent implements OnInit, OnDestroy {
    */
   private syncTimer(serverTime: number): void {
     if (serverTime === undefined) return;
-
     this.isGameStarted = true; // Mark game as started since we are syncing a timer
     this.isCountingDown = false; // Ensure no animations are playing
     this.bankLettersVisible = true;
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
 
-    // The server provides raw elapsed time. The client-side gameplay time is that
-    // value minus the total duration of the startup animations.
     const totalOffsetMs =
       LOBBY_GAME_START_COUNTDOWN_DURATION +
       COUNTDOWN_START_DELAY +
       COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
       COUNTDOWN_FADEOUT_DELAY;
-
     const animationOffsetS = totalOffsetMs / 1000;
     const gameplayTime = Math.max(0, serverTime - animationOffsetS);
 
     console.log(
       `Syncing timer. Server time: ${serverTime}s, Gameplay time: ${gameplayTime}s`,
     );
-
     this.timerStartTime = gameplayTime;
     this.onTimeChanged(gameplayTime); // Update display immediately
     this.startTimer();
@@ -457,18 +467,15 @@ export class GameComponent implements OnInit, OnDestroy {
     localStorage.setItem('finishedDaily', 'true');
     localStorage.setItem('finalGrid', JSON.stringify(this.condensedGrid));
     localStorage.setItem('finalTime', this.currentTimeString);
-
     let timesString = localStorage.getItem('allTimes');
     let times = [];
     let finalTimeNumber = +localStorage.getItem('dailyCurrentTime')!;
-
     if (timesString) {
       times = JSON.parse(timesString);
       times.push(finalTimeNumber);
     } else {
       times = [finalTimeNumber];
     }
-
     localStorage.setItem('allTimes', JSON.stringify(times));
   }
 
@@ -568,7 +575,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   openTutorialDialog(data: any) {
-    const dialogRef = this.dialog.open(DialogTutorial, {
+    this.dialog.open(DialogTutorial, {
       data: data,
       minWidth: 380,
     });

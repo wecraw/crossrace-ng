@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/services/websocket/websocket.service.ts
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -170,10 +171,6 @@ export class WebSocketService implements OnDestroy {
       }
 
       this.messageSubject.next(data);
-
-      if (data.type === 'gameEnded') {
-        this.gameStateService.clearPendingWin();
-      }
     });
 
     this.socket.on('error', (data: any) => {

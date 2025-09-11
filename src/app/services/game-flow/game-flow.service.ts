@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/services/game-flow/game-flow.service.ts
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -37,6 +38,12 @@ export class GameFlowService {
   private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
   private countdownTargetMs: number | null = null;
 
+  // Cancellable "Game starting!" interstitial
+  private activeBarrier: {
+    hide: () => void;
+    timeoutId: ReturnType<typeof setTimeout>;
+  } | null = null;
+
   public initialize(): void {
     if (this.initialized) return;
     this.initialized = true;
@@ -57,6 +64,7 @@ export class GameFlowService {
     this.destroy$.complete();
     this.stopCountdownTimer();
     this.closePostGameDialog();
+    this.clearBarrier();
   }
 
   public playerReady(): void {
@@ -70,7 +78,6 @@ export class GameFlowService {
         return player;
       });
       this.gameStateService.updateGameState({ players: newPlayers });
-
       // Send the actual request to the server.
       this.webSocketService.playerReady(currentState.gameCode);
     }
@@ -90,6 +97,11 @@ export class GameFlowService {
     const prevPhase = previousState.gamePhase;
     const currPhase = currentState.gamePhase;
 
+    // When the server confirms the game has ended, clear any pending win data.
+    if (prevPhase === 'IN_GAME' && currPhase === 'POST_GAME') {
+      this.gameStateService.clearPendingWin();
+    }
+
     if (prevPhase === currPhase) {
       // If we remain in POST_GAME, ensure the single countdown for the current round is running.
       if (currPhase === 'POST_GAME' && currentState.lastGameEndTimestamp) {
@@ -103,50 +115,52 @@ export class GameFlowService {
         this.gamePhaseSubject.next('LOBBY');
         this.stopCountdownTimer();
         this.closePostGameDialog();
+        this.clearBarrier();
         if (currentState.gameCode) {
           this.router.navigate(['/lobby', currentState.gameCode]);
         }
         break;
       }
-
       case 'IN_GAME': {
         this.gamePhaseSubject.next('IN_GAME');
         this.stopCountdownTimer();
         this.closePostGameDialog();
 
-        // If we are rejoining an in-progress game (elapsed time > 0), skip the interstitial
-        // and barrier entirely to allow immediate timer sync.
+        // Rejoin mid-game? Skip interstitial/barrier.
         const elapsed = currentState.currentGameTime ?? 0;
         if (elapsed > 0) {
-          this.gameStateService.updateGameState({ startBarrierUntil: null });
+          this.clearBarrier();
           if (currentState.gameCode) {
             this.router.navigate(['/versus', currentState.gameCode]);
           }
           break;
         }
 
-        // Set a barrier so GameComponent defers its own 3..2..1 countdown
-        // until after the "Game starting!" animation finishes.
+        // Fresh round start: set a barrier so GameComponent can honor it,
+        // and show a cancellable interstitial.
         const barrierUntil = Date.now() + LOBBY_GAME_START_COUNTDOWN_DURATION;
         this.gameStateService.updateGameState({
           startBarrierUntil: barrierUntil,
         });
 
-        // Show "Game starting!" interstitial, then navigate.
-        // If showAndHide doesn't truly await, the barrier still enforces the delay in GameComponent.
-        await this.loadingService.showAndHide({
+        this.clearBarrier(); // ensure at most one active
+        const hide = this.loadingService.show({
           message: 'Game starting!',
-          duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
         });
+        const timeoutId = setTimeout(() => {
+          hide();
+          // Allow any stale barrier to be cleared by GameComponent too
+        }, LOBBY_GAME_START_COUNTDOWN_DURATION);
+        this.activeBarrier = { hide, timeoutId };
 
         if (currentState.gameCode) {
           this.router.navigate(['/versus', currentState.gameCode]);
         }
         break;
       }
-
       case 'POST_GAME': {
         this.gamePhaseSubject.next('POST_GAME');
+        this.clearBarrier();
 
         const data = currentState.postGameData;
         if (data && !this.postGameDialogRef) {
@@ -161,7 +175,6 @@ export class GameFlowService {
             minWidth: 380,
             disableClose: true,
           });
-
           this.postGameDialogRef.afterClosed().subscribe((result) => {
             this.postGameDialogRef = null;
             if (result && result.event === 'quit') {
@@ -176,6 +189,14 @@ export class GameFlowService {
         }
         break;
       }
+    }
+  }
+
+  private clearBarrier(): void {
+    if (this.activeBarrier) {
+      clearTimeout(this.activeBarrier.timeoutId);
+      this.activeBarrier.hide();
+      this.activeBarrier = null;
     }
   }
 
@@ -242,7 +263,6 @@ export class GameFlowService {
         .players.filter((p) => !p.disconnected).length;
 
       if (totalPlayers < 2) {
-        // Match intended copy exactly (no ellipsis)
         this.nextGameCountdownSubject.next('Waiting for more players');
       } else {
         this.nextGameCountdownSubject.next(
