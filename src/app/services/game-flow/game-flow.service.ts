@@ -1,4 +1,3 @@
-// crossrace-ng/src/app/services/game-flow/game-flow.service.ts
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -61,7 +60,6 @@ export class GameFlowService {
   public destroy(): void {
     this.initialized = false;
     this.destroy$.next();
-    this.destroy$.complete();
     this.stopCountdownTimer();
     this.closePostGameDialog();
     this.clearBarrier();
