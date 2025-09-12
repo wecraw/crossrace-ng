@@ -1,16 +1,16 @@
 import { Player } from './player';
 
-// This is the base shape for all responses that use the callback/ack pattern.
 export interface AckResponse {
   success: boolean;
   message?: string;
 }
 
-// New snapshot-based structures
+/** Back-compat game data (legacy timer) */
 export interface GameData {
   gameSeed: number;
   serverElapsedTimeSeconds: number;
 }
+
 export interface PostGameData {
   winner: string;
   winnerDisplayName: string;
@@ -20,26 +20,48 @@ export interface PostGameData {
   time: string;
   lastGameEndTimestamp: Date;
 }
+
+export type SnapshotPhase = 'LOBBY' | 'STARTING' | 'IN_GAME' | 'POST_GAME';
+
+export interface GameDurations {
+  interstitialMs: number;
+  countdownMs: number;
+  fadeMs: number;
+}
+
+/** Server-authoritative snapshot (protocol v2) */
 export interface GameStateSnapshot {
-  phase: 'LOBBY' | 'IN_GAME' | 'POST_GAME';
+  protocolVersion: number; // e.g., 2
+  serverNow: number; // ms epoch (same clock as *At fields)
+  durations: GameDurations;
+
+  phase: SnapshotPhase;
   gameCode: string;
   players: Player[];
+
+  // Round identity & absolute timestamps (ms epoch)
+  roundId: string | null;
+  nextRoundStartAt?: number | null; // present in STARTING
+  roundStartedAt?: number | null; // present in IN_GAME
+  roundEndedAt?: number | null; // present in POST_GAME
+
+  // Back-compat payloads (kept during rollout)
   gameData?: GameData;
   postGameData?: PostGameData;
 }
 
-// The specific shape for the 'create' event's response
+/** 'create' ack payload (fields optionalized for flexibility with rollout) */
 export interface CreateGameResponse extends AckResponse {
-  type: 'gameCreated';
+  type?: 'gameCreated';
   gameCode: string;
   playerId: string;
-  displayName: string;
-  playerColor: string;
-  playerEmoji: string;
+  displayName?: string;
+  playerColor?: string;
+  playerEmoji?: string;
   players: Player[];
 }
 
-// The specific shape for the 'join' event's response (snapshot-based)
+/** 'join' ack payload (snapshot-based) */
 export interface JoinGameResponse extends AckResponse {
   playerId: string;
   gameCode: string;
