@@ -6,7 +6,13 @@ import { GameStateService } from '../game-state/game-state.service';
 import { LoadingService } from '../loading/loading.service';
 import { WebSocketService } from '../websocket/websocket.service';
 import { DialogPostGameMp } from '../../components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component';
-import { LOBBY_GAME_START_COUNTDOWN_DURATION } from '../../constants/game-constants';
+import {
+  LOBBY_GAME_START_COUNTDOWN_DURATION,
+  COUNTDOWN_START_DELAY,
+  COUNTDOWN_INITIAL_VALUE,
+  COUNTDOWN_INTERVAL,
+  COUNTDOWN_FADEOUT_DELAY,
+} from '../../constants/game-constants';
 import { GameState } from '../../interfaces/game-state';
 
 export type GamePhase = 'LOBBY' | 'STARTING' | 'IN_GAME' | 'POST_GAME';
@@ -76,6 +82,7 @@ export class GameFlowService {
         return player;
       });
       this.gameStateService.updateGameState({ players: newPlayers });
+
       // Send the actual request to the server.
       this.webSocketService.playerReady(currentState.gameCode);
     }
@@ -119,6 +126,7 @@ export class GameFlowService {
         }
         break;
       }
+
       case 'IN_GAME': {
         this.gamePhaseSubject.next('IN_GAME');
         this.stopCountdownTimer();
@@ -156,23 +164,27 @@ export class GameFlowService {
         }
         break;
       }
+
       case 'POST_GAME': {
         this.gamePhaseSubject.next('POST_GAME');
         this.clearBarrier();
 
         const data = currentState.postGameData;
         if (data && !this.postGameDialogRef) {
+          const adjustedTime = this.adjustServerTimeString(data.time);
           this.postGameDialogRef = this.dialog.open(DialogPostGameMp, {
             data: {
               winnerDisplayName: data.winnerDisplayName,
               winnerColor: data.winnerColor,
               winnerEmoji: data.winnerEmoji,
               grid: data.condensedGrid,
-              time: data.time,
+              // Show gameplay time (server elapsed minus animation offset)
+              time: adjustedTime,
             },
             minWidth: 380,
             disableClose: true,
           });
+
           this.postGameDialogRef.afterClosed().subscribe((result) => {
             this.postGameDialogRef = null;
             if (result && result.event === 'quit') {
@@ -259,7 +271,6 @@ export class GameFlowService {
       const totalPlayers = this.gameStateService
         .getCurrentState()
         .players.filter((p) => !p.disconnected).length;
-
       if (totalPlayers < 2) {
         this.nextGameCountdownSubject.next('Waiting for more players');
       } else {
@@ -275,5 +286,47 @@ export class GameFlowService {
     this.nextGameCountdownSubject.next(
       `Next game starts in: ${remainingSeconds}s`,
     );
+  }
+
+  // ===== Helpers to align server time with client-side gameplay timer =====
+
+  /** Total client animation offset in seconds (interstitial + 3..2..1 + fade). */
+  private getAnimationOffsetSeconds(): number {
+    const totalOffsetMs =
+      LOBBY_GAME_START_COUNTDOWN_DURATION +
+      COUNTDOWN_START_DELAY +
+      COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
+      COUNTDOWN_FADEOUT_DELAY;
+    return totalOffsetMs / 1000;
+  }
+
+  /** Convert "M:SS" -> seconds */
+  private parseTimeStringToSeconds(time: string | null | undefined): number {
+    if (!time) return 0;
+    const parts = time.split(':');
+    if (parts.length !== 2) return 0;
+    const m = parseInt(parts[0], 10);
+    const s = parseInt(parts[1], 10);
+    if (Number.isNaN(m) || Number.isNaN(s)) return 0;
+    return Math.max(0, m * 60 + s);
+  }
+
+  /** Convert seconds -> "M:SS" */
+  private formatSecondsToTimeString(totalSeconds: number): string {
+    const secs = Math.max(0, Math.round(totalSeconds));
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  /**
+   * Adjusts server-reported elapsed time (formatted) by subtracting the client animation offset.
+   * Ensures the winner dialog shows the same "gameplay time" as local timers.
+   */
+  private adjustServerTimeString(serverTimeFormatted: string): string {
+    const offset = this.getAnimationOffsetSeconds();
+    const rawSeconds = this.parseTimeStringToSeconds(serverTimeFormatted);
+    const gameplaySeconds = Math.max(0, rawSeconds - offset);
+    return this.formatSecondsToTimeString(gameplaySeconds);
   }
 }

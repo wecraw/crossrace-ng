@@ -1,3 +1,4 @@
+// crossrace-ng/src/app/components/game/game.component.ts
 import {
   Component,
   ElementRef,
@@ -29,7 +30,7 @@ import {
   takeUntil,
   timer,
 } from 'rxjs';
-import { finalize, take, tap } from 'rxjs/operators';
+import { finalize, take, tap, filter, map } from 'rxjs/operators';
 import * as confetti from 'canvas-confetti';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameStateService } from '../../services/game-state/game-state.service';
@@ -68,8 +69,12 @@ import { GameFlowService } from '../../services/game-flow/game-flow.service';
 })
 export class GameComponent implements OnInit, OnDestroy {
   @ViewChild(TimerComponent) timerComponent!: TimerComponent;
+
   private readonly destroy$ = new Subject<void>();
   private dialogCloseSubscription: Subscription | null = null;
+
+  // Small grace so the "Game starting!" overlay can finish fade-out before 3..2..1 begins
+  private readonly START_BARRIER_EXTRA_BUFFER_MS = 250;
 
   // Local state for the template, synced from GameLogicService
   bankLetters: string[] = [];
@@ -113,6 +118,10 @@ export class GameComponent implements OnInit, OnDestroy {
   // Start sequence control (pre-delay + 3..2..1)
   private startSequenceCancel$ = new Subject<void>();
   private startSequenceActive = false;
+
+  // Gate countdown until barrier exists (fix race for mid-joiners)
+  private barrierWaitCancel$ = new Subject<void>();
+  private awaitingBarrier = false;
 
   waitingForRestart: boolean = false;
   isGridReady: boolean = false;
@@ -198,12 +207,26 @@ export class GameComponent implements OnInit, OnDestroy {
           this.cancelStartSequence();
         }
 
+        // === Reconnect / mid-game rejoin resync ===
+        if (
+          state?.gameMode === 'versus' &&
+          state?.gamePhase === 'IN_GAME' &&
+          (state.currentGameTime ?? 0) > 0
+        ) {
+          if (oldState?.gamePhase !== 'IN_GAME' || !this.timerRunning) {
+            this.startAfterCountDown(state.currentGameTime);
+          } else {
+            this.syncTimer(state.currentGameTime!);
+          }
+        }
+
         // New round while we are already on GameComponent (new seed)
         if (
           oldState && // not first emission
           oldState.gameSeed !== state.gameSeed &&
           state.gameMode === 'versus'
         ) {
+          // Kick off start, but internally we will WAIT for barrier if it hasn't arrived yet.
           this.startAfterCountDown();
           return;
         }
@@ -251,6 +274,8 @@ export class GameComponent implements OnInit, OnDestroy {
   /**
    * RxJS-driven pre-start pipeline that is cancellable and reentry-safe.
    * Skips interstitial/countdown for mid-game rejoins (versus with elapsed > 0).
+   * If this is a fresh versus round but the barrier has not been written yet,
+   * wait until startBarrierUntil is present before computing the pre-delay.
    */
   startAfterCountDown(startTime?: number) {
     // Mid-game rejoin: initialize immediately and sync timer (no interstitial/countdown).
@@ -260,19 +285,43 @@ export class GameComponent implements OnInit, OnDestroy {
       startTime > 0
     ) {
       this.cancelStartSequence();
-      this.resetForNewGame();
-      if (this.gameState.gameSeed !== null) {
-        this.gameLogicService.initializeGame(this.gameState.gameSeed);
+      if (!this.isGameStarted) {
+        this.resetForNewGame();
+        if (this.gameState.gameSeed !== null) {
+          this.gameLogicService.initializeGame(this.gameState.gameSeed);
+        }
+        this.bankLettersVisible = true;
+        this.prepareGrid();
       }
-      this.bankLettersVisible = true;
-      this.prepareGrid();
-      const totalOffsetMs =
-        LOBBY_GAME_START_COUNTDOWN_DURATION +
-        COUNTDOWN_START_DELAY +
-        COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
-        COUNTDOWN_FADEOUT_DELAY;
-      const estimatedServerTime = startTime + totalOffsetMs / 1000;
-      this.syncTimer(estimatedServerTime);
+      this.syncTimer(startTime);
+      return;
+    }
+
+    // Fresh start in versus: barrier may be set by GameFlowService slightly AFTER the snapshot.
+    const isVersusFresh =
+      this.gameState?.gameMode === 'versus' &&
+      (startTime === undefined || startTime === 0);
+
+    if (isVersusFresh && !this.gameState?.startBarrierUntil) {
+      // Avoid stacking multiple one-shot waits.
+      if (this.awaitingBarrier) return;
+      this.awaitingBarrier = true;
+
+      this.gameStateService
+        .getGameState()
+        .pipe(
+          map((s) => s.startBarrierUntil),
+          filter((v): v is number => v != null),
+          take(1),
+          takeUntil(this.barrierWaitCancel$),
+          takeUntil(this.destroy$),
+        )
+        .subscribe(() => {
+          this.awaitingBarrier = false;
+          // Re-enter now that the barrier is known.
+          this.startAfterCountDown(startTime);
+        });
+
       return;
     }
 
@@ -283,7 +332,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.startSequenceActive = true;
 
     concat(
-      // Pre-delay (barrier)
+      // Pre-delay (barrier + small buffer)
       timer(preDelayMs),
 
       // Init game state & light-weight prep
@@ -304,7 +353,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
         this.bankLettersVisible = true;
         this.prepareGrid();
-
         return of(null);
       }),
 
@@ -360,19 +408,30 @@ export class GameComponent implements OnInit, OnDestroy {
       this.startSequenceCancel$.next();
       this.startSequenceCancel$.complete();
     }
+    this.barrierWaitCancel$.next();
+    this.awaitingBarrier = false;
     this.isCountingDown = false;
   }
 
-  /** Compute a pre-start delay to allow the “Game starting!” interstitial to finish in versus mode. */
+  /**
+   * Compute a pre-start delay to allow the “Game starting!” interstitial to fully finish
+   * in versus mode. Adds a small buffer to cover CSS fade-out/layout.
+   */
   private getPreStartDelayMs(startTime?: number): number {
-    // Only gate versus games that are starting fresh (elapsed time 0 or undefined).
     if (this.gameState.gameMode !== 'versus') return 0;
     if (startTime !== undefined && startTime > 0) return 0; // mid-game rejoin: no delay
+
     const barrierUntil = this.gameState.startBarrierUntil ?? null;
     if (!barrierUntil) return 0;
+
     const remaining = barrierUntil - Date.now();
-    if (remaining <= 0) return 0;
-    return Math.min(remaining, LOBBY_GAME_START_COUNTDOWN_DURATION);
+    const clampedRemaining = Math.min(
+      Math.max(remaining, 0),
+      LOBBY_GAME_START_COUNTDOWN_DURATION,
+    );
+
+    // Always add a small buffer so the overlay is definitely gone before numbers begin.
+    return clampedRemaining + this.START_BARRIER_EXTRA_BUFFER_MS;
   }
 
   private resetForNewGame(): void {
@@ -401,24 +460,22 @@ export class GameComponent implements OnInit, OnDestroy {
    * Calculates the correct gameplay time from the server's raw time and syncs the timer.
    * This is only called for in-progress games on reconnect.
    */
-  private syncTimer(serverTime: number): void {
-    if (serverTime === undefined) return;
+  private syncTimer(serverElapsedSeconds: number): void {
+    if (serverElapsedSeconds === undefined || serverElapsedSeconds === null)
+      return;
+
     this.isGameStarted = true; // Mark game as started since we are syncing a timer
     this.isCountingDown = false; // Ensure no animations are playing
     this.bankLettersVisible = true;
     this.allDropListIds = ['letter-bank', ...this.gridCellIds];
 
-    const totalOffsetMs =
-      LOBBY_GAME_START_COUNTDOWN_DURATION +
-      COUNTDOWN_START_DELAY +
-      COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
-      COUNTDOWN_FADEOUT_DELAY;
-    const animationOffsetS = totalOffsetMs / 1000;
-    const gameplayTime = Math.max(0, serverTime - animationOffsetS);
+    const animationOffsetS =
+      LOBBY_GAME_START_COUNTDOWN_DURATION / 1000 +
+      COUNTDOWN_START_DELAY / 1000 +
+      (COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL) / 1000 +
+      COUNTDOWN_FADEOUT_DELAY / 1000;
+    const gameplayTime = Math.max(0, serverElapsedSeconds - animationOffsetS);
 
-    console.log(
-      `Syncing timer. Server time: ${serverTime}s, Gameplay time: ${gameplayTime}s`,
-    );
     this.timerStartTime = gameplayTime;
     this.onTimeChanged(gameplayTime); // Update display immediately
     this.startTimer();
@@ -643,6 +700,7 @@ export class GameComponent implements OnInit, OnDestroy {
       angle: 60,
       origin: { y: 0.5, x: 0 },
     });
+
     myConfetti({
       particleCount: 150,
       ticks: 150,
