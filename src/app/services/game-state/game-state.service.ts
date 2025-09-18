@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { GameState } from '../../interfaces/game-state';
+import { GameStateSnapshot } from '../../interfaces/api-responses';
 
 const initialState: GameState = {
   gameCode: null,
@@ -11,6 +12,8 @@ const initialState: GameState = {
   gameMode: null,
   pendingWin: null,
   lastGameEndTimestamp: null,
+  gamePhase: null,
+  postGameData: null,
 };
 
 const PLAYER_ID_STORAGE_KEY = 'crossrace_player_id';
@@ -41,12 +44,10 @@ export class GameStateService {
   updateGameState(updates: Partial<GameState>): void {
     const currentState = this.gameState.getValue();
     const newState = { ...currentState, ...updates };
-
     // If the localPlayerId is being updated, persist it.
     if ('localPlayerId' in updates && updates.localPlayerId) {
       localStorage.setItem(PLAYER_ID_STORAGE_KEY, updates.localPlayerId);
     }
-
     this.gameState.next(newState);
   }
 
@@ -79,14 +80,27 @@ export class GameStateService {
   hasPendingWin(): boolean {
     const pendingWin = this.getCurrentState().pendingWin;
     if (!pendingWin) return false;
-
     // Clear pending wins older than 5 minutes to prevent stale data
     const FIVE_MINUTES = 5 * 60 * 1000;
     if (Date.now() - pendingWin.timestamp > FIVE_MINUTES) {
       this.clearPendingWin();
       return false;
     }
-
     return true;
+  }
+
+  public applyAuthoritativeSnapshot(snapshot: GameStateSnapshot): void {
+    if (!snapshot) return;
+    this.updateGameState({
+      gameCode: snapshot.gameCode,
+      players: snapshot.players,
+      gamePhase: snapshot.phase,
+      isInGame: snapshot.phase === 'IN_GAME',
+      gameSeed: snapshot.gameData?.gameSeed ?? null,
+      currentGameTime: snapshot.gameData?.serverElapsedTimeSeconds ?? 0,
+      lastGameEndTimestamp: snapshot.postGameData?.lastGameEndTimestamp ?? null,
+      gameMode: 'versus',
+      postGameData: snapshot.postGameData ?? null,
+    });
   }
 }

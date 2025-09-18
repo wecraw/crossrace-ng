@@ -5,11 +5,11 @@ export const environment: Environment = {
   serverUrl: '__SERVER_URL__',
 
   version: {
-    number: '0.12.0',
-    buildNumber: 1756858803,
-    buildDate: '2025-09-03T00:20:03.224Z',
-    gitHash: 'ca0d375',
-    gitBranch: 'dev',
-    displayVersion: '0.12.0.1756858803'
+    number: '0.12.1',
+    buildNumber: 1757660635,
+    buildDate: '2025-09-12T07:03:55.594Z',
+    gitHash: 'd3d985c',
+    gitBranch: 'state-based-refactor',
+    displayVersion: '0.12.1.1757660635'
   }
 };

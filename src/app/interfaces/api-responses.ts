@@ -1,23 +1,66 @@
 import { Player } from './player';
 
-// This is the base shape for all responses that use the callback/ack pattern.
 export interface AckResponse {
   success: boolean;
   message?: string;
 }
 
-// The specific shape for the 'create' event's response
+/** Server-supplied game data for the current round's seed and elapsed time. */
+export interface GameData {
+  gameSeed: number;
+  serverElapsedTimeSeconds: number;
+}
+
+export interface PostGameData {
+  winner: string;
+  winnerDisplayName: string;
+  winnerEmoji: string;
+  winnerColor: string;
+  condensedGrid: string[][];
+  time: string;
+  lastGameEndTimestamp: Date;
+}
+
+export type SnapshotPhase = 'LOBBY' | 'STARTING' | 'IN_GAME' | 'POST_GAME';
+
+export interface GameDurations {
+  interstitialMs: number;
+  countdownMs: number;
+  fadeMs: number;
+}
+
+/** Server-authoritative snapshot (protocol v2-compatible) */
+export interface GameStateSnapshot {
+  protocolVersion: number; // e.g., 2
+  serverNow: number; // ms epoch (same clock as *At fields)
+  durations: GameDurations;
+  phase: SnapshotPhase;
+  gameCode: string;
+  players: Player[];
+
+  // Round identity & absolute timestamps (ms epoch)
+  roundId: string | null;
+  nextRoundStartAt?: number | null; // present in STARTING
+  roundStartedAt?: number | null; // present in IN_GAME
+  roundEndedAt?: number | null; // present in POST_GAME
+
+  // Payloads used by the current client
+  gameData?: GameData;
+  postGameData?: PostGameData;
+}
+
+/** 'create' ack payload (fields optionalized for flexibility) */
 export interface CreateGameResponse extends AckResponse {
-  type: 'gameCreated';
+  type?: 'gameCreated';
   gameCode: string;
   playerId: string;
-  displayName: string;
-  playerColor: string;
-  playerEmoji: string;
+  displayName?: string;
+  playerColor?: string;
+  playerEmoji?: string;
   players: Player[];
 }
 
-// The specific shape for the 'join' event's response
+/** 'join' ack payload (snapshot-based) */
 export interface JoinGameResponse extends AckResponse {
   playerId: string;
   gameCode: string;
@@ -25,22 +68,5 @@ export interface JoinGameResponse extends AckResponse {
   playerColor: string;
   playerEmoji: string;
   players: Player[];
-  gameSeed: number;
-  // Properties for handling games that ended while disconnected
-  gameEnded?: boolean;
-  gameEndData?: {
-    winner: string;
-    winnerDisplayName: string;
-    winnerColor: string;
-    winnerEmoji: string;
-    players: any[];
-    condensedGrid: string[][];
-    time: string;
-    lastGameEndTimestamp?: Date;
-  };
-  // Properties for timer synchronization
-  gameState?: string;
-  currentGameTime?: number;
-  isGameActive?: boolean;
-  lastGameEndTimestamp?: Date;
+  gameStateSnapshot: GameStateSnapshot;
 }

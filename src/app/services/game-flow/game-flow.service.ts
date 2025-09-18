@@ -1,12 +1,18 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { BehaviorSubject, Subject, Subscription, takeUntil } from 'rxjs';
+import { BehaviorSubject, Subject, pairwise, startWith, takeUntil } from 'rxjs';
 import { GameStateService } from '../game-state/game-state.service';
 import { LoadingService } from '../loading/loading.service';
 import { WebSocketService } from '../websocket/websocket.service';
 import { DialogPostGameMp } from '../../components/dialogs/dialog-post-game-mp/dialog-post-game-mp.component';
-import { LOBBY_GAME_START_COUNTDOWN_DURATION } from '../../constants/game-constants';
+import {
+  LOBBY_GAME_START_COUNTDOWN_DURATION,
+  COUNTDOWN_START_DELAY,
+  COUNTDOWN_INITIAL_VALUE,
+  COUNTDOWN_INTERVAL,
+  COUNTDOWN_FADEOUT_DELAY,
+} from '../../constants/game-constants';
 import { GameState } from '../../interfaces/game-state';
 
 export type GamePhase = 'LOBBY' | 'STARTING' | 'IN_GAME' | 'POST_GAME';
@@ -22,8 +28,6 @@ export class GameFlowService {
   private loadingService = inject(LoadingService);
 
   private readonly destroy$ = new Subject<void>();
-  private wsSubscription: Subscription | null = null;
-  private countdownInterval: any;
   private postGameDialogRef: MatDialogRef<DialogPostGameMp> | null = null;
 
   private readonly gamePhaseSubject = new BehaviorSubject<GamePhase>('LOBBY');
@@ -33,39 +37,38 @@ export class GameFlowService {
   public readonly nextGameCountdown$ =
     this.nextGameCountdownSubject.asObservable();
 
-  private gameState!: GameState;
+  private initialized = false;
 
-  constructor() {
-    this.gameStateService
-      .getGameState()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((state) => {
-        this.gameState = state;
-      });
-  }
+  // Countdown management (prevents multiple overlapping timers)
+  private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
+  private countdownTargetMs: number | null = null;
+
+  // Cancellable "Game starting!" interstitial
+  private activeBarrier: {
+    hide: () => void;
+    timeoutId: ReturnType<typeof setTimeout>;
+  } | null = null;
 
   public initialize(): void {
-    // Prevent multiple initializations
-    if (this.wsSubscription && !this.wsSubscription.closed) {
-      return;
-    }
-    this.wsSubscription = this.webSocketService
-      .getMessages()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((message) => this.handleWebSocketMessage(message));
+    if (this.initialized) return;
+    this.initialized = true;
+
+    this.gameStateService
+      .getGameState()
+      .pipe(
+        startWith(this.gameStateService.getCurrentState()),
+        pairwise(),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(([prev, curr]) => this.onStateChange(prev, curr));
   }
 
   public destroy(): void {
-    if (this.wsSubscription) {
-      this.wsSubscription.unsubscribe();
-      this.wsSubscription = null;
-    }
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-      this.countdownInterval = null;
-    }
+    this.initialized = false;
     this.destroy$.next();
-    this.destroy$.complete();
+    this.stopCountdownTimer();
+    this.closePostGameDialog();
+    this.clearBarrier();
   }
 
   public playerReady(): void {
@@ -74,12 +77,10 @@ export class GameFlowService {
       // Optimistic update: Update the local state immediately.
       const newPlayers = currentState.players.map((player) => {
         if (player.id === currentState.localPlayerId) {
-          // Create a new player object with the ready status updated
           return { ...player, ready: true };
         }
         return player;
       });
-
       this.gameStateService.updateGameState({ players: newPlayers });
 
       // Send the actual request to the server.
@@ -94,102 +95,119 @@ export class GameFlowService {
     }
   }
 
-  private async handleWebSocketMessage(message: any): Promise<void> {
-    console.log('GameFlowService received message:', message.type, message);
+  private async onStateChange(
+    previousState: GameState,
+    currentState: GameState,
+  ): Promise<void> {
+    const prevPhase = previousState.gamePhase;
+    const currPhase = currentState.gamePhase;
 
-    switch (message.type) {
-      case 'playerList':
-        this.gameStateService.updateGameState({
-          players: message.players,
-        });
-        break;
+    // When the server confirms the game has ended, clear any pending win data.
+    if (prevPhase === 'IN_GAME' && currPhase === 'POST_GAME') {
+      this.gameStateService.clearPendingWin();
+    }
 
-      case 'gameStarted':
+    if (prevPhase === currPhase) {
+      // If we remain in POST_GAME, ensure the single countdown for the current round is running.
+      if (currPhase === 'POST_GAME' && currentState.lastGameEndTimestamp) {
+        this.startCountdownTimer(currentState.lastGameEndTimestamp);
+      }
+      return;
+    }
+
+    switch (currPhase) {
+      case 'LOBBY': {
+        this.gamePhaseSubject.next('LOBBY');
+        this.stopCountdownTimer();
         this.closePostGameDialog();
-        this.gamePhaseSubject.next('STARTING');
-        // Set isInGame first. This is important for the lobby->game transition
-        // so that the inGameGuard passes.
-        this.gameStateService.updateGameState({
-          isInGame: true,
-          gameMode: 'versus',
-        });
-
-        await this.loadingService.showAndHide({
-          message: 'Game starting!',
-          duration: LOBBY_GAME_START_COUNTDOWN_DURATION,
-        });
-
-        // after the delay, update the game seed. This will trigger
-        // the GameComponent to start a new round if it's already active.
-        this.gameStateService.updateGameState({
-          gameSeed: message.gameSeed,
-        });
-
-        this.gamePhaseSubject.next('IN_GAME');
-        this.router.navigate(['/versus', this.gameState.gameCode]);
-        break;
-
-      case 'gameEnded':
-        this.gamePhaseSubject.next('POST_GAME');
-        this.gameStateService.updateGameState({
-          players: message.players,
-          lastGameEndTimestamp: message.lastGameEndTimestamp,
-        });
-        this.openPostGameDialog(message);
-        this.startCountdownTimer(message.lastGameEndTimestamp);
-        break;
-
-      case 'syncGameState':
-        await this.syncGameState(
-          message.time,
-          message.isGameEnded,
-          message.gameEndData,
-        );
-        break;
-
-      case 'error':
-        if (
-          message.message?.includes(
-            'A multiplayer game requires at least 2 players',
-          )
-        ) {
-          this.handleNotEnoughPlayersError();
-        } else if (message.message?.includes('Failed to start game')) {
-          // This can be ignored as the lobby handles it locally.
-          return;
-        } else {
-          // General error handling
-          console.error('Received server error:', message.message);
-          this.router.navigate(['/']); // Or a dedicated error page
+        this.clearBarrier();
+        if (currentState.gameCode) {
+          this.router.navigate(['/lobby', currentState.gameCode]);
         }
         break;
+      }
+
+      case 'IN_GAME': {
+        this.gamePhaseSubject.next('IN_GAME');
+        this.stopCountdownTimer();
+        this.closePostGameDialog();
+
+        // Rejoin mid-game? Skip interstitial/barrier.
+        const elapsed = currentState.currentGameTime ?? 0;
+        if (elapsed > 0) {
+          this.clearBarrier();
+          if (currentState.gameCode) {
+            this.router.navigate(['/versus', currentState.gameCode]);
+          }
+          break;
+        }
+
+        // Fresh round start: set a barrier so GameComponent can honor it,
+        // and show a cancellable interstitial.
+        const barrierUntil = Date.now() + LOBBY_GAME_START_COUNTDOWN_DURATION;
+        this.gameStateService.updateGameState({
+          startBarrierUntil: barrierUntil,
+        });
+
+        this.clearBarrier(); // ensure at most one active
+        const hide = this.loadingService.show({
+          message: 'Game starting!',
+        });
+        const timeoutId = setTimeout(() => {
+          hide();
+          // Allow any stale barrier to be cleared by GameComponent too
+        }, LOBBY_GAME_START_COUNTDOWN_DURATION);
+        this.activeBarrier = { hide, timeoutId };
+
+        if (currentState.gameCode) {
+          this.router.navigate(['/versus', currentState.gameCode]);
+        }
+        break;
+      }
+
+      case 'POST_GAME': {
+        this.gamePhaseSubject.next('POST_GAME');
+        this.clearBarrier();
+
+        const data = currentState.postGameData;
+        if (data && !this.postGameDialogRef) {
+          const adjustedTime = this.adjustServerTimeString(data.time);
+          this.postGameDialogRef = this.dialog.open(DialogPostGameMp, {
+            data: {
+              winnerDisplayName: data.winnerDisplayName,
+              winnerColor: data.winnerColor,
+              winnerEmoji: data.winnerEmoji,
+              grid: data.condensedGrid,
+              // Show gameplay time (server elapsed minus animation offset)
+              time: adjustedTime,
+            },
+            minWidth: 380,
+            disableClose: true,
+          });
+
+          this.postGameDialogRef.afterClosed().subscribe((result) => {
+            this.postGameDialogRef = null;
+            if (result && result.event === 'quit') {
+              this.webSocketService.disconnect();
+              this.router.navigate(['/versus-menu']);
+            }
+          });
+        }
+
+        if (currentState.lastGameEndTimestamp) {
+          this.startCountdownTimer(currentState.lastGameEndTimestamp);
+        }
+        break;
+      }
     }
   }
 
-  private openPostGameDialog(data: any): void {
-    if (this.postGameDialogRef) {
-      return; // Dialog is already open
+  private clearBarrier(): void {
+    if (this.activeBarrier) {
+      clearTimeout(this.activeBarrier.timeoutId);
+      this.activeBarrier.hide();
+      this.activeBarrier = null;
     }
-    this.gamePhaseSubject.next('POST_GAME');
-    this.postGameDialogRef = this.dialog.open(DialogPostGameMp, {
-      data: {
-        winnerDisplayName: data.winnerDisplayName,
-        winnerColor: data.winnerColor,
-        winnerEmoji: data.winnerEmoji,
-        grid: data.condensedGrid,
-        time: data.time,
-      },
-      minWidth: 380,
-      disableClose: true,
-    });
-
-    this.postGameDialogRef.afterClosed().subscribe((result) => {
-      this.postGameDialogRef = null;
-      if (result && result.event === 'quit') {
-        this.webSocketService.disconnect();
-        this.router.navigate(['/versus-menu']);
-      }
-    });
   }
 
   private closePostGameDialog(): void {
@@ -199,103 +217,116 @@ export class GameFlowService {
     }
   }
 
+  /**
+   * Starts or updates a single countdown tied to a specific end timestamp.
+   * Clears any previous countdown to prevent overlapping timers across rounds.
+   */
   private startCountdownTimer(timestamp: string | Date): void {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-    }
-
     const AUTO_START_SECONDS = 30;
     const serverEndTime = new Date(timestamp).getTime();
-    const autoStartTime = serverEndTime + AUTO_START_SECONDS * 1000;
+    if (!isFinite(serverEndTime)) return;
 
-    const updateCountdown = () => {
-      const now = Date.now();
-      const remainingSeconds = Math.round((autoStartTime - now) / 1000);
-      const totalPlayers = this.gameState.players.filter(
-        (p) => !p.disconnected,
-      ).length;
+    const targetMs = serverEndTime + AUTO_START_SECONDS * 1000;
 
-      if (remainingSeconds <= 0) {
-        clearInterval(this.countdownInterval);
-        this.countdownInterval = null;
-        if (totalPlayers < 2) {
-          this.nextGameCountdownSubject.next('Waiting for more players...');
-        } else {
-          this.nextGameCountdownSubject.next(
-            'Waiting for players to ready up...',
-          );
-        }
-      } else {
-        this.nextGameCountdownSubject.next(
-          `Next game starts in: ${remainingSeconds}s`,
-        );
-      }
-    };
-
-    updateCountdown();
-    this.countdownInterval = setInterval(updateCountdown, 1000);
-  }
-
-  private handleNotEnoughPlayersError(): void {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-      this.countdownInterval = null;
-    }
-    const totalPlayers = this.gameState.players.filter(
-      (p) => !p.disconnected,
-    ).length;
-    if (totalPlayers < 2) {
-      this.nextGameCountdownSubject.next('Waiting for more players...');
-    } else {
-      this.nextGameCountdownSubject.next('Waiting for players to ready up...');
-    }
-  }
-
-  private async syncGameState(
-    serverTime: number,
-    gameEnded: boolean,
-    gameEndData: any,
-  ): Promise<void> {
-    console.log(
-      'Syncing game state on connection:',
-      serverTime,
-      gameEnded,
-      gameEndData,
-    );
-
-    // Case 1: Game ended while player was disconnected. Show post-game dialog.
-    if (gameEnded && gameEndData) {
-      this.gamePhaseSubject.next('POST_GAME');
-      console.log('Game ended while disconnected, showing end game dialog');
-      this.gameStateService.updateGameState({
-        players: gameEndData.players,
-        lastGameEndTimestamp: gameEndData.lastGameEndTimestamp,
-      });
-      this.openPostGameDialog(gameEndData);
-      if (gameEndData.lastGameEndTimestamp) {
-        this.startCountdownTimer(gameEndData.lastGameEndTimestamp);
-      }
+    // If we're already counting down to this exact target, just tick once.
+    if (this.countdownTargetMs === targetMs && this.countdownIntervalId) {
+      this.updateCountdownLabel();
       return;
     }
 
-    // Case 2: Game is in progress. Navigate to game screen.
-    // The GameComponent will receive the sync time from the GameStateService
-    // and handle its own countdown and timer synchronization.
-    if (this.gameState.isInGame) {
-      this.gamePhaseSubject.next('IN_GAME');
-      console.log(
-        'Reconnected to an active game. Ensuring navigation to game screen.',
-      );
-      this.router.navigate(['/versus', this.gameState.gameCode]);
-    } else {
-      // Case 3: Player was in lobby/post-game, but is not in a game now.
-      // This can happen if they were disconnected, the game ended, and the game start timer expired
-      // but there weren't enough players to start a new one. Send them to the lobby.
-      this.gamePhaseSubject.next('LOBBY');
-      this.router.navigate([
-        '/lobby',
-        this.gameStateService.getCurrentState().gameCode,
-      ]);
+    // Otherwise switch to the new target.
+    this.stopCountdownTimer();
+    this.countdownTargetMs = targetMs;
+
+    // Immediate label update, then tick every second.
+    this.updateCountdownLabel();
+    this.countdownIntervalId = setInterval(() => {
+      this.updateCountdownLabel();
+    }, 1000);
+  }
+
+  /**
+   * Stops the active countdown.
+   * @param preserveLabel When true, keeps the current label text instead of clearing it.
+   */
+  private stopCountdownTimer(preserveLabel: boolean = false): void {
+    if (this.countdownIntervalId) {
+      clearInterval(this.countdownIntervalId);
+      this.countdownIntervalId = null;
     }
+    this.countdownTargetMs = null;
+    if (!preserveLabel) {
+      this.nextGameCountdownSubject.next('');
+    }
+  }
+
+  private updateCountdownLabel(): void {
+    if (this.countdownTargetMs === null) return;
+
+    const remainingSeconds = Math.round(
+      (this.countdownTargetMs - Date.now()) / 1000,
+    );
+
+    if (remainingSeconds <= 0) {
+      const totalPlayers = this.gameStateService
+        .getCurrentState()
+        .players.filter((p) => !p.disconnected).length;
+      if (totalPlayers < 2) {
+        this.nextGameCountdownSubject.next('Waiting for more players');
+      } else {
+        this.nextGameCountdownSubject.next(
+          'Waiting for players to ready up...',
+        );
+      }
+      // Stop the countdown but keep the label visible.
+      this.stopCountdownTimer(true);
+      return;
+    }
+
+    this.nextGameCountdownSubject.next(
+      `Next game starts in: ${remainingSeconds}s`,
+    );
+  }
+
+  // ===== Helpers to align server time with client-side gameplay timer =====
+
+  /** Total client animation offset in seconds (interstitial + 3..2..1 + fade). */
+  private getAnimationOffsetSeconds(): number {
+    const totalOffsetMs =
+      LOBBY_GAME_START_COUNTDOWN_DURATION +
+      COUNTDOWN_START_DELAY +
+      COUNTDOWN_INITIAL_VALUE * COUNTDOWN_INTERVAL +
+      COUNTDOWN_FADEOUT_DELAY;
+    return totalOffsetMs / 1000;
+  }
+
+  /** Convert "M:SS" -> seconds */
+  private parseTimeStringToSeconds(time: string | null | undefined): number {
+    if (!time) return 0;
+    const parts = time.split(':');
+    if (parts.length !== 2) return 0;
+    const m = parseInt(parts[0], 10);
+    const s = parseInt(parts[1], 10);
+    if (Number.isNaN(m) || Number.isNaN(s)) return 0;
+    return Math.max(0, m * 60 + s);
+  }
+
+  /** Convert seconds -> "M:SS" */
+  private formatSecondsToTimeString(totalSeconds: number): string {
+    const secs = Math.max(0, Math.round(totalSeconds));
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  /**
+   * Adjusts server-reported elapsed time (formatted) by subtracting the client animation offset.
+   * Ensures the winner dialog shows the same "gameplay time" as local timers.
+   */
+  private adjustServerTimeString(serverTimeFormatted: string): string {
+    const offset = this.getAnimationOffsetSeconds();
+    const rawSeconds = this.parseTimeStringToSeconds(serverTimeFormatted);
+    const gameplaySeconds = Math.max(0, rawSeconds - offset);
+    return this.formatSecondsToTimeString(gameplaySeconds);
   }
 }
