@@ -18,7 +18,7 @@ export interface GameState {
   gameSeed: number | null;
   gameMode: 'versus' | 'daily' | 'practice' | null;
 
-  // Back-compat / legacy client fields
+  // Client timing fields currently in use
   currentGameTime?: number; // Current game time for synchronization
   lastGameEndTimestamp?: Date | null; // Timestamp of the last game end for countdown to next game
   pendingWin: {
@@ -40,8 +40,8 @@ export interface GameState {
   postGameData?: PostGameData | null;
 
   /**
-   * @deprecated Legacy client-side barrier used to delay local countdowns.
-   * Not used in protocol v2 (server-driven absolute timing).
+   * Legacy client-side barrier used to delay local countdowns while an interstitial displays.
+   * Retained until absolute-timestamp sequencing fully replaces it end-to-end.
    */
   startBarrierUntil?: number | null;
 }

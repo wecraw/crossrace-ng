@@ -5,7 +5,7 @@ export interface AckResponse {
   message?: string;
 }
 
-/** Back-compat game data (legacy timer) */
+/** Server-supplied game data for the current round's seed and elapsed time. */
 export interface GameData {
   gameSeed: number;
   serverElapsedTimeSeconds: number;
@@ -29,12 +29,11 @@ export interface GameDurations {
   fadeMs: number;
 }
 
-/** Server-authoritative snapshot (protocol v2) */
+/** Server-authoritative snapshot (protocol v2-compatible) */
 export interface GameStateSnapshot {
   protocolVersion: number; // e.g., 2
   serverNow: number; // ms epoch (same clock as *At fields)
   durations: GameDurations;
-
   phase: SnapshotPhase;
   gameCode: string;
   players: Player[];
@@ -45,12 +44,12 @@ export interface GameStateSnapshot {
   roundStartedAt?: number | null; // present in IN_GAME
   roundEndedAt?: number | null; // present in POST_GAME
 
-  // Back-compat payloads (kept during rollout)
+  // Payloads used by the current client
   gameData?: GameData;
   postGameData?: PostGameData;
 }
 
-/** 'create' ack payload (fields optionalized for flexibility with rollout) */
+/** 'create' ack payload (fields optionalized for flexibility) */
 export interface CreateGameResponse extends AckResponse {
   type?: 'gameCreated';
   gameCode: string;
